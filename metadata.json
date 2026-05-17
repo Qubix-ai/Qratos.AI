@@ -1,0 +1,8 @@
+{
+  "name": "Qratos.ai",
+  "description": "Hyper-specialized AI copywriting operating system focused on persuasive marketing and conversion copy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

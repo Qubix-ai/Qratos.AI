@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "Represents an application user.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "isAdmin": { "type": "boolean" },
+        "totalCredits": { "type": "number", "description": "The maximum credits a user can have daily." },
+        "remainingCredits": { "type": "number", "description": "Remaining credits for the current day." },
+        "lastResetDate": { "type": "string", "format": "date-time", "description": "The last time credits were reset." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "isAdmin", "remainingCredits", "lastResetDate"]
+    },
+    "conversation": {
+      "title": "Conversation",
+      "description": "A collection of messages between user and AI.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "createdAt", "updatedAt"]
+    },
+    "message": {
+      "title": "Message",
+      "description": "An individual message within a conversation.",
+      "type": "object",
+      "properties": {
+        "conversationId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string" },
+        "model": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["conversationId", "role", "content", "createdAt"]
+    },
+    "analytic": {
+      "title": "Analytic",
+      "description": "Event logs for admin tracking.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "eventType": { "type": "string" },
+        "metadata": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "eventType", "createdAt"]
+    },
+    "prompt": {
+      "title": "Prompt",
+      "description": "Stored user prompts for category analysis.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "originalPrompt": { "type": "string" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "brand_profile": {
+      "title": "Brand Profile",
+      "description": "Stored brand voice details.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "tone": { "type": "string" },
+        "details": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "user",
+      "description": "Users of the platform."
+    },
+    "conversations": {
+      "schema": "conversation",
+      "description": "Chat sessions."
+    },
+    "conversations/{conversationId}/messages": {
+      "schema": "message",
+      "description": "Messages inside sessions."
+    },
+    "analytics": {
+      "schema": "analytic",
+      "description": "System event logs."
+    },
+    "prompts": {
+      "schema": "prompt",
+      "description": "Archive of submitted prompts."
+    },
+    "brand_profiles": {
+      "schema": "brand_profile",
+      "description": "User brand definitions."
+    }
+  }
+}

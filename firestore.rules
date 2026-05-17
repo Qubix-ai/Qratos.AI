@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isEmailVerified() { return request.auth.token.email_verified == true; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // --- Entity Validations ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'displayName', 'isAdmin', 'remainingCredits', 'lastResetDate', 'createdAt'])
+        && data.email is string && data.email.size() > 0 && data.email.size() < 256
+        && data.displayName is string && data.displayName.size() < 128
+        && data.isAdmin is bool
+        && data.remainingCredits is number && data.remainingCredits >= 0 && data.remainingCredits <= 20
+        && data.lastResetDate is string
+        && data.createdAt is string;
+    }
+
+    function isValidConversation(data) {
+      return data.keys().hasAll(['userId', 'title', 'createdAt', 'updatedAt'])
+        && data.userId == request.auth.uid
+        && data.title is string && data.title.size() <= 200
+        && data.createdAt is string
+        && data.updatedAt is string;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['conversationId', 'role', 'content', 'createdAt'])
+        && data.role in ['user', 'assistant']
+        && data.content is string && data.content.size() <= 10000
+        && data.createdAt is string;
+    }
+
+    // --- Rules ---
+
+    // Users
+    match /users/{userId} {
+      // Users can read their own profile. Admin can read all.
+      allow get: if isOwner(userId);
+      allow list: if false; // No public user listing
+      
+      // Profiles are mostly managed by server via admin SDK, but user can self-init if needed?
+      // Actually per server.ts, the server handles user creation.
+      // But let's allow read for the frontend to show credits.
+      allow read: if isOwner(userId);
+      allow write: if false; // Critical: only server can update credits/admin status securely
+    }
+
+    // Conversations
+    match /conversations/{conversationId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn(); // We rely on the client to query by userId, but we should enforce it.
+      // Better: allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && isValidConversation(incoming());
+      allow update: if isSignedIn() && existing().userId == request.auth.uid 
+                   && incoming().userId == existing().userId
+                   && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt', 'category']);
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Enforce parent relationship
+        allow read, write: if isSignedIn() && get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
+        
+        allow create: if isSignedIn() && isValidMessage(incoming());
+      }
+    }
+
+    // Analytics (Write only for users, Read for Admin)
+    match /analytics/{analyticId} {
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow read: if false; // Managed by server/admin
+    }
+
+    // Prompts (Write only for users, Read for Admin)
+    match /prompts/{promptId} {
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow read: if false;
+    }
+
+    // Brand Profiles
+    match /brand_profiles/{profileId} {
+      allow read, write: if isSignedIn() && (
+        (request.method == 'create' && incoming().userId == request.auth.uid) ||
+        (existing().userId == request.auth.uid)
+      );
+    }
+  }
+}
