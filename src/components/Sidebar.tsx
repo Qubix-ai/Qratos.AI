@@ -8,11 +8,12 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   onLogout: () => void;
   onShowAdmin: () => void;
+  onExitToLanding: () => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmin, isOpen, onClose }: SidebarProps) {
+export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmin, onExitToLanding, isOpen, onClose }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [folders, setFolders] = useState([
     { id: "campaigns", label: "Ad Campaigns", isOpen: true, items: [
@@ -174,6 +175,17 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Navigation to Landing */}
+          <div className="pt-4">
+            <button 
+              onClick={onExitToLanding}
+              className="flex items-center gap-3 w-full p-3 px-4 rounded-xl text-[11px] font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+            >
+              <Share2 size={16} className="text-gray-600" />
+              Main Landing Page
+            </button>
           </div>
         </div>
 

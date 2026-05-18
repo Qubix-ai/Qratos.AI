@@ -20,9 +20,10 @@ interface ChatInterfaceProps {
   user: any;
   userData: any;
   activeTab: string;
+  onExitToLanding: () => void;
 }
 
-export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps) {
+export function ChatInterface({ user, userData, activeTab, onExitToLanding }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -149,6 +150,15 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
       {/* Top Bar Info */}
       <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-4 md:px-8 z-10 bg-gradient-to-b from-[#0A0A0B] to-transparent pointer-events-none sticky top-0 md:absolute">
         <div className="flex items-center gap-2 md:gap-4 pointer-events-auto">
+           <button 
+             onClick={onExitToLanding}
+             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-sans text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+           >
+             <Share2 size={12} className="text-[#FFB52E]" />
+             <span className="hidden sm:inline">EXIT TO LANDING</span>
+             <span className="sm:hidden">EXIT</span>
+           </button>
+           <div className="h-4 w-[1px] bg-white/10 mx-1 hidden sm:block" />
            <div className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-sans text-gray-400">
              <Coins size={12} className="text-yellow-500" />
              <span className="hidden sm:inline">{remainingCredits} CREDITS LEFT</span>
@@ -157,8 +167,8 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
         </div>
         <div className="flex items-center gap-2 pointer-events-auto">
           <div className="px-2 md:px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] md:text-[11px] font-sans text-purple-400">
-            <span className="hidden sm:inline">CLAUDE-3-FLASH ENGINE</span>
-            <span className="sm:hidden">ENGINE v3</span>
+            <span className="hidden sm:inline">GEMINI PRE-3.1 PRO ENGINE</span>
+            <span className="sm:hidden">ENGINE v3.1</span>
           </div>
         </div>
       </div>
@@ -285,7 +295,7 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
                 <div className="relative">
                    <div className="absolute inset-0 bg-[#FFB52E] rounded-full blur-xl opacity-20 animate-pulse" />
                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-black border border-[#FFB52E]/30 flex items-center justify-center relative z-10">
-                      <BrainCircuit size={20} className="text-[#FFB52E] animate-pulse md:size-24" />
+                      <BrainCircuit size={20} className="text-[#FFB52E] animate-pulse" />
                    </div>
                 </div>
                 <div className="flex flex-col gap-1 md:gap-2 relative z-10">
@@ -371,9 +381,13 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
                   e.target.style.height = e.target.scrollHeight + "px";
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
+                  if (e.key === "Enter") {
+                    if (e.metaKey || e.ctrlKey || (!e.shiftKey)) {
+                      if (!e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }
                   }
                 }}
                 placeholder="Message Qratos AI..."

@@ -27,8 +27,6 @@ function Counter({ value, suffix = "" }: { value: string, suffix?: string }) {
 }
 
 export function LandingPage({ onLogin }: LandingPageProps) {
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly" | "lifetime">("monthly");
-
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
@@ -211,11 +209,11 @@ export function LandingPage({ onLogin }: LandingPageProps) {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight mb-8 text-white italic leading-[1.2] px-4 max-w-5xl"
+              className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight mb-8 text-white italic leading-[1.3] px-2 md:px-4 max-w-5xl"
             >
               Why Qratos is the last <br className="hidden sm:block" /> 
-              <span className="bg-gradient-to-r from-[#FFB52E] via-[#FFD778] to-[#FFB52E] bg-clip-text text-transparent px-2 -ml-2">copywriting tool</span> 
-              <span> you will ever need</span>
+              <span className="bg-gradient-to-r from-[#FFB52E] via-[#FFD778] to-[#FFB52E] bg-clip-text text-transparent px-1 md:px-2">copywriting tool</span> 
+              <span>you will ever need</span>
             </motion.h2>
             <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] to-transparent shadow-[0_0_10px_rgba(255,181,46,0.5)]" />
           </div>
@@ -447,15 +445,10 @@ export function LandingPage({ onLogin }: LandingPageProps) {
                           initial={{ opacity: 0, translateZ: -100 }}
                           whileInView={{ opacity: 1, translateZ: 0 }}
                           viewport={{ once: true }}
-                          animate={{ 
-                            y: [0, -10, 0],
-                            translateZ: [0, 20, 0]
-                          }}
                           transition={{ 
                             delay: i * 0.1, 
-                            duration: 5 + i, 
-                            repeat: Infinity,
-                            ease: "easeInOut"
+                            duration: 1.2, 
+                            ease: [0.16, 1, 0.3, 1] 
                           }}
                           style={{ transformStyle: "preserve-3d" }}
                           className="group relative w-44 h-44 bg-white/[0.03] border-t border-l border-white/20 rounded-[32px] backdrop-blur-3xl p-6 flex flex-col justify-between overflow-hidden shadow-[20px_20px_60px_-15px_rgba(0,0,0,0.5)] hover:border-[#FFB52E]/50 transition-all duration-500"
@@ -528,7 +521,7 @@ export function LandingPage({ onLogin }: LandingPageProps) {
                            opacity: [0.3, 1, 0.3],
                          }}
                          transition={{ 
-                           duration: 1.5 + (i * 0.1), 
+                           duration: 4 + (i * 0.25), 
                            repeat: Infinity,
                            ease: "easeInOut"
                          }}
@@ -670,110 +663,65 @@ export function LandingPage({ onLogin }: LandingPageProps) {
 
       {/* Pricing Section */}
       <section className="py-32 px-4 relative overflow-hidden bg-[#0A0A0A]">
-        {/* Background Luxury Elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-to-r from-yellow-500/5 to-transparent rounded-full blur-[160px] pointer-events-none" />
+        {/* Background Luxury Elements - Glassmorphism Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#FFB52E]/5 rounded-full blur-[120px] animate-pulse pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#FFB52E]/3 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-              Choose Your Intelligence Layer
+          <div className="text-center mb-16 px-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/20 text-[10px] font-black text-[#FFB52E] uppercase tracking-[0.2em] mb-8 backdrop-blur-md"
+            >
+              <Sparkles size={12} />
+              Limited MVP Access
+            </motion.div>
+            <h2 className="text-4xl md:text-8xl font-bold tracking-tighter mb-8 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic leading-tight">
+              Frontier Access <br /> for Early Adopters
             </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-[#FFB52E] to-transparent mx-auto mb-8 rounded-full shadow-[0_0_10px_#FFB52E]" />
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Select the intelligence layer built for your level of growth, scale, and conversion performance.
+            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Qratos is currently in focused MVP development. We are granting full frontier-level intelligence to a select group of growth-focused pioneers.
             </p>
           </div>
 
-          {/* Pricing Toggle */}
-          <div className="flex justify-center mb-20">
-            <div className="p-1 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl inline-flex relative">
-               <div 
-                 className={`absolute inset-y-1 rounded-xl bg-white/[0.08] transition-all duration-300 shadow-xl ${
-                   billingPeriod === 'monthly' ? 'left-1 w-[100px]' : 
-                   billingPeriod === 'yearly' ? 'left-[105px] w-[100px]' : 
-                   'left-[209px] w-[100px]'
-                 }`}
-               />
-               <button 
-                 onClick={() => setBillingPeriod("monthly")}
-                 className={`relative z-10 px-6 py-2.5 text-xs font-bold transition-colors ${billingPeriod === 'monthly' ? 'text-white' : 'text-gray-500'}`}
-               >
-                 MONTHLY
-               </button>
-               <button 
-                 onClick={() => setBillingPeriod("yearly")}
-                 className={`relative z-10 px-6 py-2.5 text-xs font-bold transition-colors ${billingPeriod === 'yearly' ? 'text-white' : 'text-gray-500'}`}
-               >
-                 YEARLY
-               </button>
-               <button 
-                 onClick={() => setBillingPeriod("lifetime")}
-                 className={`relative z-10 px-6 py-2.5 text-xs font-bold transition-colors ${billingPeriod === 'lifetime' ? 'text-white' : 'text-gray-500'}`}
-               >
-                 LIFETIME
-               </button>
+          {/* Single MVP Card with 3D Orbital Effect */}
+          <div className="flex justify-center mt-20 relative px-4">
+            {/* Orbital Rings Background */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none opacity-20">
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20 + i * 10, repeat: Infinity, ease: "linear" }}
+                  className="absolute border border-white/20 rounded-full"
+                  style={{ width: 400 + i * 200, height: 400 + i * 200 }}
+                />
+              ))}
             </div>
+
+            <MVPPriceCard onLogin={onLogin} />
           </div>
 
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8 items-stretch px-4 sm:px-0 mt-20">
-            {/* FREE PLAN */}
-            <PricingCard
-              badge="Lifetime Free"
-              title="FREE"
-              price="$0"
-              desc="For creators and operators exploring high-converting AI-powered copywriting."
-              features={[
-                "Limited daily credits", "Standard AI model", "Basic copywriting tools", 
-                "Landing page generation", "Social content generation", "Email copy generation",
-                "Access to chat interface", "Limited conversation history", "Community access"
-              ]}
-              cta="Start Free"
-              onCta={onLogin}
-            />
-
-            {/* CORE PLAN */}
-            <PricingCard
-              featured
-              badge="Most Popular"
-              title="CORE"
-              price={billingPeriod === 'monthly' ? '$29' : billingPeriod === 'yearly' ? '$247' : '$397'}
-              subPrice={billingPeriod === 'monthly' ? '/month' : billingPeriod === 'yearly' ? '/year' : 'one-time'}
-              saving={billingPeriod === 'yearly' ? "Save $101" : billingPeriod === 'lifetime' ? "Save $299" : ""}
-              desc="For ambitious creators, founders, and growth-focused brands building scalable conversion systems."
-              features={[
-                "Higher daily credits", "Faster AI responses", "More powerful AI model", 
-                "Advanced persuasion engine", "Long-form copywriting", "AI brand voice training",
-                "Unlimited projects", "Campaign workspaces", "Advanced email sequences",
-                "Landing page frameworks", "Launch campaign systems", "Premium templates",
-                "Smart rewrite modes", "Priority generation speed", "Advanced export tools"
-              ]}
-              cta="Upgrade to Core"
-              onCta={onLogin}
-            />
-
-            {/* ASCEND PLAN */}
-            <PricingCard
-              elite
-              badge="Elite Intelligence Access"
-              title="ASCEND"
-              price={billingPeriod === 'monthly' ? '$67' : billingPeriod === 'yearly' ? '$599' : '$1199'}
-              subPrice={billingPeriod === 'monthly' ? '/month' : billingPeriod === 'yearly' ? '/year' : 'one-time'}
-              saving={billingPeriod === 'yearly' ? "Save $201" : ""}
-              desc="For elite operators, agencies, and high-performance teams requiring frontier-level persuasion intelligence."
-              features={[
-                "Highest daily credit limits", "Frontier-level AI intelligence", "Fastest generation speeds", 
-                "Advanced reasoning engine", "Deep persuasion optimization", "Multi-step campaign systems",
-                "AI sales funnel architect", "VSL intelligence system", "Conversion psychology analysis",
-                "Advanced audience profiling", "Competitor messaging analysis", "AI offer optimization",
-                "High-converting launch systems", "Team collaboration features", "Dedicated premium workspace"
-              ]}
-              cta="Unlock Ascend"
-              onCta={onLogin}
-            />
+          <div className="text-center mt-12 space-y-4">
+            <motion.p 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-gray-500 text-[10px] md:text-sm font-sans font-black uppercase tracking-[0.3em]"
+            >
+              pricings coming soon. App currently in MVP stage
+            </motion.p>
+            <div className="flex justify-center gap-1">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="w-1 h-1 rounded-full bg-[#FFB52E]/20" />
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
 
       {/* Footer Ecosystem */}
       <footer className="relative pt-32 pb-12 overflow-hidden border-t border-white/5 bg-[#050505]">
@@ -892,13 +840,13 @@ export function LandingPage({ onLogin }: LandingPageProps) {
               <h4 className="text-[10px] font-sans font-black text-gray-500 uppercase tracking-[0.3em] mb-8">Connect</h4>
               <ul className="space-y-6">
                 {[
-                  { label: "Instagram", icon: Instagram },
-                  { label: "Facebook", icon: Facebook },
-                  { label: "Newsletter", icon: Mail },
-                  { label: "X / Twitter", icon: Twitter }
+                  { label: "Instagram", icon: Instagram, href: "https://www.instagram.com/qreato.io?igsh=MTlmNHN6ampqYWF3bQ==" },
+                  { label: "Facebook", icon: Facebook, href: "#" },
+                  { label: "Newsletter", icon: Mail, href: "#" },
+                  { label: "X / Twitter", icon: Twitter, href: "https://x.com/s4lma9" }
                 ].map(social => (
                   <li key={social.label}>
-                    <a href="#" className="flex items-center gap-4 group">
+                    <a href={social.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                       <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#FFB52E]/10 group-hover:border-[#FFB52E]/30 transition-all font-bold">
                         <social.icon size={18} className="text-gray-500 group-hover:text-[#FFB52E] transition-colors" />
                       </div>
@@ -937,85 +885,100 @@ export function LandingPage({ onLogin }: LandingPageProps) {
   );
 }
 
-interface PricingCardProps {
-  badge: string;
-  title: string;
-  price: string;
-  subPrice?: string;
-  saving?: string;
-  desc: string;
-  features: string[];
-  cta: string;
-  onCta: () => void;
-  featured?: boolean;
-  elite?: boolean;
-}
+function MVPPriceCard({ onLogin }: { onLogin: () => void }) {
+  const x = useSpring(0, { stiffness: 100, damping: 30 });
+  const y = useSpring(0, { stiffness: 100, damping: 30 });
 
-function PricingCard({ badge, title, price, subPrice, saving, desc, features, cta, onCta, featured, elite }: PricingCardProps) {
+  const rotateX = useTransform(y, [-0.5, 0.5], [10, -10]);
+  const rotateY = useTransform(x, [-0.5, 0.5], [-10, 10]);
+
+  function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const xPct = (mouseX / width) - 0.5;
+    const yPct = (mouseY / height) - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+  }
+
   return (
     <motion.div
-      whileHover={{ y: -10 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className={`relative flex flex-col p-10 rounded-[32px] border transition-all duration-700 h-full backdrop-blur-2xl ${
-        featured ? 'bg-gradient-to-b from-[#0F0F11] to-black border-[#FFB52E]/40 shadow-[0_40px_100px_-20px_rgba(226,167,46,0.15)] scale-105 z-10' : 
-        elite ? 'bg-black border-white/10 shadow-2xl' : 
-        'bg-white/[0.02] border-white/5'
-      }`}
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      className="relative w-full max-w-3xl p-8 md:p-16 rounded-[48px] bg-white/[0.02] border border-white/10 backdrop-blur-[100px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] overflow-hidden group cursor-crosshair"
     >
-      {/* Visual Effects for Elite */}
-      {elite && (
-        <>
-          <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
-            <motion.div 
-               animate={{ x: ['100%', '-100%'], opacity: [0, 0.5, 0] }}
-               transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-               className="absolute top-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB52E]/50 to-transparent"
-            />
-          </div>
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#FFB52E]/5 rounded-full blur-3xl" />
-        </>
-      )}
+       {/* Premium 3D Moving Light Streak */}
+       <motion.div 
+         animate={{ left: ['-100%', '200%'] }}
+         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+         className="absolute top-0 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] to-transparent opacity-30"
+       />
 
-      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-8 w-fit ${
-        featured ? 'bg-[#FFB52E]/10 text-[#FFB52E]' : 'bg-white/5 text-gray-400'
-      }`}>
-        {badge}
-      </div>
-
-      <h3 className="text-3xl font-bold mb-4 tracking-tight">{title}</h3>
-      <div className="flex items-baseline gap-1 mb-2">
-        <span className="text-5xl font-bold tracking-tighter">{price}</span>
-        {subPrice && <span className="text-gray-500 text-sm font-medium">{subPrice}</span>}
-      </div>
-      {saving && <div className="text-xs font-bold text-[#FFB52E] mb-6">{saving}</div>}
-      
-      <p className="text-gray-400 text-sm mb-10 leading-relaxed min-h-[3rem]">{desc}</p>
-
-      <div className="space-y-4 mb-12 flex-1">
-        {features.map((f, i) => (
-          <div key={i} className="flex items-start gap-3">
-             <div className={`mt-1 p-0.5 rounded-full ${featured || elite ? 'bg-[#FFB52E]/20 text-[#FFB52E]' : 'bg-white/10 text-gray-400'}`}>
-                <Check size={10} />
+       <div className="relative z-10 flex flex-col md:flex-row gap-12 items-center" style={{ transform: "translateZ(50px)" }}>
+          <div className="flex-1 space-y-8">
+             <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                   <h3 className="text-4xl md:text-6xl font-bold tracking-tight text-white italic">MVP FREE</h3>
+                   <div className="px-3 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black text-white/40 tracking-widest uppercase">Limited Tier</div>
+                </div>
+                <div className="flex items-baseline gap-2">
+                   <span className="text-6xl font-bold tracking-tighter">$0</span>
+                   <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Forever Free for Early Users</span>
+                </div>
+                <p className="text-gray-400 text-sm leading-relaxed font-medium">
+                  Experience the full persuasion engine. All advanced features from our Core and Ascend systems have been unlocked for the first 1,000 MVP users.
+                </p>
              </div>
-             <span className="text-xs text-gray-300 font-medium">{f}</span>
-          </div>
-        ))}
-      </div>
 
-      <button 
-        onClick={onCta}
-        className={`group relative w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
-          featured ? 'bg-gradient-to-br from-[#FFB52E] via-[#E2A72E] to-[#C98E1A] text-black hover:shadow-[0_0_30px_rgba(255,181,46,0.3)]' : 
-          elite ? 'bg-white text-black hover:bg-gray-200' : 
-          'bg-white/5 text-white border border-white/10 hover:bg-white/10'
-        }`}
-      >
-        {elite && (
-           <div className="absolute inset-x-0 -top-full h-full bg-white/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-        )}
-        {cta}
-        <ArrowRight size={16} />
-      </button>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                {[
+                  "Unlimited Frontier AI Processing",
+                  "Deep Persuasion Engine Access",
+                  "AI Brand Voice Training",
+                  "Strategic Funnel Architect",
+                  "Complete Email Sequence Systems",
+                  "Advanced Audience Profiling",
+                  "Multi-Step Campaign Strategy",
+                  "Campaign Collaboration Mode",
+                  "VSL Intelligence Architect",
+                  "Priority Generation Speed"
+                ].map((feature, i) => (
+                  <div key={i} className="flex items-center gap-3 group/item">
+                     <div className="w-5 h-5 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/30 flex items-center justify-center group-hover/item:bg-[#FFB52E]/20 transition-colors">
+                        <Check size={12} className="text-[#FFB52E]" />
+                     </div>
+                     <span className="text-xs text-gray-300 font-bold tracking-tight group-hover/item:text-white transition-colors">{feature}</span>
+                  </div>
+                ))}
+             </div>
+
+             <button 
+               onClick={onLogin}
+               className="group relative w-full py-6 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-widest hover:bg-[#FFB52E] transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden"
+             >
+               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+               Claim Early Access
+               <ArrowRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
+             </button>
+          </div>
+       </div>
+
+       {/* MVP Decorative Counter */}
+       <div className="absolute bottom-6 right-10 text-[8px] font-sans text-gray-700 font-bold tracking-[0.5em] uppercase pointer-events-none" style={{ transform: "translateZ(30px)" }}>
+         MVP STATUS: v0.8.2 ACTIVE
+       </div>
     </motion.div>
   );
 }

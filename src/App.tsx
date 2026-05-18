@@ -15,6 +15,7 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState("chat");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [forceShowLanding, setForceShowLanding] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -27,6 +28,8 @@ export default function App() {
           });
           const data = await res.json();
           setUserData(data);
+          // If logged in and was on landing, move to chat
+          setForceShowLanding(false);
         } catch (e) {
           console.error("Failed to fetch user data", e);
         }
@@ -41,19 +44,34 @@ export default function App() {
   const handleLogin = async () => {
     try {
       await signInWithGoogle();
+      // Onboarding logic is handled server-side in /api/user/me
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleLogout = () => auth.signOut();
+  const handleLogout = () => {
+    auth.signOut();
+    setForceShowLanding(true);
+  };
 
   if (loading) {
-    return <div className="min-h-screen bg-[#050505]" />; // Silent load
+    return <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <motion.div 
+        animate={{ opacity: [0.3, 0.6, 0.3], scale: [0.95, 1, 0.95] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="text-[#FFB52E] font-black tracking-[0.5em] text-[10px] uppercase"
+      >
+        Initializing Intelligence...
+      </motion.div>
+    </div>;
   }
 
-  if (!user) {
-    return <LandingPage onLogin={handleLogin} />;
+  if (!user || forceShowLanding) {
+    return <LandingPage onLogin={() => {
+      handleLogin();
+      setForceShowLanding(false);
+    }} />;
   }
 
   return (
@@ -77,6 +95,7 @@ export default function App() {
           setShowAdmin(true);
           setSidebarOpen(false);
         }}
+        onExitToLanding={() => setForceShowLanding(true)}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -116,7 +135,12 @@ export default function App() {
             {showAdmin ? (
               <AdminDashboard onClose={() => setShowAdmin(false)} />
             ) : (
-              <ChatInterface user={user} userData={userData} activeTab={activeTab} />
+              <ChatInterface 
+                user={user} 
+                userData={userData} 
+                activeTab={activeTab} 
+                onExitToLanding={() => setForceShowLanding(true)} 
+              />
             )}
           </motion.div>
         </AnimatePresence>

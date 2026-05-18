@@ -159,9 +159,12 @@ async function checkAndDeductCredits(uid: string) {
   const userDoc = await userRef.get();
 
   if (!userDoc.exists) {
+    // This should ideally be handled by /api/user/me, but as a fallback:
     const now = new Date();
     const data = {
       email: "",
+      displayName: "Agent User",
+      photoURL: "",
       isAdmin: false,
       totalCredits: 20,
       remainingCredits: 19,
@@ -173,12 +176,18 @@ async function checkAndDeductCredits(uid: string) {
   }
 
   const userData = userDoc.data()!;
+  
+  // Admins have unlimited credits
+  if (userData.isAdmin) {
+    return { canProceed: true, remaining: 999 };
+  }
+
   const now = new Date();
   const lastReset = new Date(userData.lastResetDate || now.toISOString());
   
   if (now.toDateString() !== lastReset.toDateString()) {
     await userRef.update({
-      remainingCredits: 20,
+      remainingCredits: 19, // Reset to 20, deduct 1 for current request
       lastResetDate: now.toISOString(),
     });
     return { canProceed: true, remaining: 19 };
