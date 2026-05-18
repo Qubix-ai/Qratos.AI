@@ -5,7 +5,7 @@ import { Sidebar } from "./components/Sidebar";
 import { ChatInterface } from "./components/ChatInterface";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { LandingPage } from "./components/LandingPage";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { BrainCircuit, LayoutDashboard } from "lucide-react";
 
 export default function App() {
@@ -89,8 +89,11 @@ export default function App() {
                  <BrainCircuit size={20} className="text-black" />
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold tracking-tighter text-sm leading-none text-white">QRATOS.AI</span>
-                <span className="text-[8px] font-mono text-[#FFB52E] tracking-widest uppercase">PERSUASION OS</span>
+                <div className="tracking-tighter text-sm leading-none text-white">
+                  <span className="font-extrabold">QRATOS</span>
+                  <span className="font-light">.AI</span>
+                </div>
+                <span className="text-[8px] font-sans text-[#FFB52E] tracking-widest uppercase">PERSUASION OS</span>
               </div>
            </div>
            <button 

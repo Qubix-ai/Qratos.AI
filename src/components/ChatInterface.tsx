@@ -1,12 +1,19 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Wand2, Copy, Check, RotateCcw, ArrowRight, BrainCircuit, Coins } from "lucide-react";
+import { Send, Sparkles, Wand2, Copy, Check, RotateCcw, ArrowRight, BrainCircuit, Coins, Mail, Target, FileText, Zap, Paperclip, X, File } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import { auth } from "../lib/firebase";
 
+interface Attachment {
+  name: string;
+  mimeType: string;
+  base64Data: string;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
+  attachments?: Attachment[];
 }
 
 interface ChatInterfaceProps {
@@ -21,7 +28,9 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
   const [isTyping, setIsTyping] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [remainingCredits, setRemainingCredits] = useState(userData?.remainingCredits ?? 20);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,12 +40,43 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isTyping || remainingCredits <= 0) return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
 
-    const userMessage: Message = { role: "user", content: input };
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        const base64Data = base64.split(",")[1];
+        setAttachments(prev => [...prev, {
+          name: file.name,
+          mimeType: file.type,
+          base64Data
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSend = async () => {
+    if ((!input.trim() && attachments.length === 0) || isTyping || remainingCredits <= 0) return;
+
+    const userMessage: Message = { 
+      role: "user", 
+      content: input,
+      attachments: attachments.length > 0 ? attachments : undefined
+    };
+    
     setMessages(prev => [...prev, userMessage]);
     setInput("");
+    setAttachments([]);
     setIsTyping(true);
 
     try {
@@ -109,14 +149,14 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
       {/* Top Bar Info */}
       <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-4 md:px-8 z-10 bg-gradient-to-b from-[#0A0A0B] to-transparent pointer-events-none sticky top-0 md:absolute">
         <div className="flex items-center gap-2 md:gap-4 pointer-events-auto">
-           <div className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-mono text-gray-400">
+           <div className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-sans text-gray-400">
              <Coins size={12} className="text-yellow-500" />
              <span className="hidden sm:inline">{remainingCredits} CREDITS LEFT</span>
              <span className="sm:hidden">{remainingCredits}CR</span>
            </div>
         </div>
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="px-2 md:px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] md:text-[11px] font-mono text-purple-400">
+          <div className="px-2 md:px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] md:text-[11px] font-sans text-purple-400">
             <span className="hidden sm:inline">CLAUDE-3-FLASH ENGINE</span>
             <span className="sm:hidden">ENGINE v3</span>
           </div>
@@ -183,18 +223,18 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} group relative`}
             >
-              <div className={`max-w-[95%] md:max-w-[85%] rounded-[32px] px-6 md:px-8 py-5 md:py-7 ${
+              <div className={`max-w-[95%] md:max-w-[85%] rounded-[28px] md:rounded-[32px] px-5 md:px-8 py-4 md:py-7 ${
                 m.role === "user" 
                 ? "bg-[#111111] border border-white/10 text-white shadow-xl" 
                 : "bg-white/[0.03] border border-[#FFB52E]/10 text-gray-100 shadow-2xl glass-card relative overflow-hidden"
-              }`}>
+              } will-change-transform`}>
                 {m.role === "assistant" && (
                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-[10px] font-mono text-[#FFB52E] font-black tracking-widest uppercase">
+                      <div className="flex items-center gap-2 text-[10px] font-sans text-[#FFB52E] font-black tracking-widest uppercase">
                         <BrainCircuit size={14} />
                         QRATOS PERSUASION ENGINE
                       </div>
-                      <div className="text-[9px] font-mono text-gray-600">v1.4.2 PREMIUM</div>
+                      <div className="text-[9px] font-sans text-gray-600">v1.4.2 PREMIUM</div>
                    </div>
                 )}
                 
@@ -203,6 +243,17 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
                       <ReactMarkdown>{m.content}</ReactMarkdown>
                    </div>
                 </div>
+
+                {m.attachments && m.attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {m.attachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-gray-400 font-sans">
+                        <FileText size={12} className="text-[#FFB52E]" />
+                        <span className="truncate max-w-[120px]">{file.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {m.role === "assistant" && m.content && (
                    <div className="flex items-center gap-4 mt-8 pt-6 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -227,25 +278,25 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex justify-start"
+              className="flex justify-start will-change-transform"
             >
-              <div className="bg-gradient-to-br from-[#FFB52E]/5 to-transparent border border-[#FFB52E]/20 rounded-[32px] p-6 px-10 flex items-center gap-6 shadow-2xl relative overflow-hidden glass-card">
+              <div className="bg-gradient-to-br from-[#FFB52E]/5 to-transparent border border-[#FFB52E]/20 rounded-[28px] md:rounded-[32px] p-4 md:p-6 px-6 md:px-10 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden glass-card">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FFB52E]/5 to-transparent animate-[pulse_3s_infinite]" />
                 <div className="relative">
                    <div className="absolute inset-0 bg-[#FFB52E] rounded-full blur-xl opacity-20 animate-pulse" />
-                   <div className="w-12 h-12 rounded-2xl bg-black border border-[#FFB52E]/30 flex items-center justify-center relative z-10">
-                      <BrainCircuit size={24} className="text-[#FFB52E] animate-pulse" />
+                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-black border border-[#FFB52E]/30 flex items-center justify-center relative z-10">
+                      <BrainCircuit size={20} className="text-[#FFB52E] animate-pulse md:size-24" />
                    </div>
                 </div>
-                <div className="flex flex-col gap-2 relative z-10">
-                   <span className="text-[11px] font-mono text-[#FFB52E] tracking-[0.4em] font-black uppercase">Synthesizing Persuasion Architecture...</span>
-                   <div className="flex gap-2">
+                <div className="flex flex-col gap-1 md:gap-2 relative z-10">
+                   <span className="text-[10px] md:text-[11px] font-sans text-[#FFB52E] tracking-[0.4em] font-black uppercase">Synthesizing...</span>
+                   <div className="flex gap-1.5 md:gap-2">
                       {[0, 0.2, 0.4].map((delay) => (
                         <motion.div 
                           key={delay}
                           animate={{ height: [4, 12, 4], opacity: [0.3, 1, 0.3] }}
                           transition={{ repeat: Infinity, duration: 1.5, delay }}
-                          className="w-1 bg-[#FFB52E]/50 rounded-full" 
+                          className="w-0.5 md:w-1 bg-[#FFB52E]/50 rounded-full" 
                         />
                       ))}
                    </div>
@@ -264,7 +315,50 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
             whileFocus={{ scale: 1.01 }}
             className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl p-1 shadow-[0_0_50px_-20px_rgba(0,0,0,0.8)] focus-within:border-[#FFB52E]/30 focus-within:shadow-[0_0_60px_-15px_rgba(255,181,46,0.1)] transition-all duration-500 overflow-hidden"
           >
+            {/* Attachment Preview */}
+            <AnimatePresence>
+              {attachments.length > 0 && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="flex flex-wrap gap-2 px-6 py-4 border-b border-white/5 overflow-hidden"
+                >
+                  {attachments.map((file, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-400 group/file"
+                    >
+                      <File size={14} className="text-[#FFB52E]" />
+                      <span className="max-w-[150px] truncate">{file.name}</span>
+                      <button 
+                        onClick={() => removeAttachment(i)}
+                        className="hover:text-red-400 transition-colors ml-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex items-end gap-3 p-3">
+               <input 
+                type="file"
+                multiple
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+               />
+               <button 
+                 onClick={() => fileInputRef.current?.click()}
+                 className="p-3 text-gray-600 hover:text-[#FFB52E] transition-all hover:scale-110"
+               >
+                  <Paperclip size={22} />
+               </button>
                <button className="p-3 text-gray-600 hover:text-[#FFB52E] transition-all hover:scale-110">
                   <Wand2 size={22} />
                </button>
@@ -310,7 +404,7 @@ export function ChatInterface({ user, userData, activeTab }: ChatInterfaceProps)
                      Psychology Tuned
                   </div>
                </div>
-               <div className="hidden sm:block text-[9px] text-gray-700 font-mono font-bold tracking-widest uppercase">
+               <div className="hidden sm:block text-[9px] text-gray-700 font-sans font-bold tracking-widest uppercase">
                   Press CMD+ENTER to Synthesize
                </div>
             </div>

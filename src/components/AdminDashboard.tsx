@@ -52,7 +52,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       <div className="max-w-7xl mx-auto pb-20">
         <header className="flex items-center justify-between mb-12">
           <div>
-            <div className="flex items-center gap-2 text-purple-400 text-xs font-mono mb-2">
+            <div className="flex items-center gap-2 text-purple-400 text-xs font-sans mb-2">
               <ShieldCheck size={14} />
               ADMINISTRATIVE ACCESS GRANTED
             </div>
@@ -182,19 +182,19 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                  <div className="space-y-6">
                     <div className="flex items-center justify-between">
                        <span className="text-xs text-gray-400">API Latency</span>
-                       <span className="text-xs font-mono text-green-400">142ms</span>
+                       <span className="text-xs font-sans text-green-400">142ms</span>
                     </div>
                     <div className="flex items-center justify-between">
                        <span className="text-xs text-gray-400">Uptime</span>
-                       <span className="text-xs font-mono text-green-400">99.99%</span>
+                       <span className="text-xs font-sans text-green-400">99.99%</span>
                     </div>
                     <div className="flex items-center justify-between">
                        <span className="text-xs text-gray-400">Token Usage</span>
-                       <span className="text-xs font-mono text-yellow-400">7.2M / 10M</span>
+                       <span className="text-xs font-sans text-yellow-400">7.2M / 10M</span>
                     </div>
                     <div className="flex items-center justify-between">
                        <span className="text-xs text-gray-400">Server Load</span>
-                       <span className="text-xs font-mono text-blue-400">24%</span>
+                       <span className="text-xs font-sans text-blue-400">24%</span>
                     </div>
                  </div>
                </div>
@@ -213,7 +213,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       <div className="mt-0.5 w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 animate-pulse" />
                       <div>
                         <p className="text-gray-300">
-                          User <span className="text-white font-mono">{ev.userId.slice(0, 6)}</span> executed <span className="text-purple-400">{ev.eventType}</span>
+                          User <span className="text-white font-sans">{ev.userId.slice(0, 6)}</span> executed <span className="text-purple-400">{ev.eventType}</span>
                         </p>
                         <p className="text-[10px] text-gray-500 mt-1">{new Date(ev.createdAt).toLocaleTimeString()}</p>
                       </div>

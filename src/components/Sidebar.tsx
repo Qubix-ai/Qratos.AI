@@ -57,7 +57,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
       <div className={`
         fixed inset-y-0 left-0 z-50 w-80 bg-[#050505] border-r border-white/5 flex flex-col p-6
         transform transition-transform duration-700 ease-[0.16,1,0.3,1] lg:relative lg:translate-x-0
-        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} shadow-2xl
+        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} shadow-2xl will-change-transform
       `}>
         {/* Mobile Close Button */}
         <button 
@@ -73,8 +73,11 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
             <BrainCircuit size={22} className="text-black" />
           </div>
           <div className="flex flex-col">
-            <span className="font-extrabold text-xl tracking-tighter text-white">QRATOS.AI</span>
-            <span className="text-[10px] font-mono text-[#FFB52E] tracking-[0.3em] font-bold">PERSUASION OS</span>
+            <div className="tracking-tighter text-white text-xl">
+              <span className="font-extrabold">QRATOS</span>
+              <span className="font-light">.AI</span>
+            </div>
+            <span className="text-[10px] font-sans text-[#FFB52E] tracking-[0.3em] font-bold">PERSUASION OS</span>
           </div>
         </div>
 
@@ -106,7 +109,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
         <div className="flex-1 space-y-8 overflow-y-auto custom-scrollbar pr-2 mb-8">
           {/* Main Controls */}
           <div>
-            <h3 className="text-[9px] font-mono text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Core Systems</h3>
+            <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Core Systems</h3>
             <div className="space-y-1">
               {menuItems.map((item) => (
                 <button
@@ -132,7 +135,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
           {folders.map(folder => (
             <div key={folder.id}>
               <div className="flex items-center justify-between px-3 mb-3 group cursor-pointer">
-                <h3 className="text-[9px] font-mono text-gray-500 uppercase tracking-[0.3em] font-black group-hover:text-[#FFB52E] transition-colors">{folder.label}</h3>
+                <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black group-hover:text-[#FFB52E] transition-colors">{folder.label}</h3>
                 <Sparkles size={10} className="text-gray-700 group-hover:text-[#FFB52E]/50" />
               </div>
               <div className="space-y-1">
@@ -151,7 +154,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
 
           {/* Model Categories */}
           <div>
-            <h3 className="text-[9px] font-mono text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Specialized Agents</h3>
+            <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Specialized Agents</h3>
             <div className="space-y-1">
               {filteredCategories.map((item) => (
                 <button
@@ -178,7 +181,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
         <div className="pt-6 border-t border-white/5">
           {/* Usage Meter */}
           <div className="mb-6 px-2">
-            <div className="flex items-center justify-between text-[10px] font-mono mb-2">
+            <div className="flex items-center justify-between text-[10px] font-sans mb-2">
               <span className="text-gray-500 uppercase tracking-widest font-black">Daily Intelligence Usage</span>
               <span className="text-[#FFB52E] font-bold">{userData?.remainingCredits ?? 20} / 20</span>
             </div>
@@ -201,7 +204,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
             </div>
             <div className="flex-1 min-w-0">
                <p className="text-xs font-extrabold text-white truncate">{userData?.displayName || "Agent User"}</p>
-               <p className="text-[10px] font-mono text-[#FFB52E] uppercase font-bold tracking-tight">Level: Elite Operator</p>
+               <p className="text-[10px] font-sans text-[#FFB52E] uppercase font-bold tracking-tight">Level: Elite Operator</p>
             </div>
             <button 
               onClick={onLogout}
@@ -214,7 +217,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
           {userData?.isAdmin && (
             <button 
               onClick={onShowAdmin}
-              className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 rounded-xl bg-[#FFB52E]/5 border border-[#FFB52E]/20 text-[10px] font-mono font-black text-[#FFB52E] uppercase tracking-widest hover:bg-[#FFB52E]/10 transition-colors"
+              className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 rounded-xl bg-[#FFB52E]/5 border border-[#FFB52E]/20 text-[10px] font-sans font-black text-[#FFB52E] uppercase tracking-widest hover:bg-[#FFB52E]/10 transition-colors"
             >
               <History size={14} />
               Command Center
