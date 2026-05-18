@@ -1,27 +1,52 @@
 import { useState } from "react";
-import { BrainCircuit, MessageSquare, Plus, Settings, User as UserIcon, LogOut, LayoutDashboard, History, Sparkles, Target, Mic, Mail, FileText, Share2, Search, X } from "lucide-react";
+import { BrainCircuit, MessageSquare, Plus, Settings, User as UserIcon, LogOut, LayoutDashboard, History, Sparkles, Target, Mic, Mail, FileText, Globe, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface SidebarProps {
+  user: any;
   userData: any;
   activeTab: string;
+  activeSessionId?: string;
   onTabChange: (tab: string) => void;
+  onSessionSelect: (sessionId: string) => void;
   onLogout: () => void;
   onShowAdmin: () => void;
-  onExitToLanding: () => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmin, onExitToLanding, isOpen, onClose }: SidebarProps) {
+export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChange, onSessionSelect, onLogout, onShowAdmin, isOpen, onClose }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [folders, setFolders] = useState([
-    { id: "campaigns", label: "Ad Campaigns", isOpen: true, items: [
-      { id: "alpha", label: "Project Alpha Launch", type: "ad" },
-      { id: "beta", label: "Beta Testing Funnel", type: "funnel" },
-    ]},
-    { id: "content", label: "Content Vault", isOpen: false, items: [] },
-  ]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Fetch Session History (Last 20)
+  useEffect(() => {
+    if (!user) return;
+    setLoadingHistory(true);
+    const sessionsRef = collection(db, "chats", user.uid, "sessions");
+    const q = query(sessionsRef, orderBy("lastUpdated", "desc"), limit(20));
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const items = snap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setHistory(items);
+      setLoadingHistory(false);
+    }, (err) => {
+      console.error("Sidebar history sync error:", err);
+      setLoadingHistory(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const filteredHistory = history.filter(item => {
+    if (!searchQuery) return true;
+    const firstMsg = item.messages?.[0]?.content || "";
+    return firstMsg.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const menuItems = [
     { id: "chat", icon: MessageSquare, label: "Neural Engine" },
@@ -69,7 +94,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
         </button>
 
         {/* Logo */}
-        <div className="flex items-center gap-4 mb-10 group cursor-pointer" onClick={() => onTabChange("chat")}>
+        <div className="flex items-center gap-4 mb-8 mt-2 group cursor-pointer" onClick={() => onTabChange("chat")}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E]/50 flex items-center justify-center shadow-[0_0_20px_-5px_rgba(255,181,46,0.5)] group-hover:scale-110 transition-transform">
             <BrainCircuit size={22} className="text-black" />
           </div>
@@ -108,6 +133,42 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
 
         {/* Nav Sections Scrollable Area */}
         <div className="flex-1 space-y-8 overflow-y-auto custom-scrollbar pr-2 mb-8">
+          {/* Persuasion Archive (Past Texts) */}
+          <div>
+            <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Neural Archive</h3>
+            <div className="space-y-1">
+              {loadingHistory && (
+                <div className="px-4 py-2 text-[10px] text-gray-600 italic">Syncing history...</div>
+              )}
+              {!loadingHistory && filteredHistory.length === 0 && (
+                <div className="px-4 py-2 text-[10px] text-gray-600 italic">No archive data found.</div>
+              )}
+              {filteredHistory.map((session) => (
+                <button
+                  key={session.id}
+                  onClick={() => {
+                    onSessionSelect(session.id);
+                    onTabChange("chat");
+                    onClose?.();
+                  }}
+                  className={`group flex items-center gap-3 w-full p-2.5 px-4 rounded-xl text-[11px] transition-all relative overflow-hidden ${
+                    activeSessionId === session.id 
+                    ? "bg-[#FFB52E]/10 text-[#FFB52E]" 
+                    : "text-gray-500 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <MessageSquare size={14} className={activeSessionId === session.id ? "text-[#FFB52E]" : "text-gray-600 group-hover:text-gray-400"} />
+                  <span className="truncate flex-1 text-left">
+                    {session.messages?.[0]?.content || "Archive Entry"}
+                  </span>
+                  {activeSessionId === session.id && (
+                    <motion.div layoutId="activeInd" className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#FFB52E]" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Main Controls */}
           <div>
             <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Core Systems</h3>
@@ -177,16 +238,7 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
             </div>
           </div>
 
-          {/* Navigation to Landing */}
-          <div className="pt-4">
-            <button 
-              onClick={onExitToLanding}
-              className="flex items-center gap-3 w-full p-3 px-4 rounded-xl text-[11px] font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-            >
-              <Share2 size={16} className="text-gray-600" />
-              Main Landing Page
-            </button>
-          </div>
+          {/* Navigation to Landing - REMOVED */}
         </div>
 
         {/* Enhanced Footer Profile Section */}
@@ -194,13 +246,13 @@ export function Sidebar({ userData, activeTab, onTabChange, onLogout, onShowAdmi
           {/* Usage Meter */}
           <div className="mb-6 px-2">
             <div className="flex items-center justify-between text-[10px] font-sans mb-2">
-              <span className="text-gray-500 uppercase tracking-widest font-black">Daily Intelligence Usage</span>
-              <span className="text-[#FFB52E] font-bold">{userData?.remainingCredits ?? 20} / 20</span>
+              <span className="text-gray-500 uppercase tracking-widest font-black">Intelligence Reset (48h)</span>
+              <span className="text-[#FFB52E] font-bold">{userData?.remainingCredits ?? 400} / 400</span>
             </div>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
-                animate={{ width: `${((userData?.remainingCredits ?? 20) / 20) * 100}%` }}
+                animate={{ width: `${((userData?.remainingCredits ?? 0) / 400) * 100}%` }}
                 className="h-full bg-gradient-to-r from-[#FFB52E] to-[#E2A72E] rounded-full shadow-[0_0_10px_rgba(255,181,46,0.3)]"
               />
             </div>

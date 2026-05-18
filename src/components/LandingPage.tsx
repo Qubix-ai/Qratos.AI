@@ -1,32 +1,224 @@
-import { motion, useSpring, useTransform, animate } from "motion/react";
-import { BrainCircuit, Check, ArrowRight, Target, Sparkles, MessageSquare, ShieldCheck, Mail, FileText, Globe, Wand2, Zap, BarChart3, Activity, Layers, Network, Instagram, Facebook, Twitter } from "lucide-react";
+import { motion, useSpring, useTransform, animate, AnimatePresence } from "motion/react";
+import { BrainCircuit, Check, ArrowRight, Target, Sparkles, MessageSquare, ShieldCheck, Mail, FileText, Globe, Wand2, Zap, BarChart3, Activity, Layers, Network, Instagram, Facebook, Twitter, Lock, X, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
+import { signInWithEmail, signUpWithEmail, resetPassword } from "../lib/firebase";
 
-interface LandingPageProps {
-  onLogin: () => void;
-}
+function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
-function Counter({ value, suffix = "" }: { value: string, suffix?: string }) {
-  // Extract number from string if possible (e.g. "500" from "$500M+")
-  const numericStr = value.replace(/[^0-9.]/g, "");
-  const numericValue = parseFloat(numericStr) || 0;
-  const prefix = value.startsWith("$") ? "$" : "";
-  const endSuffix = value.replace(/[0-9.$]/g, "") + suffix;
-
-  const count = useSpring(0, { stiffness: 50, damping: 20 });
-  const rounded = useTransform(count, (latest) => {
-    return prefix + (latest.toFixed(numericValue % 1 === 0 ? 0 : 1)) + endSuffix;
-  });
-
+  // Clear state on open/close
   useEffect(() => {
-    const controls = animate(count, numericValue, { duration: 2, delay: 0.5 });
-    return controls.stop;
-  }, [numericValue]);
+    if (isOpen) {
+      setError(null);
+      setResetSent(false);
+      setShowPassword(false);
+    }
+  }, [isOpen]);
 
-  return <motion.span>{rounded}</motion.span>;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    try {
+      if (showForgot) {
+        await resetPassword(trimmedEmail);
+        setResetSent(true);
+      } else if (isLogin) {
+        await signInWithEmail(trimmedEmail, trimmedPassword);
+        onClose();
+      } else {
+        await signUpWithEmail(trimmedEmail, trimmedPassword);
+        onClose();
+      }
+    } catch (err: any) {
+      console.error("Auth Error:", err);
+      // Map common Firebase errors to user-friendly messages
+      let msg = err.message;
+      if (err.code === "auth/operation-not-allowed") {
+        msg = "Email/Password login is not enabled in Firebase. Please enable it in the console.";
+      } else if (err.code === "auth/user-not-found") {
+        msg = "No account found with this email.";
+      } else if (err.code === "auth/wrong-password") {
+        msg = "Incorrect password.";
+      } else if (err.code === "auth/email-already-in-use") {
+        msg = "This email is already registered.";
+      }
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={error ? { 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              x: [0, -10, 10, -10, 10, 0] 
+            } : { 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              x: 0
+            }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ 
+              duration: error ? 0.4 : 0.5, 
+              ease: error ? "easeInOut" : [0.16, 1, 0.3, 1] 
+            }}
+            className="relative w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-[32px] p-8 md:p-10 overflow-hidden shadow-2xl"
+          >
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/30 to-transparent" />
+            <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
+              <X size={20} />
+            </button>
+
+            <div className="flex flex-col items-center mb-8">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E]/50 flex items-center justify-center shadow-[0_0_20px_-5px_#FFB52E] mb-4">
+                <BrainCircuit size={24} className="text-black" />
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight text-white italic">
+                {showForgot ? "Reset Engine Access" : isLogin ? "Access Persuasion OS" : "Initialize Creator Link"}
+              </h2>
+              <p className="text-xs text-gray-500 mt-2 font-medium">
+                {showForgot ? "Enter your email to receive reset instructions" : isLogin ? "Welcome back to elite levels of conversion" : "Join the frontier of strategic copywriting"}
+              </p>
+            </div>
+
+            {resetSent ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Check size={20} className="text-green-500" />
+                </div>
+                <p className="text-gray-300 mb-6">Password reset link sent! Check your inbox.</p>
+                <button 
+                  onClick={() => {
+                    setShowForgot(false);
+                    setResetSent(false);
+                  }}
+                  className="text-[#FFB52E] text-xs font-black uppercase tracking-widest hover:underline"
+                >
+                  Back to Login
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Professional Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
+                    <input 
+                      required
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="name@company.com"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-sm text-white placeholder:text-gray-700 focus:outline-none focus:border-[#FFB52E]/30 transition-all font-medium"
+                    />
+                  </div>
+                </div>
+
+                {!showForgot && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Secure Keypass</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
+                      <input 
+                        required
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-sm text-white placeholder:text-gray-700 focus:outline-none focus:border-[#FFB52E]/30 transition-all font-medium"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-[#FFB52E] transition-all p-2 -mr-2"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                    <p className="text-red-400 text-[10px] leading-relaxed text-center font-bold">{error}</p>
+                  </div>
+                )}
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full group relative flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-br from-white to-gray-300 text-black font-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50"
+                >
+                  <span className="text-sm tracking-tight uppercase">
+                    {loading ? "Authenticating..." : showForgot ? "Send Reset Link" : isLogin ? "Access System" : "Create Link"}
+                  </span>
+                  {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
+                </button>
+
+                <div className="flex flex-col items-center gap-3 pt-4 border-t border-white/5">
+                  {!showForgot && (
+                    <button 
+                      type="button"
+                      onClick={() => setShowForgot(true)}
+                      className="text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors"
+                    >
+                      Forgotten credentials?
+                    </button>
+                  )}
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (showForgot) setShowForgot(false);
+                      else setIsLogin(!isLogin);
+                    }}
+                    className="text-[#FFB52E] text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-125 transition-all"
+                  >
+                    {showForgot ? "Return to authentication" : isLogin ? "Request fresh access link" : "Already have access? Connect"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
 }
 
-export function LandingPage({ onLogin }: LandingPageProps) {
+export function LandingPage() {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  const handleLoginClick = () => {
+    setAuthModalOpen(true);
+  };
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
@@ -175,15 +367,20 @@ export function LandingPage({ onLogin }: LandingPageProps) {
             <div className="absolute inset-0 rounded-[32px] md:rounded-[40px] shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] pointer-events-none" />
             
             <button
-              onClick={onLogin}
+              onClick={handleLoginClick}
               className="w-full sm:w-auto group relative flex items-center justify-center gap-3 px-10 py-6 bg-gradient-to-br from-white/10 to-white/5 text-white border border-white/10 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all duration-500 shadow-[0_0_30px_-5px_rgba(255,181,46,0.1)] overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              <span className="text-base tracking-tight uppercase">Start Writing Free</span>
+              <span className="text-base tracking-tight uppercase">
+                Start Writing Free
+              </span>
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
 
-            <button className="w-full sm:w-auto px-10 py-6 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-white font-bold tracking-tight uppercase text-xs glass-card">
+            <button 
+              onClick={handleLoginClick}
+              className="w-full sm:w-auto px-10 py-6 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-white font-bold tracking-tight uppercase text-xs glass-card"
+            >
               Explore Intelligence
             </button>
           </motion.div>
@@ -395,13 +592,11 @@ export function LandingPage({ onLogin }: LandingPageProps) {
                     <motion.div
                       key={`part-${i}`}
                       animate={{
-                        y: [-20, 20, -20],
-                        x: [-10, 10, -10],
                         opacity: [0.3, 0.7, 0.3],
                         scale: [1, 1.2, 1]
                       }}
                       transition={{
-                        duration: 5 + i,
+                        duration: 8 + i,
                         repeat: Infinity,
                         delay: i * 0.5
                       }}
@@ -521,7 +716,7 @@ export function LandingPage({ onLogin }: LandingPageProps) {
                            opacity: [0.3, 1, 0.3],
                          }}
                          transition={{ 
-                           duration: 4 + (i * 0.25), 
+                           duration: 10 + (i * 0.5), 
                            repeat: Infinity,
                            ease: "easeInOut"
                          }}
@@ -701,7 +896,9 @@ export function LandingPage({ onLogin }: LandingPageProps) {
               ))}
             </div>
 
-            <MVPPriceCard onLogin={onLogin} />
+            <MVPPriceCard 
+              handleLoginClick={handleLoginClick} 
+            />
           </div>
 
           <div className="text-center mt-12 space-y-4">
@@ -881,11 +1078,16 @@ export function LandingPage({ onLogin }: LandingPageProps) {
           </div>
         </div>
       </footer>
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 }
 
-function MVPPriceCard({ onLogin }: { onLogin: () => void }) {
+function MVPPriceCard({ 
+  handleLoginClick 
+}: { 
+  handleLoginClick: () => void 
+}) {
   const x = useSpring(0, { stiffness: 100, damping: 30 });
   const y = useSpring(0, { stiffness: 100, damping: 30 });
 
@@ -965,7 +1167,7 @@ function MVPPriceCard({ onLogin }: { onLogin: () => void }) {
              </div>
 
              <button 
-               onClick={onLogin}
+               onClick={handleLoginClick}
                className="group relative w-full py-6 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-widest hover:bg-[#FFB52E] transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden"
              >
                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />

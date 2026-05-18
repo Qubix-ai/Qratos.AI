@@ -1,83 +1,132 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Wand2, Copy, Check, RotateCcw, ArrowRight, BrainCircuit, Coins, Mail, Target, FileText, Zap, Paperclip, X, File } from "lucide-react";
+import { 
+  Send, 
+  Sparkles, 
+  BrainCircuit, 
+  Coins, 
+  Mail, 
+  Target, 
+  FileText, 
+  Zap, 
+  Paperclip, 
+  X, 
+  Eye,
+  ArrowUp,
+  MessageSquare,
+  ShieldCheck,
+  LayoutDashboard,
+  Menu
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
-import { auth } from "../lib/firebase";
-
-interface Attachment {
-  name: string;
-  mimeType: string;
-  base64Data: string;
-}
+import { auth, db } from "../lib/firebase";
+import { doc, onSnapshot, setDoc, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
-  attachments?: Attachment[];
+  timestamp?: string;
 }
 
 interface ChatInterfaceProps {
   user: any;
   userData: any;
   activeTab: string;
-  onExitToLanding: () => void;
+  activeSessionId?: string;
+  onSessionChange?: (id: string) => void;
+  onMenuToggle?: () => void;
 }
 
-export function ChatInterface({ user, userData, activeTab, onExitToLanding }: ChatInterfaceProps) {
+export function ChatInterface({ user, userData, activeTab, activeSessionId, onSessionChange, onMenuToggle }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [remainingCredits, setRemainingCredits] = useState(userData?.remainingCredits ?? 400);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState("100dvh");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [remainingCredits, setRemainingCredits] = useState(userData?.remainingCredits ?? 20);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Keyboard Handling for Section 5
+  useEffect(() => {
+    if (!window.visualViewport) return;
+
+    const handleResize = () => {
+      if (window.visualViewport) {
+        setViewportHeight(`${window.visualViewport.height}px`);
+      }
+    };
+
+    window.visualViewport.addEventListener("resize", handleResize);
+    window.visualViewport.addEventListener("scroll", handleResize);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("scroll", handleResize);
+    };
+  }, []);
+
+  // Tools for Section 5
+  const toolButtons = [
+    { id: 'email', icon: Mail, label: 'Email', prompt: 'Engineer a high-converting 3-part email sequence for ' },
+    { id: 'ads', icon: Target, label: 'Ads', prompt: 'Create 5 scroll-stopping Facebook ad hooks for ' },
+    { id: 'landing', icon: FileText, label: 'Landing', prompt: 'Architect a long-form sales page headline and lead for ' },
+    { id: 'hook', icon: Zap, label: 'Hook', prompt: 'Generate 10 viral-style hooks for ' },
+  ];
+
+  // Section 7: Session Hydration
+  useEffect(() => {
+    if (!user) return;
+
+    if (!activeSessionId) {
+      setMessages([]);
+      return;
+    }
+
+    setLoadingHistory(true);
+    const sessionRef = doc(db, "chats", user.uid, "sessions", activeSessionId);
+    
+    const unsubscribe = onSnapshot(sessionRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.messages) {
+          setMessages(data.messages);
+        }
+      }
+      setLoadingHistory(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, activeSessionId]);
+
+  // Sync credits from userData prop
+  useEffect(() => {
+    if (userData?.remainingCredits !== undefined) {
+      setRemainingCredits(userData.remainingCredits);
+    }
+  }, [userData]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        const base64Data = base64.split(",")[1];
-        setAttachments(prev => [...prev, {
-          name: file.name,
-          mimeType: file.type,
-          base64Data
-        }]);
-      };
-      reader.readAsDataURL(file);
-    });
-    
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSend = async () => {
-    if ((!input.trim() && attachments.length === 0) || isTyping || remainingCredits <= 0) return;
+  const handleSend = async (customInput?: string) => {
+    const textToSend = customInput || input;
+    if (!textToSend.trim() || isTyping || remainingCredits <= 0) return;
 
     const userMessage: Message = { 
       role: "user", 
-      content: input,
-      attachments: attachments.length > 0 ? attachments : undefined
+      content: textToSend,
+      timestamp: new Date().toISOString()
     };
     
     setMessages(prev => [...prev, userMessage]);
     setInput("");
-    setAttachments([]);
     setIsTyping(true);
 
     try {
@@ -94,10 +143,7 @@ export function ChatInterface({ user, userData, activeTab, onExitToLanding }: Ch
         })
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Generation failed");
-      }
+      if (!response.ok) throw new Error("Connection failed");
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -129,306 +175,213 @@ export function ChatInterface({ user, userData, activeTab, onExitToLanding }: Ch
           }
         }
       }
-
-      setRemainingCredits(prev => prev - 1);
+      setRemainingCredits(prev => Math.max(0, prev - 1));
     } catch (error: any) {
-      console.error(error);
-      setMessages(prev => [...prev, { role: "assistant", content: `**Error:** ${error.message}` }]);
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "Neural link lost. Your credits were preserved. Please check your data connection and re-brief me." 
+      }]);
     } finally {
       setIsTyping(false);
     }
   };
 
-  const copyToClipboard = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
-
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0A0A0B] relative">
-      {/* Top Bar Info */}
-      <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-4 md:px-8 z-10 bg-gradient-to-b from-[#0A0A0B] to-transparent pointer-events-none sticky top-0 md:absolute">
-        <div className="flex items-center gap-2 md:gap-4 pointer-events-auto">
-           <button 
-             onClick={onExitToLanding}
-             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-sans text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-           >
-             <Share2 size={12} className="text-[#FFB52E]" />
-             <span className="hidden sm:inline">EXIT TO LANDING</span>
-             <span className="sm:hidden">EXIT</span>
-           </button>
-           <div className="h-4 w-[1px] bg-white/10 mx-1 hidden sm:block" />
-           <div className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-[11px] font-sans text-gray-400">
-             <Coins size={12} className="text-yellow-500" />
-             <span className="hidden sm:inline">{remainingCredits} CREDITS LEFT</span>
-             <span className="sm:hidden">{remainingCredits}CR</span>
+    <div 
+      className="flex-1 flex flex-col bg-[#050505] relative overflow-hidden font-sans"
+      style={{ height: viewportHeight }}
+    >
+      {/* MOBILE HEADER - Section 5 & 6 */}
+      <header className="flex-shrink-0 min-h-[80px] pt-10 flex items-end justify-between px-6 pb-4 z-50 bg-[#050505]/80 border-b border-white/5 backdrop-blur-3xl sticky top-0">
+         <div className="flex items-center gap-3">
+            <button 
+              onClick={onMenuToggle}
+              className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-[#FFB52E] transition-colors"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E] flex items-center justify-center shadow-[0_0_20px_-5px_rgba(255,181,46,0.6)]">
+               <BrainCircuit size={22} className="text-black" />
+            </div>
+            <div className="flex flex-col">
+              <div className="tracking-tighter text-base leading-none text-white italic">
+                <span className="font-black">QRATOS</span>
+                <span className="font-extralight opacity-60">.AI</span>
+              </div>
+              <span className="text-[9px] font-sans text-[#FFB52E]/80 tracking-[0.3em] uppercase font-bold">CONVERSION ENGINE</span>
+            </div>
+         </div>
+
+         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFB52E]/5 border border-[#FFB52E]/30 shadow-[0_0_20px_rgba(255,181,46,0.05)] hover:shadow-[0_0_25px_rgba(255,181,46,0.15)] transition-all">
+           <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E] flex items-center justify-center shadow-[0_0_8px_rgba(255,181,46,0.6)] border border-[#FFB52E]/50">
+             <Coins size={11} className="text-black" />
            </div>
+           <span className="text-[11px] font-black text-[#FFB52E] uppercase tracking-wider">{remainingCredits} CREDITS</span>
+         </div>
+      </header>
+
+      {/* CHAT DISPLAY - Section 5 */}
+      <div className="flex-1 overflow-y-auto pt-6 pb-48 px-4 custom-scrollbar scroll-smooth">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {messages.length === 0 && !loadingHistory && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center pt-12 pb-8 text-center"
+            >
+              {/* BENTO GRID WELCOME - Section 5 */}
+              <div className="grid grid-cols-2 gap-3 w-full mb-12">
+                {[
+                  { icon: Mail, title: "Emails", desc: "Sequence Architect", prompt: "Build an email sequence for..." },
+                  { icon: Target, title: "Ads", desc: "Facebook/IG Hooks", prompt: "Write ad hooks for..." },
+                  { icon: FileText, title: "Pages", desc: "Sales Landing Pages", prompt: "Draft a sales page for..." },
+                  { icon: Zap, title: "Psych", desc: "Behavioral Triggers", prompt: "Analyze triggers for..." }
+                ].map((item, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => {
+                      if (remainingCredits > 0) {
+                        setInput(item.prompt);
+                        inputRef.current?.focus();
+                      }
+                    }}
+                    className="flex flex-col items-start p-4 bg-[#0A0A0A] border border-white/10 rounded-2xl text-left hover:border-[#FFB52E]/40 transition-all active:scale-95 group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#FFB52E]/10 flex items-center justify-center mb-3 group-hover:bg-[#FFB52E] transition-colors">
+                      <item.icon size={16} className="text-[#FFB52E] group-hover:text-black" />
+                    </div>
+                    <span className="text-xs font-bold text-white mb-1">{item.title}</span>
+                    <span className="text-[10px] text-gray-500">{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+
+              <h2 className="text-3xl font-black italic tracking-tighter text-white mb-3">
+                WELCOME TO THE FRONTIER
+              </h2>
+              <p className="text-gray-500 text-sm max-w-xs leading-relaxed font-medium">
+                Optimized for elite persuasion, high-stakes funnels, and psychology-driven growth.
+              </p>
+            </motion.div>
+          )}
+
+          {loadingHistory && (
+            <div className="flex flex-col items-center justify-center pt-20">
+              <div className="w-10 h-10 border-2 border-[#FFB52E]/20 border-t-[#FFB52E] rounded-full animate-spin" />
+              <span className="text-[10px] text-[#FFB52E] font-black tracking-widest uppercase mt-4">Restoring Link...</span>
+            </div>
+          )}
+
+          <AnimatePresence mode="popLayout">
+            {messages.map((m, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`max-w-[88%] rounded-2xl px-5 py-4 ${
+                  m.role === "user" 
+                  ? "bg-transparent border border-[#FFB52E]/30 text-white shadow-[0_4px_20px_rgba(255,181,46,0.05)]" 
+                  : "bg-[#111111] border border-white/5 text-gray-200 shadow-[0_0_30px_rgba(255,181,46,0.05)]"
+                }`}>
+                  <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-strong:text-[#FFB52E] prose-p:text-gray-300">
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          
+          {isTyping && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start"
+            >
+              <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl px-6 py-4 flex items-center gap-4">
+                <div className="flex gap-1.5">
+                  <motion.div animate={{ opacity:[0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2 }} className="w-1.5 h-1.5 rounded-full bg-[#FFB52E]" />
+                  <motion.div animate={{ opacity:[0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-[#FFB52E]" />
+                  <motion.div animate={{ opacity:[0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-[#FFB52E]" />
+                </div>
+                <span className="text-[10px] text-[#FFB52E] font-black tracking-widest uppercase">SYNERGIZING...</span>
+              </div>
+            </motion.div>
+          )}
+          <div ref={messagesEndRef} className="h-4" />
         </div>
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="px-2 md:px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] md:text-[11px] font-sans text-purple-400">
-            <span className="hidden sm:inline">GEMINI PRE-3.1 PRO ENGINE</span>
-            <span className="sm:hidden">ENGINE v3.1</span>
+      </div>
+
+      {/* INPUT BAR - Section 5 & 6 */}
+      <div className="absolute bottom-0 left-0 right-0 z-50">
+        <div className="max-w-2xl mx-auto px-4 pb-12">
+          <div className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,1)] overflow-hidden group transition-all duration-500 focus-within:border-[#FFB52E]/60 focus-within:shadow-[0_0_100px_rgba(255,181,46,0.3)]">
+            {/* Animated Golden Rim Glow */}
+            <div className="absolute inset-x-0 -top-px h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/50 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
+            
+            <div className="flex flex-col">
+              {/* Tool Buttons Bar */}
+              <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40">
+                {toolButtons.map(tool => (
+                  <button
+                    key={tool.id}
+                    disabled={remainingCredits <= 0}
+                    onClick={() => {
+                      setInput(tool.prompt);
+                      inputRef.current?.focus();
+                    }}
+                    className={`flex flex-1 items-center justify-center gap-1.5 py-2 transition-all rounded-xl ${
+                      remainingCredits <= 0 ? "opacity-30 cursor-not-allowed" : "text-[#FFB52E]/60 hover:text-[#FFB52E] hover:bg-white/5"
+                    }`}
+                  >
+                    <tool.icon size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-tight">{tool.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 p-2 px-4">
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  value={input}
+                  disabled={isTyping || remainingCredits <= 0}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder={remainingCredits <= 0 ? "Upgrade to continue..." : "Input persuasion brief..."}
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white placeholder:text-gray-600 py-3 outline-none resize-none max-h-32"
+                  style={{ minHeight: '44px' }}
+                />
+
+                <button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isTyping || remainingCredits <= 0}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                    input.trim() && !isTyping && remainingCredits > 0
+                    ? "bg-[#FFB52E] text-black shadow-[0_0_20px_rgba(255,181,46,0.5)] scale-100 active:scale-95"
+                    : "bg-white/5 text-gray-700"
+                  }`}
+                >
+                  <ArrowUp size={20} strokeWidth={3} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar pt-4 md:pt-20 pb-40 px-4">
-        <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">
-          {messages.length === 0 && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-center justify-center pt-20 md:pt-32 text-center"
-            >
-              <div className="relative group mb-10">
-                <div className="absolute inset-0 bg-[#FFB52E]/20 rounded-[40px] blur-3xl animate-pulse" />
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-[40px] bg-black border border-[#FFB52E]/30 flex items-center justify-center shadow-2xl relative z-10 transition-transform duration-700 group-hover:scale-110">
-                  <BrainCircuit size={48} className="text-[#FFB52E]" />
-                </div>
-              </div>
-              
-              <h2 className="text-4xl md:text-7xl font-bold mb-6 tracking-tighter leading-[0.9] bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent px-4">
-                What shall we engineer today?
-              </h2>
-              <p className="text-gray-500 max-w-xl text-lg md:text-xl px-6 leading-relaxed mb-16 font-medium">
-                Optimized for elite persuasion, high-stakes funnels, and psychology-driven revenue growth.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl px-4">
-                 {[
-                   { label: "Predictive Email Sequence", icon: Mail },
-                   { label: "High-Ticket Funnel Architect", icon: Target },
-                   { label: "Direct Response Sales Page", icon: FileText },
-                   { label: "Behavioral Hook Generator", icon: Zap },
-                 ].map((opt, i) => (
-                   <motion.button
-                     key={opt.label}
-                     initial={{ opacity: 0, y: 10 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     transition={{ delay: 0.2 + i * 0.1 }}
-                     onClick={() => {
-                        setInput(opt.label);
-                        handleSend();
-                     }}
-                     className="flex items-center gap-4 p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:bg-[#FFB52E]/5 hover:border-[#FFB52E]/30 transition-all group text-left"
-                   >
-                     <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#FFB52E] transition-all">
-                        <opt.icon size={18} className="text-[#FFB52E] group-hover:text-black transition-colors" />
-                     </div>
-                     <span className="text-sm font-bold text-gray-400 group-hover:text-white transition-colors">{opt.label}</span>
-                   </motion.button>
-                 ))}
-              </div>
-            </motion.div>
-          )}
-
-          {messages.map((m, i) => (
-            <motion.div 
-              key={i}
-              initial={{ opacity: 0, y: 30, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} group relative`}
-            >
-              <div className={`max-w-[95%] md:max-w-[85%] rounded-[28px] md:rounded-[32px] px-5 md:px-8 py-4 md:py-7 ${
-                m.role === "user" 
-                ? "bg-[#111111] border border-white/10 text-white shadow-xl" 
-                : "bg-white/[0.03] border border-[#FFB52E]/10 text-gray-100 shadow-2xl glass-card relative overflow-hidden"
-              } will-change-transform`}>
-                {m.role === "assistant" && (
-                   <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-[10px] font-sans text-[#FFB52E] font-black tracking-widest uppercase">
-                        <BrainCircuit size={14} />
-                        QRATOS PERSUASION ENGINE
-                      </div>
-                      <div className="text-[9px] font-sans text-gray-600">v1.4.2 PREMIUM</div>
-                   </div>
-                )}
-                
-                <div className="prose prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 max-w-none text-sm md:text-base font-medium">
-                   <div className="markdown-body">
-                      <ReactMarkdown>{m.content}</ReactMarkdown>
-                   </div>
-                </div>
-
-                {m.attachments && m.attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {m.attachments.map((file, idx) => (
-                      <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-gray-400 font-sans">
-                        <FileText size={12} className="text-[#FFB52E]" />
-                        <span className="truncate max-w-[120px]">{file.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {m.role === "assistant" && m.content && (
-                   <div className="flex items-center gap-4 mt-8 pt-6 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => copyToClipboard(m.content, i)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-white"
-                      >
-                         {copiedIndex === i ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
-                         {copiedIndex === i ? "Copied" : "Copy Output"}
-                      </button>
-                      <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-white">
-                         <Zap size={12} className="text-[#FFB52E]" />
-                         Refine Persuasion
-                      </button>
-                   </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-          
-          {isTyping && messages[messages.length-1]?.role === "user" && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex justify-start will-change-transform"
-            >
-              <div className="bg-gradient-to-br from-[#FFB52E]/5 to-transparent border border-[#FFB52E]/20 rounded-[28px] md:rounded-[32px] p-4 md:p-6 px-6 md:px-10 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden glass-card">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FFB52E]/5 to-transparent animate-[pulse_3s_infinite]" />
-                <div className="relative">
-                   <div className="absolute inset-0 bg-[#FFB52E] rounded-full blur-xl opacity-20 animate-pulse" />
-                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-black border border-[#FFB52E]/30 flex items-center justify-center relative z-10">
-                      <BrainCircuit size={20} className="text-[#FFB52E] animate-pulse" />
-                   </div>
-                </div>
-                <div className="flex flex-col gap-1 md:gap-2 relative z-10">
-                   <span className="text-[10px] md:text-[11px] font-sans text-[#FFB52E] tracking-[0.4em] font-black uppercase">Synthesizing...</span>
-                   <div className="flex gap-1.5 md:gap-2">
-                      {[0, 0.2, 0.4].map((delay) => (
-                        <motion.div 
-                          key={delay}
-                          animate={{ height: [4, 12, 4], opacity: [0.3, 1, 0.3] }}
-                          transition={{ repeat: Infinity, duration: 1.5, delay }}
-                          className="w-0.5 md:w-1 bg-[#FFB52E]/50 rounded-full" 
-                        />
-                      ))}
-                   </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Floating Input Area - Metallic & Premium */}
-      <div className="absolute bottom-6 md:bottom-12 left-0 right-0 px-4 md:px-8 bg-gradient-to-t from-[#050505] via-[#050505] to-transparent pt-12">
-        <div className="max-w-3xl mx-auto group">
-          <motion.div 
-            whileFocus={{ scale: 1.01 }}
-            className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl p-1 shadow-[0_0_50px_-20px_rgba(0,0,0,0.8)] focus-within:border-[#FFB52E]/30 focus-within:shadow-[0_0_60px_-15px_rgba(255,181,46,0.1)] transition-all duration-500 overflow-hidden"
-          >
-            {/* Attachment Preview */}
-            <AnimatePresence>
-              {attachments.length > 0 && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="flex flex-wrap gap-2 px-6 py-4 border-b border-white/5 overflow-hidden"
-                >
-                  {attachments.map((file, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-400 group/file"
-                    >
-                      <File size={14} className="text-[#FFB52E]" />
-                      <span className="max-w-[150px] truncate">{file.name}</span>
-                      <button 
-                        onClick={() => removeAttachment(i)}
-                        className="hover:text-red-400 transition-colors ml-1"
-                      >
-                        <X size={14} />
-                      </button>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="flex items-end gap-3 p-3">
-               <input 
-                type="file"
-                multiple
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-               />
-               <button 
-                 onClick={() => fileInputRef.current?.click()}
-                 className="p-3 text-gray-600 hover:text-[#FFB52E] transition-all hover:scale-110"
-               >
-                  <Paperclip size={22} />
-               </button>
-               <button className="p-3 text-gray-600 hover:text-[#FFB52E] transition-all hover:scale-110">
-                  <Wand2 size={22} />
-               </button>
-               <textarea
-                rows={1}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  e.target.style.height = "auto";
-                  e.target.style.height = e.target.scrollHeight + "px";
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    if (e.metaKey || e.ctrlKey || (!e.shiftKey)) {
-                      if (!e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
-                      }
-                    }
-                  }
-                }}
-                placeholder="Message Qratos AI..."
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white resize-none max-h-60 custom-scrollbar py-2"
-                disabled={isTyping}
-               />
-               <button 
-                onClick={handleSend}
-                disabled={!input.trim() || isTyping || remainingCredits <= 0}
-                className={`p-4 rounded-2xl transition-all shadow-xl hover:scale-105 active:scale-95 ${
-                  input.trim() && !isTyping && remainingCredits > 0
-                  ? "bg-white text-black hover:bg-[#FFB52E]"
-                  : "bg-white/5 text-gray-600 cursor-not-allowed"
-                }`}
-               >
-                 <ArrowRight size={22} strokeWidth={2.5} />
-               </button>
-            </div>
-            
-            <div className="flex items-center justify-between px-6 py-2.5 border-t border-white/5 bg-[#080808]/50 backdrop-blur-md rounded-b-[22px]">
-               <div className="flex gap-6">
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                     <Sparkles size={12} className="text-[#FFB52E]" />
-                     Elite Mode Alpha
-                  </div>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                     <Target size={12} className="text-[#FFB52E]" />
-                     Psychology Tuned
-                  </div>
-               </div>
-               <div className="hidden sm:block text-[9px] text-gray-700 font-sans font-bold tracking-widest uppercase">
-                  Press CMD+ENTER to Synthesize
-               </div>
-            </div>
-          </motion.div>
-          
-          <p className="text-center text-[10px] text-gray-600 mt-6 tracking-widest uppercase font-black">
-            Hyper-Specialized Copywriting OS • Engine v1.4.2
-          </p>
-        </div>
-      </div>
+      {/* Keyboard Visibility Viewport Fix */}
+      <style>{`
+        @media (max-height: 500px) {
+          .pb-48 { padding-bottom: 24px !important; }
+        }
+      `}</style>
     </div>
   );
 }

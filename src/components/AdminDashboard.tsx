@@ -19,10 +19,17 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         const res = await fetch("/api/admin/stats", {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Admin stats fetch failed (${res.status}): ${text.slice(0, 100)}`);
+        }
+        
         const data = await res.json();
         setStats(data);
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
+        // Fallback or error display logic could go here
       } finally {
         setLoading(false);
       }
@@ -47,54 +54,55 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 bg-[#0A0A0B] z-50 overflow-y-auto custom-scrollbar p-8"
+      className="absolute inset-0 bg-[#0A0A0B] z-50 overflow-y-auto custom-scrollbar p-4 md:p-8"
     >
       <div className="max-w-7xl mx-auto pb-20">
-        <header className="flex items-center justify-between mb-12">
+        <header className="flex items-center justify-between mb-8 md:mb-12 mt-4 md:mt-0">
           <div>
-            <div className="flex items-center gap-2 text-purple-400 text-xs font-sans mb-2">
+            <div className="flex items-center gap-2 text-purple-400 text-[10px] md:text-xs font-sans mb-2">
               <ShieldCheck size={14} />
               ADMINISTRATIVE ACCESS GRANTED
             </div>
-            <h1 className="text-4xl font-bold text-white tracking-tight">System Overview</h1>
+            <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight">System Overview</h1>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/5 text-gray-500 hover:text-white transition-all"
+            className="p-3 -mr-2 rounded-full hover:bg-white/5 text-gray-500 hover:text-white transition-all active:scale-90"
+            aria-label="Close Dashboard"
           >
-            <X size={24} />
+            <X size={28} className="md:size-6" />
           </button>
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-12">
           {[
             { label: "Total Users", value: stats?.totalUsers || 0, icon: Users, color: "text-blue-400", trend: "+12%" },
-            { label: "Active Conversations", value: stats?.totalConversations || 0, icon: MessageSquare, color: "text-purple-400", trend: "+18%" },
-            { label: "Prompts Processed", value: stats?.totalPrompts || 0, icon: Zap, color: "text-yellow-400", trend: "+24%" },
-            { label: "Retention Rate", value: "84.2%", icon: Heart, color: "text-pink-400", trend: "+2%" },
+            { label: "Conversations", value: stats?.totalConversations || 0, icon: MessageSquare, color: "text-purple-400", trend: "+18%" },
+            { label: "Prompts", value: stats?.totalPrompts || 0, icon: Zap, color: "text-yellow-400", trend: "+24%" },
+            { label: "Retention", value: "84%", icon: Heart, color: "text-pink-400", trend: "+2%" },
           ].map((stat, i) => (
             <motion.div 
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group"
+              className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-6 relative overflow-hidden group"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <stat.icon size={48} />
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity hidden sm:block">
+                <stat.icon size={40} />
               </div>
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
-                  <stat.icon size={18} />
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-1.5 rounded-lg bg-white/5 ${stat.color}`}>
+                  <stat.icon size={16} />
                 </div>
-                <div className="flex items-center gap-1 text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">
-                  <ArrowUpRight size={10} />
+                <div className="flex items-center gap-0.5 text-[8px] md:text-[10px] font-bold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+                  <ArrowUpRight size={8} className="md:size-[10px]" />
                   {stat.trend}
                 </div>
               </div>
-              <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">{stat.label}</p>
-              <h3 className="text-3xl font-bold text-white">{stat.value}</h3>
+              <p className="text-gray-400 text-[9px] md:text-xs font-medium uppercase tracking-wider mb-1 truncate">{stat.label}</p>
+              <h3 className="text-xl md:text-3xl font-bold text-white truncate">{stat.value}</h3>
             </motion.div>
           ))}
         </div>
@@ -102,8 +110,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         {/* Charts & Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                   <h3 className="text-lg font-bold text-white">Conversion & Growth</h3>
                   <p className="text-xs text-gray-500">Daily prompts vs User acquisition</p>
@@ -117,7 +125,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                   </div>
                 </div>
               </div>
-              <div className="h-80 w-full">
+              <div className="h-64 md:h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={dummyData}>
                     <defs>
