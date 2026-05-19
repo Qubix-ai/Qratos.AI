@@ -50,10 +50,14 @@ export default function App() {
       } else {
         // No user - sign in anonymously immediately
         signInAnonymously(auth).catch(err => {
-          console.error("Anonymous auth failed:", err);
+          console.warn("Anonymous auth restricted or disabled in Firebase. Continuing as guest.", err);
+          // We don't throw - user will just have null 'user' and app will still load
+        }).finally(() => {
+          if (isMounted) setLoading(false);
         });
+        return; // loading will be set in finally
       }
-      // Set loading false once auth state resolved (even if anonymous login is in progress)
+      // Set loading false once auth state resolved (already signed in)
       if (isMounted) setLoading(false);
     });
 
