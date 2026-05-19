@@ -4,9 +4,10 @@ import { auth } from "./lib/firebase";
 import { Sidebar } from "./components/Sidebar";
 import { ChatInterface } from "./components/ChatInterface";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { LandingPage } from "./components/LandingPage";
 import { SplashScreen } from "./components/SplashScreen";
 import { AnimatePresence, motion } from "motion/react";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Target, Zap, ShieldCheck, BrainCircuit, Sparkles } from "lucide-react";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -14,17 +15,17 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState("landing");
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    // Transition away from splash screen after 1.5s
+    // Transition away from splash screen after 2s
     const splashTimer = setTimeout(() => {
       if (isMounted) setShowSplash(false);
-    }, 1500);
+    }, 2000);
 
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (!isMounted) return;
@@ -46,14 +47,14 @@ export default function App() {
         } catch (e) {
           console.error("Error initializing user session:", e);
         }
-        setLoading(false);
       } else {
         // No user - sign in anonymously immediately
         signInAnonymously(auth).catch(err => {
           console.error("Anonymous auth failed:", err);
-          setLoading(false);
         });
       }
+      // Set loading false once auth state resolved (even if anonymous login is in progress)
+      if (isMounted) setLoading(false);
     });
 
     return () => {
@@ -63,8 +64,21 @@ export default function App() {
     };
   }, []);
 
-  if (loading || showSplash) {
+  // Return landing/chat structure always after initial loading
+  if (loading) {
     return <SplashScreen />;
+  }
+
+  // Full-screen Landing Page to match user vision
+  if (activeTab === "landing" && !showAdmin) {
+    return (
+      <div className="h-screen bg-[#050505] overflow-y-auto overflow-x-hidden selection:bg-[#FFB52E]/30">
+        <AnimatePresence>
+          {showSplash && <SplashScreen />}
+        </AnimatePresence>
+        <LandingPage onStart={() => setActiveTab("chat")} />
+      </div>
+    );
   }
 
   return (
@@ -80,9 +94,6 @@ export default function App() {
         activeSessionId={activeSessionId}
         onTabChange={(tab) => {
           setActiveTab(tab);
-          if (tab === "chat" && !activeSessionId) {
-             // Reset to newest? Or just let it be.
-          }
           setSidebarOpen(false);
           setShowAdmin(false);
         }} 
@@ -101,17 +112,25 @@ export default function App() {
       
       <main className="flex-1 relative flex flex-col min-w-0 h-full overflow-hidden z-20">
         <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
-            key={showAdmin ? "admin" : activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 h-full min-h-0"
-          >
-            {showAdmin ? (
+          {showAdmin ? (
+            <motion.div
+              key="admin"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex-1 h-full min-h-0"
+            >
               <AdminDashboard onClose={() => setShowAdmin(false)} />
-            ) : (
+            </motion.div>
+          ) : (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="flex-1 h-full min-h-0"
+            >
               <ChatInterface 
                 user={user} 
                 userData={userData} 
@@ -119,11 +138,13 @@ export default function App() {
                 activeSessionId={activeSessionId}
                 onSessionChange={(id) => setActiveSessionId(id)}
                 onMenuToggle={() => setSidebarOpen(true)}
+                onGoHome={() => setActiveTab("landing")}
               />
-            )}
-          </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
     </div>
   );
 }
+

@@ -212,11 +212,15 @@ function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }
   );
 }
 
-export function LandingPage() {
+export function LandingPage({ onStart }: { onStart?: () => void }) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const handleLoginClick = () => {
-    setAuthModalOpen(true);
+    if (onStart) {
+      onStart();
+    } else {
+      setAuthModalOpen(true);
+    }
   };
 
   useEffect(() => {
@@ -1119,7 +1123,7 @@ function MVPPriceCard({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className="relative w-full max-w-3xl p-8 md:p-16 rounded-[48px] bg-white/[0.02] border border-white/10 backdrop-blur-[100px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] overflow-hidden group cursor-crosshair"
+      className="relative w-full max-w-3xl p-6 md:p-12 rounded-[32px] md:rounded-[48px] bg-white/[0.02] border border-white/10 backdrop-blur-3xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] overflow-hidden group cursor-crosshair"
     >
        {/* Premium 3D Moving Light Streak */}
        <motion.div 
@@ -1128,23 +1132,23 @@ function MVPPriceCard({
          className="absolute top-0 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] to-transparent opacity-30"
        />
 
-       <div className="relative z-10 flex flex-col md:flex-row gap-12 items-center" style={{ transform: "translateZ(50px)" }}>
-          <div className="flex-1 space-y-8">
-             <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                   <h3 className="text-4xl md:text-6xl font-bold tracking-tight text-white italic">MVP FREE</h3>
-                   <div className="px-3 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black text-white/40 tracking-widest uppercase">Limited Tier</div>
+       <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-center" style={{ transform: "translateZ(50px)" }}>
+          <div className="flex-1 space-y-6 md:space-y-8">
+             <div className="space-y-3 md:space-y-4 text-center lg:text-left">
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+                   <h3 className="text-3xl md:text-5xl font-bold tracking-tight text-white italic">MVP FREE</h3>
+                   <div className="px-3 py-1 rounded-lg bg-[#FFB52E]/10 border border-[#FFB52E]/20 text-[8px] font-black text-[#FFB52E] tracking-[0.2em] uppercase">Limited Tier</div>
                 </div>
-                <div className="flex items-baseline gap-2">
-                   <span className="text-6xl font-bold tracking-tighter">$0</span>
-                   <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Forever Free for Early Users</span>
+                <div className="flex items-baseline justify-center lg:justify-start gap-2">
+                   <span className="text-5xl md:text-6xl font-bold tracking-tighter text-white">$0</span>
+                   <span className="text-gray-500 font-bold uppercase tracking-widest text-[9px] md:text-[10px]">Forever Free for Early Users</span>
                 </div>
-                <p className="text-gray-400 text-sm leading-relaxed font-medium">
-                  Experience the full persuasion engine. All advanced features from our Core and Ascend systems have been unlocked for the first 1,000 MVP users.
+                <p className="text-gray-400 text-xs md:text-sm leading-relaxed font-medium max-w-lg mx-auto lg:mx-0">
+                  Experience the full persuasion engine. All advanced features have been unlocked for the first 1,000 MVP users.
                 </p>
              </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                 {[
                   "Unlimited Frontier AI Processing",
                   "Deep Persuasion Engine Access",
@@ -1153,35 +1157,41 @@ function MVPPriceCard({
                   "Complete Email Sequence Systems",
                   "Advanced Audience Profiling",
                   "Multi-Step Campaign Strategy",
-                  "Campaign Collaboration Mode",
-                  "VSL Intelligence Architect",
-                  "Priority Generation Speed"
+                  "Campaign Collaboration Mode"
                 ].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-3 group/item">
-                     <div className="w-5 h-5 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/30 flex items-center justify-center group-hover/item:bg-[#FFB52E]/20 transition-colors">
-                        <Check size={12} className="text-[#FFB52E]" />
+                  <div key={i} className="flex items-center gap-2 group/item">
+                     <div className="w-4 h-4 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/30 flex items-center justify-center group-hover/item:bg-[#FFB52E] transition-all duration-300">
+                        <Check size={10} className="text-[#FFB52E] group-hover:text-black transition-colors" />
                      </div>
-                     <span className="text-xs text-gray-300 font-bold tracking-tight group-hover/item:text-white transition-colors">{feature}</span>
+                     <span className="text-[11px] text-gray-300 font-bold tracking-tight group-hover/item:text-white transition-colors">{feature}</span>
                   </div>
                 ))}
              </div>
 
-             <button 
-               onClick={handleLoginClick}
-               className="group relative w-full py-6 rounded-2xl bg-white text-black font-black text-sm uppercase tracking-widest hover:bg-[#FFB52E] transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden"
-             >
-               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-               Claim Early Access
-               <ArrowRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
-             </button>
+             <div className="space-y-4 pt-2">
+                <button 
+                  onClick={handleLoginClick}
+                  className="group relative w-full py-5 md:py-6 rounded-2xl bg-white text-black font-black text-xs md:text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-98 transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  Claim Early Access
+                  <ArrowRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
+                </button>
+                
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+                  <div className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.2em] text-center sm:text-left">
+                    pricings coming soon. App currently in MVP stage
+                  </div>
+                  <div className="text-[9px] font-black text-[#FFB52E] uppercase tracking-[0.3em] flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#FFB52E] animate-pulse" />
+                    MVP STATUS: v0.8.2 ACTIVE
+                  </div>
+                </div>
+             </div>
           </div>
        </div>
-
-       {/* MVP Decorative Counter */}
-       <div className="absolute bottom-6 right-10 text-[8px] font-sans text-gray-700 font-bold tracking-[0.5em] uppercase pointer-events-none" style={{ transform: "translateZ(30px)" }}>
-         MVP STATUS: v0.8.2 ACTIVE
-       </div>
     </motion.div>
+
   );
 }
 

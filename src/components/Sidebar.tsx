@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { BrainCircuit, MessageSquare, Plus, Settings, User as UserIcon, LogOut, LayoutDashboard, History, Sparkles, Target, Mic, Mail, FileText, Globe, Search, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BrainCircuit, MessageSquare, Plus, Settings, User as UserIcon, LogOut, LayoutDashboard, History, Sparkles, Target, Mic, Mail, FileText, Globe, Search, X, PlusCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 interface SidebarProps {
   user: any;
@@ -44,9 +46,17 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
 
   const filteredHistory = history.filter(item => {
     if (!searchQuery) return true;
-    const firstMsg = item.messages?.[0]?.content || "";
-    return firstMsg.toLowerCase().includes(searchQuery.toLowerCase());
+    const title = item.title || item.messages?.[0]?.content || "Archive Entry";
+    return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  const getSessionTitle = (session: any) => {
+    if (session.title) return session.title;
+    const firstMsg = session.messages?.[0]?.content || "";
+    if (!firstMsg) return "New Session";
+    // Generate concise title: first 40 chars
+    return firstMsg.length > 40 ? firstMsg.substring(0, 40) + "..." : firstMsg;
+  };
 
   const menuItems = [
     { id: "chat", icon: MessageSquare, label: "Neural Engine" },
@@ -119,26 +129,40 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
           />
         </div>
 
-        {/* Primary Action */}
-        <button 
-          onClick={() => {
-            onTabChange("chat");
-            onClose?.();
-          }}
-          className="flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-extrabold rounded-2xl text-xs uppercase tracking-widest hover:bg-gray-200 transition-all mb-8 shadow-xl"
-        >
-          <Plus size={16} />
-          New Persuasion Goal
-        </button>
-
         {/* Nav Sections Scrollable Area */}
         <div className="flex-1 space-y-8 overflow-y-auto custom-scrollbar pr-2 mb-8">
+          {/* Create New Session Button */}
+          <div className="px-2">
+            <button
+              onClick={() => {
+                onSessionSelect("");
+                onTabChange("chat");
+                onClose?.();
+              }}
+              className="group flex items-center gap-3 w-full p-4 rounded-2xl bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E] text-black shadow-[0_10px_20px_-5px_rgba(255,181,46,0.4)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
+            >
+              <div className="w-8 h-8 rounded-lg bg-black/10 flex items-center justify-center">
+                <Plus size={18} strokeWidth={3} />
+              </div>
+              <div className="flex flex-col items-start leading-none">
+                <span className="text-[11px] font-black uppercase tracking-wider">New Neural Logic</span>
+                <span className="text-[9px] font-bold opacity-70 mt-1">Initialize fresh session</span>
+              </div>
+            </button>
+          </div>
+
           {/* Persuasion Archive (Past Texts) */}
           <div>
-            <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Neural Archive</h3>
+            <div className="flex items-center justify-between px-3 mb-4">
+              <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black">Neural Archive</h3>
+              <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[8px] text-gray-500 font-bold border border-white/5">LAST 20</span>
+            </div>
             <div className="space-y-1">
               {loadingHistory && (
-                <div className="px-4 py-2 text-[10px] text-gray-600 italic">Syncing history...</div>
+                <div className="px-4 py-2 text-[10px] text-gray-600 italic flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#FFB52E] animate-pulse" />
+                  Syncing high-stakes history...
+                </div>
               )}
               {!loadingHistory && filteredHistory.length === 0 && (
                 <div className="px-4 py-2 text-[10px] text-gray-600 italic">No archive data found.</div>
@@ -151,15 +175,15 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
                     onTabChange("chat");
                     onClose?.();
                   }}
-                  className={`group flex items-center gap-3 w-full p-2.5 px-4 rounded-xl text-[11px] transition-all relative overflow-hidden ${
+                  className={`group flex items-center gap-3 w-full p-2.5 px-4 rounded-xl text-[11px] transition-all duration-300 relative overflow-hidden hover:scale-[1.02] active:scale-98 ${
                     activeSessionId === session.id 
-                    ? "bg-[#FFB52E]/10 text-[#FFB52E]" 
+                    ? "bg-[#FFB52E]/10 text-[#FFB52E] border border-[#FFB52E]/10 shadow-[0_0_20px_rgba(255,181,46,0.1)]" 
                     : "text-gray-500 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   <MessageSquare size={14} className={activeSessionId === session.id ? "text-[#FFB52E]" : "text-gray-600 group-hover:text-gray-400"} />
-                  <span className="truncate flex-1 text-left">
-                    {session.messages?.[0]?.content || "Archive Entry"}
+                  <span className="truncate flex-1 text-left font-medium">
+                    {getSessionTitle(session)}
                   </span>
                   {activeSessionId === session.id && (
                     <motion.div layoutId="activeInd" className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#FFB52E]" />
@@ -180,7 +204,7 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
                     onTabChange(item.id);
                     onClose?.();
                   }}
-                  className={`flex items-center gap-3 w-full p-3 px-4 rounded-xl text-xs font-bold transition-all ${
+                  className={`flex items-center gap-3 w-full p-3 px-4 rounded-xl text-xs font-bold transition-all duration-300 hover:scale-[1.02] active:scale-98 ${
                     activeTab === item.id 
                     ? "bg-[#FFB52E]/10 text-[#FFB52E] shadow-[0_0_15px_-5px_rgba(255,181,46,0.2)] border border-[#FFB52E]/20" 
                     : "text-gray-500 hover:text-white hover:bg-white/5"
@@ -193,50 +217,29 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
             </div>
           </div>
 
-          {/* Dynamic Channels/Folders */}
-          {folders.map(folder => (
-            <div key={folder.id}>
-              <div className="flex items-center justify-between px-3 mb-3 group cursor-pointer">
-                <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black group-hover:text-[#FFB52E] transition-colors">{folder.label}</h3>
-                <Sparkles size={10} className="text-gray-700 group-hover:text-[#FFB52E]/50" />
-              </div>
-              <div className="space-y-1">
-                {folder.items.map(item => (
-                   <button
-                    key={item.id}
-                    className="flex items-center gap-3 w-full p-2.5 px-4 rounded-xl text-[11px] font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all truncate"
-                   >
-                     <div className="w-1 h-1 rounded-full bg-[#FFB52E]" />
-                     {item.label}
-                   </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {/* Model Categories */}
-          <div>
-            <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Specialized Agents</h3>
-            <div className="space-y-1">
-              {filteredCategories.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    onTabChange(item.id);
-                    onClose?.();
-                  }}
-                  className={`flex items-center gap-3 w-full p-3 px-4 rounded-xl text-[11px] font-bold transition-all ${
-                    activeTab === item.id 
-                    ? "bg-[#FFB52E]/10 text-[#FFB52E] border border-[#FFB52E]/20" 
-                    : "text-gray-500 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <item.icon size={16} className={activeTab === item.id ? "text-[#FFB52E]" : "text-gray-600"} />
-                  {item.label}
-                </button>
-              ))}
-            </div>
+        {/* Model Categories */}
+        <div>
+          <h3 className="text-[9px] font-sans text-gray-500 uppercase tracking-[0.3em] font-black px-3 mb-4">Specialized Agents</h3>
+          <div className="space-y-1">
+            {filteredCategories.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onTabChange(item.id);
+                  onClose?.();
+                }}
+                className={`flex items-center gap-3 w-full p-3 px-4 rounded-xl text-[11px] font-bold transition-all ${
+                  activeTab === item.id 
+                  ? "bg-[#FFB52E]/10 text-[#FFB52E] border border-[#FFB52E]/20" 
+                  : "text-gray-500 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <item.icon size={16} className={activeTab === item.id ? "text-[#FFB52E]" : "text-gray-600"} />
+                {item.label}
+              </button>
+            ))}
           </div>
+        </div>
 
           {/* Navigation to Landing - REMOVED */}
         </div>

@@ -35,9 +35,10 @@ interface ChatInterfaceProps {
   activeSessionId?: string;
   onSessionChange?: (id: string) => void;
   onMenuToggle?: () => void;
+  onGoHome?: () => void;
 }
 
-export function ChatInterface({ user, userData, activeTab, activeSessionId, onSessionChange, onMenuToggle }: ChatInterfaceProps) {
+export function ChatInterface({ user, userData, activeTab, activeSessionId, onSessionChange, onMenuToggle, onGoHome }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -125,6 +126,13 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
       timestamp: new Date().toISOString()
     };
     
+    // Determine active session ID or create new
+    let currentSessionId = activeSessionId;
+    if (!currentSessionId) {
+      currentSessionId = doc(collection(db, "chats", user.uid, "sessions")).id;
+      onSessionChange?.(currentSessionId);
+    }
+
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsTyping(true);
@@ -165,16 +173,39 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
               if (data === "[DONE]") break;
               try {
                 const parsed = JSON.parse(data);
-                assistantContent += parsed.text;
-                setMessages(prev => {
-                  const last = prev[prev.length - 1];
-                  return [...prev.slice(0, -1), { ...last, content: assistantContent }];
-                });
+                if (parsed.text) {
+                  assistantContent += parsed.text;
+                  setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    return [...prev.slice(0, -1), { ...last, content: assistantContent }];
+                  });
+                }
               } catch (e) {}
             }
           }
         }
       }
+
+      // Sync to Firestore
+      const finalMessages = [...messages, userMessage, { 
+        role: "assistant", 
+        content: assistantContent,
+        timestamp: new Date().toISOString()
+      }];
+      
+      const sessionRef = doc(db, "chats", user.uid, "sessions", currentSessionId);
+      const updateData: any = {
+        messages: finalMessages,
+        lastUpdated: new Date().toISOString()
+      };
+
+      // Set title if it's the first message
+      if (messages.length === 0) {
+        updateData.title = textToSend.length > 40 ? textToSend.substring(0, 40) + "..." : textToSend;
+      }
+
+      await setDoc(sessionRef, updateData, { merge: true });
+
       setRemainingCredits(prev => Math.max(0, prev - 1));
     } catch (error: any) {
       setMessages(prev => [...prev, { 
@@ -212,11 +243,21 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
             </div>
          </div>
 
-         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFB52E]/5 border border-[#FFB52E]/30 shadow-[0_0_20px_rgba(255,181,46,0.05)] hover:shadow-[0_0_25px_rgba(255,181,46,0.15)] transition-all">
-           <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E] flex items-center justify-center shadow-[0_0_8px_rgba(255,181,46,0.6)] border border-[#FFB52E]/50">
-             <Coins size={11} className="text-black" />
+         <div className="flex items-center gap-4">
+           <button 
+             onClick={onGoHome}
+             className="flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#FFB52E]/30 transition-all group"
+           >
+             <LayoutDashboard size={14} className="text-gray-500 group-hover:text-[#FFB52E] transition-colors" />
+             <span>Landing Control</span>
+           </button>
+           
+           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFB52E]/5 border border-[#FFB52E]/30 shadow-[0_0_20px_rgba(255,181,46,0.05)] hover:shadow-[0_0_25px_rgba(255,181,46,0.15)] transition-all">
+             <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E] flex items-center justify-center shadow-[0_0_8px_rgba(255,181,46,0.6)] border border-[#FFB52E]/50">
+               <Coins size={11} className="text-black" />
+             </div>
+             <span className="text-[11px] font-black text-[#FFB52E] uppercase tracking-wider">{remainingCredits} CREDITS</span>
            </div>
-           <span className="text-[11px] font-black text-[#FFB52E] uppercase tracking-wider">{remainingCredits} CREDITS</span>
          </div>
       </header>
 
@@ -276,14 +317,15 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
             {messages.map((m, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: i * 0.05 }}
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className={`max-w-[88%] rounded-2xl px-5 py-4 ${
+                <div className={`max-w-[88%] rounded-2xl px-5 py-4 transition-all duration-500 hover:shadow-[0_10px_40px_rgba(255,181,46,0.1)] ${
                   m.role === "user" 
-                  ? "bg-transparent border border-[#FFB52E]/30 text-white shadow-[0_4px_20px_rgba(255,181,46,0.05)]" 
-                  : "bg-[#111111] border border-white/5 text-gray-200 shadow-[0_0_30px_rgba(255,181,46,0.05)]"
+                  ? "bg-transparent border border-[#FFB52E]/30 text-white shadow-[0_4px_20px_rgba(255,181,46,0.05)] hover:border-[#FFB52E]/60" 
+                  : "bg-[#111111]/80 backdrop-blur-xl border border-white/5 text-gray-200 shadow-[0_0_30px_rgba(255,181,46,0.05)] hover:border-white/10"
                 }`}>
                   <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-strong:text-[#FFB52E] prose-p:text-gray-300">
                     <ReactMarkdown>{m.content}</ReactMarkdown>
@@ -316,13 +358,13 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
       {/* INPUT BAR - Section 5 & 6 */}
       <div className="absolute bottom-0 left-0 right-0 z-50">
         <div className="max-w-2xl mx-auto px-4 pb-12">
-          <div className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,1)] overflow-hidden group transition-all duration-500 focus-within:border-[#FFB52E]/60 focus-within:shadow-[0_0_100px_rgba(255,181,46,0.3)]">
+          <div className="relative bg-[#0A0A0A]/80 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,1)] overflow-hidden group transition-all duration-500 focus-within:border-[#FFB52E]/60 focus-within:shadow-[0_0_80px_rgba(255,181,46,0.15)]">
             {/* Animated Golden Rim Glow */}
             <div className="absolute inset-x-0 -top-px h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/50 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
             
             <div className="flex flex-col">
               {/* Tool Buttons Bar */}
-              <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40 backdrop-blur-md">
                 {toolButtons.map(tool => (
                   <button
                     key={tool.id}
@@ -331,11 +373,11 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
                       setInput(tool.prompt);
                       inputRef.current?.focus();
                     }}
-                    className={`flex flex-1 items-center justify-center gap-1.5 py-2 transition-all rounded-xl ${
+                    className={`flex flex-1 items-center justify-center gap-1.5 py-2 transition-all duration-300 rounded-xl hover:scale-105 active:scale-95 group/tool ${
                       remainingCredits <= 0 ? "opacity-30 cursor-not-allowed" : "text-[#FFB52E]/60 hover:text-[#FFB52E] hover:bg-white/5"
                     }`}
                   >
-                    <tool.icon size={14} />
+                    <tool.icon size={14} className="group-hover/tool:rotate-12 transition-transform" />
                     <span className="text-[10px] font-bold uppercase tracking-tight">{tool.label}</span>
                   </button>
                 ))}
