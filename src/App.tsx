@@ -34,9 +34,11 @@ export default function App() {
         setUser(u);
         try {
           const token = await u.getIdToken();
-          const res = await fetch("/api/user/me", {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const headers: Record<string, string> = {};
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+          const res = await fetch("/api/user/me", { headers });
           
           if (res.ok) {
             const data = await res.json();
