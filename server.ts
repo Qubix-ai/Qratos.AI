@@ -104,6 +104,59 @@ function getGenAI() {
   return genAI;
 }
 
+const runAPIdiagnostic = async () => {
+  console.log('=== GEMINI API DIAGNOSTIC ===');
+  
+  const key = process.env.GEMINI_API_KEY 
+    || process.env.GOOGLE_API_KEY
+    || process.env.API_KEY;
+  
+  console.log('Key found:', key ? 'YES — ' + key.substring(0, 10) + '...' : 'NO — KEY IS MISSING');
+  
+  if (!key) {
+    console.log('DIAGNOSIS: API key is not reaching the server environment. This is the entire problem.');
+    return;
+  }
+  
+  // Test the actual API connection
+  try {
+    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    
+    // Note: in Node.js, we can use global fetch
+    const testResponse = await fetch(testUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'Say the word TEST only' }] }]
+      })
+    });
+    
+    console.log('API response status:', testResponse.status);
+    
+    const responseText = await testResponse.text();
+    console.log('API response body:', responseText.substring(0, 400));
+    
+    if (testResponse.status === 200) {
+      console.log('DIAGNOSIS: API key works. Problem is in how it is passed to the chat function.');
+    } else if (testResponse.status === 400) {
+      console.log('DIAGNOSIS: Bad request format. Request body structure is wrong.');
+    } else if (testResponse.status === 403) {
+      console.log('DIAGNOSIS: API key is invalid or Generative Language API is not enabled in Google Cloud Console.');
+    } else if (testResponse.status === 429) {
+      console.log('DIAGNOSIS: Rate limit hit. Too many requests.');
+    } else {
+      console.log('DIAGNOSIS: Unexpected status. See response body above.');
+    }
+    
+  } catch (error: any) {
+    console.log('DIAGNOSIS: Fetch itself failed —', error.message);
+    console.log('This means the server cannot reach generativelanguage.googleapis.com');
+    console.log('Google AI Studio may be blocking outbound API calls to external URLs from server code.');
+  }
+  
+  console.log('=== END DIAGNOSTIC ===');
+};
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -215,12 +268,42 @@ THE STANDARD
 
 Your standard is not good for an AI. Your standard is not better than the average freelancer. Your standard is: would the best direct response copywriter alive, reading this output, feel genuine professional respect for the thinking behind it? If yes, it ships. If no, you rewrite until it does. There is no version of Qratos that produces output it does not believe in.`;
 
+interface FallbackUser {
+  email: string;
+  displayName: string;
+  photoURL: string;
+  isAdmin: boolean;
+  totalCredits: number;
+  remainingCredits: number;
+  lastResetDate: string;
+  createdAt: string;
+}
+
+const memoryUserStore = new Map<string, FallbackUser>();
+
 // Helper to check credits with a failsafe mode
 async function checkAndDeductCredits(uid: string) {
   // Guest mode handling
   if (uid.startsWith('guest_')) {
     return { canProceed: true, remaining: 5 }; // Very limited credits for guests
   }
+
+  const getMemoryUser = (userId: string): FallbackUser => {
+    if (!memoryUserStore.has(userId)) {
+      const now = new Date();
+      memoryUserStore.set(userId, {
+        email: "",
+        displayName: "Agent User",
+        photoURL: "",
+        isAdmin: false,
+        totalCredits: 400,
+        remainingCredits: 400,
+        lastResetDate: now.toISOString(),
+        createdAt: now.toISOString(),
+      });
+    }
+    return memoryUserStore.get(userId)!;
+  };
 
   try {
     const database = getDb();
@@ -240,10 +323,21 @@ async function checkAndDeductCredits(uid: string) {
         createdAt: now.toISOString(),
       };
       await userRef.set(data);
+      memoryUserStore.set(uid, data);
       return { canProceed: true, remaining: 400 };
     }
 
     const userData = userDoc.data()!;
+    memoryUserStore.set(uid, {
+      email: userData.email || "",
+      displayName: userData.displayName || "Agent User",
+      photoURL: userData.photoURL || "",
+      isAdmin: !!userData.isAdmin,
+      totalCredits: userData.totalCredits || 400,
+      remainingCredits: userData.remainingCredits !== undefined ? userData.remainingCredits : 400,
+      lastResetDate: userData.lastResetDate || new Date().toISOString(),
+      createdAt: userData.createdAt || new Date().toISOString(),
+    });
     
     // Admins have unlimited credits
     if (userData.isAdmin) {
@@ -259,6 +353,9 @@ async function checkAndDeductCredits(uid: string) {
         remainingCredits: 399, 
         lastResetDate: now.toISOString(),
       });
+      const mem = getMemoryUser(uid);
+      mem.remainingCredits = 399;
+      mem.lastResetDate = now.toISOString();
       return { canProceed: true, remaining: 399 };
     }
 
@@ -268,11 +365,37 @@ async function checkAndDeductCredits(uid: string) {
 
     const newCredits = userData.remainingCredits - 1;
     await userRef.update({ remainingCredits: newCredits });
+    const mem = getMemoryUser(uid);
+    mem.remainingCredits = newCredits;
     return { canProceed: true, remaining: newCredits };
-  } catch (error) {
-    console.warn("[Firebase] Credit check failed - entering failsafe mode:", error);
-    // FAILSAFE: Allow user to proceed even if DB is down to avoid blocking core feature
-    return { canProceed: true, remaining: -1 };
+  } catch (error: any) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    if (!errorMsg.includes("PERMISSION_DENIED")) {
+      console.warn("[Firebase] Credit check failed - entering memory fallback mode:", error);
+    }
+
+    // Fallback: use memory persistence
+    const memUser = getMemoryUser(uid);
+    if (memUser.isAdmin) {
+      return { canProceed: true, remaining: 999 };
+    }
+
+    const now = new Date();
+    const lastReset = new Date(memUser.lastResetDate || now.toISOString());
+    const hoursSinceReset = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
+
+    if (hoursSinceReset >= 48) {
+      memUser.remainingCredits = 399;
+      memUser.lastResetDate = now.toISOString();
+      return { canProceed: true, remaining: 399 };
+    }
+
+    if (memUser.remainingCredits <= 0) {
+      return { canProceed: false, remaining: 0 };
+    }
+
+    memUser.remainingCredits -= 1;
+    return { canProceed: true, remaining: memUser.remainingCredits };
   }
 }
 
@@ -395,8 +518,11 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
           creditsUsed: 1,
           lastUpdated: new Date().toISOString()
         }, { merge: true });
-      } catch (dbError) {
-        console.warn("[Firebase] Session persistence failed (server-side, proceeding anyway with stream completion):", dbError);
+      } catch (dbError: any) {
+        const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+        if (!errorMsg.includes("PERMISSION_DENIED")) {
+          console.warn("[Firebase] Session persistence failed (server-side, proceeding anyway with stream completion):", dbError);
+        }
       }
 
       res.write('data: [DONE]\n\n');
@@ -430,8 +556,11 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
           creditsUsed: 1,
           lastUpdated: new Date().toISOString()
         }, { merge: true });
-      } catch (dbError) {
-        console.warn("[Firebase] Session persistence failed (server-side, returning Gemini answer anyway):", dbError);
+      } catch (dbError: any) {
+        const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+        if (!errorMsg.includes("PERMISSION_DENIED")) {
+          console.warn("[Firebase] Session persistence failed (server-side, returning Gemini answer anyway):", dbError);
+        }
       }
 
       res.json({ text: assistantResponse, remainingCredits: creditStatus.remaining });
@@ -449,9 +578,41 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
 });
 
 app.get("/api/user/me", authenticateToken, async (req: any, res: any) => {
+  const uid = req.user.uid;
+  
+  const isGuest = uid.startsWith('guest_');
+  const getMemoryUser = (userId: string): FallbackUser => {
+    if (!memoryUserStore.has(userId)) {
+      const now = new Date();
+      memoryUserStore.set(userId, {
+        email: req.user.email || "",
+        displayName: req.user.name || "Elite Operator",
+        photoURL: req.user.picture || "",
+        isAdmin: req.user.email === "salmanhossain75313@gmail.com",
+        totalCredits: 400,
+        remainingCredits: 400,
+        lastResetDate: now.toISOString(),
+        createdAt: now.toISOString(),
+      });
+    }
+    return memoryUserStore.get(userId)!;
+  };
+
+  if (isGuest) {
+    return res.json({
+      email: 'guest@qratos.ai',
+      displayName: 'Guest Operator',
+      photoURL: "",
+      isAdmin: false,
+      totalCredits: 5,
+      remainingCredits: 5,
+      lastResetDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    });
+  }
+
   try {
     const database = getDb();
-    const uid = req.user.uid;
     const userRef = database.collection("users").doc(uid);
     const userDoc = await userRef.get();
     
@@ -469,27 +630,34 @@ app.get("/api/user/me", authenticateToken, async (req: any, res: any) => {
       };
       try {
         await database.collection("users").doc(uid).set(userData);
-      } catch (writeErr) {
-        console.warn("[Firebase] Could not save new user to DB:", writeErr);
+      } catch (writeErr: any) {
+        const writeErrMsg = writeErr instanceof Error ? writeErr.message : String(writeErr);
+        if (!writeErrMsg.includes("PERMISSION_DENIED")) {
+          console.warn("[Firebase] Could not save new user to DB:", writeErr);
+        }
       }
+      memoryUserStore.set(uid, userData);
       return res.json(userData);
     }
 
-    res.json(userDoc.data());
+    const finalData = userDoc.data()!;
+    memoryUserStore.set(uid, {
+      email: finalData.email || "",
+      displayName: finalData.displayName || "Elite Operator",
+      photoURL: finalData.photoURL || "",
+      isAdmin: !!finalData.isAdmin,
+      totalCredits: finalData.totalCredits || 400,
+      remainingCredits: finalData.remainingCredits !== undefined ? finalData.remainingCredits : 400,
+      lastResetDate: finalData.lastResetDate || new Date().toISOString(),
+      createdAt: finalData.createdAt || new Date().toISOString(),
+    });
+    res.json(finalData);
   } catch (error: any) {
-    console.warn("[Firebase] User profile fetch error (entering failsafe):", error);
-    // FAILSAFE: Return mock/guest user data so the frontend continues to load perfectly
-    const fallbackUser = {
-      email: req.user.email || "guest@qratos.ai",
-      displayName: req.user.name || "Elite Operator",
-      photoURL: req.user.picture || "",
-      isAdmin: req.user.email === "salmanhossain75313@gmail.com",
-      totalCredits: 400,
-      remainingCredits: 400,
-      lastResetDate: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    };
-    res.json(fallbackUser);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    if (!errorMsg.includes("PERMISSION_DENIED")) {
+      console.warn("[Firebase] User profile fetch error (entering failsafe):", error);
+    }
+    res.json(getMemoryUser(uid));
   }
 });
 
@@ -582,6 +750,9 @@ async function startServer() {
     app.listen(PORT, HOST, () => {
       console.log(`[Qratos] Server listening at http://${HOST}:${PORT}`);
       console.log(`[Qratos] Mode: ${isProd ? "production" : "development"}`);
+      runAPIdiagnostic().catch(err => {
+        console.error("Failed to run API diagnostic:", err);
+      });
     });
   } catch (err) {
     console.error("Critical: Server failed to start:", err);

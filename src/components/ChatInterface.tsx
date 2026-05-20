@@ -15,7 +15,9 @@ import {
   MessageSquare,
   ShieldCheck,
   LayoutDashboard,
-  Menu
+  Menu,
+  Copy,
+  Check
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import ReactMarkdown from "react-markdown";
@@ -165,6 +167,19 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
   const [conversationHistory, setConversationHistory] = useState<any[]>([]);
   const [remainingCredits, setRemainingCredits] = useState(userData?.remainingCredits ?? 400);
   const [inputFocused, setInputFocused] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | number | null>(null);
+
+  const handleCopy = async (text: string, id: string | number) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => {
+        setCopiedId(null);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   // Sync credits when userData updates (e.g. from server)
   useEffect(() => {
@@ -618,7 +633,24 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
                 }}
                 className={`flex ${m.role === "user" ? "justify-end relative z-10" : "justify-start relative z-10"} mb-6 last:mb-0`}
               >
-                <div className={m.role === "user" ? "user-bubble" : "ai-bubble"}>
+                <div className={m.role === "user" ? "user-bubble" : "ai-bubble relative group pr-11"}>
+                  {m.role === "assistant" && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(m.content, m.timestamp || i)}
+                      className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-[#C9A84C] hover:border-[#C9A84C]/30 hover:bg-[#C9A84C]/5 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 z-20 flex items-center justify-center"
+                      title="Copy persuasion brief"
+                    >
+                      {copiedId === (m.timestamp || i) ? (
+                        <div className="flex items-center gap-1">
+                          <Check size={13} className="text-[#C9A84C]" />
+                          <span className="text-[9px] font-bold text-[#C9A84C] uppercase tracking-wider">Copied!</span>
+                        </div>
+                      ) : (
+                        <Copy size={13} />
+                      )}
+                    </button>
+                  )}
                   {m.role === "assistant" && i > 0 && messages[i-1].role === "user" && (
                     <div className="mb-4 pb-3 border-b border-white/5 flex flex-col gap-1.5 opacity-60">
                       <div className="flex items-center gap-2">
