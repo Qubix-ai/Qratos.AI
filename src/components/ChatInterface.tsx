@@ -187,6 +187,14 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
       setRemainingCredits(userData.remainingCredits);
     }
   }, [userData]);
+
+  // Pre-warm the serverless function (Vercel)
+  useEffect(() => {
+    fetch('/api/chat')
+      .then(res => res.json())
+      .then(data => console.log('Qratos Engine Status:', data.status))
+      .catch(() => console.log('Engine pre-warm failed — will retry on first message'));
+  }, []);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [viewportHeight, setViewportHeight] = useState("100dvh");
   const [isContextExpanded, setIsContextExpanded] = useState(false);
