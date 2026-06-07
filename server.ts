@@ -15,7 +15,15 @@ const PORT = 3000;
 const HOST = "0.0.0.0";
 
 // Load config safely
-import firebaseConfig from "./firebase-applet-config.json";
+let firebaseConfig: any = { projectId: "", firestoreDatabaseId: "" };
+try {
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(configPath)) {
+    firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  }
+} catch (e) {
+  console.warn("[Firebase] Could not load firebase-applet-config.json dynamically:", e);
+}
 
 // Lazy initialization helpers
 let adminApp: any;
@@ -735,10 +743,11 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
 
   } catch (error: any) {
     console.error("Chat Error:", error);
+    const apiErrorMsg = error instanceof Error ? error.message : String(error);
     if (!res.headersSent) {
-      res.status(500).json({ error: "The Persuasion Engine encountered an issue. Please check your connection and try again." });
+      res.status(500).json({ error: `The Persuasion Engine encountered an issue: ${apiErrorMsg}` });
     } else {
-      res.write(`data: ${JSON.stringify({ error: "Connection interrupted" })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: `Connection interrupted: ${apiErrorMsg}` })}\n\n`);
       res.end();
     }
   }

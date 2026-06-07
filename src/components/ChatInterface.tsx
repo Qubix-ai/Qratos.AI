@@ -366,7 +366,18 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
     if (!response.ok) {
       const errorText = await response.text();
       console.error('API ERROR RESPONSE:', errorText);
-      throw new Error(`API request failed: ${response.status} — ${errorText.substring(0, 200)}`);
+      let errMsg = `API request failed with status ${response.status}`;
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.error) {
+          errMsg = parsed.error;
+        }
+      } catch (parseErr) {
+        if (errorText) {
+          errMsg += `: ${errorText.substring(0, 150)}`;
+        }
+      }
+      throw new Error(errMsg);
     }
 
     const data = await response.json();
@@ -448,12 +459,13 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
         console.error("Firestore sync error:", fbErr);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('API ERROR:', error);
       
+      const details = error instanceof Error ? error.message : String(error);
       const errorMessage = {
         role: 'assistant' as const,
-        content: 'The Persuasion Engine encountered an issue. Check your connection and try again.',
+        content: `**The Persuasion Engine encountered an issue.**\n\n*Details:*\n\`\`\`\n${details}\n\`\`\`\n\n💡 **Troubleshooting Checklist for Vercel Deployments:**\n1. Go to your **Vercel Dashboard** -> **Settings** -> **Environment Variables**.\n2. Add a new variable called \`GEMINI_API_KEY\` and paste your active Google AI Studio/Gemini API key.\n3. Redeploy your project or trigger a new deployment for the changes to take effect.`,
         timestamp: new Date().toISOString()
       };
       
