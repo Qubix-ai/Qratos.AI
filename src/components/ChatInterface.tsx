@@ -148,7 +148,53 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp?: string;
+  isNew?: boolean;
 }
+
+// TYPEWRITER ANIMATION FOR PREMIUM CHAT REVEAL
+const TypewriterMarkdown = ({ content, isNew }: { content: string; isNew?: boolean }) => {
+  const [displayedContent, setDisplayedContent] = useState(isNew ? "" : content);
+  const [isTyping, setIsTyping] = useState(isNew);
+
+  useEffect(() => {
+    if (!isNew) {
+      setDisplayedContent(content);
+      setIsTyping(false);
+      return;
+    }
+
+    setIsTyping(true);
+    let index = 0;
+    // Speed adaptation: clamp total typing duration to max 2.5 seconds, min speed 4ms, max speed 18ms
+    const speed = Math.max(4, Math.min(18, Math.round(2000 / content.length)));
+    
+    const intervalId = setInterval(() => {
+      setDisplayedContent(() => {
+        const nextPart = content.slice(0, index + 1);
+        index++;
+        if (index >= content.length) {
+          clearInterval(intervalId);
+          setIsTyping(false);
+        }
+        return nextPart;
+      });
+    }, speed);
+
+    return () => clearInterval(intervalId);
+  }, [content, isNew]);
+
+  return (
+    <div className="relative inline-block w-full">
+      <ReactMarkdown>{displayedContent}</ReactMarkdown>
+      {isTyping && (
+        <span 
+          className="inline-block w-1.5 h-3.5 bg-[#C9A84C] ml-1 animate-pulse" 
+          style={{ verticalAlign: 'middle', marginTop: '-2px' }} 
+        />
+      )}
+    </div>
+  );
+};
 
 interface ChatInterfaceProps {
   user: any;
@@ -165,7 +211,7 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<any[]>([]);
-  const [remainingCredits, setRemainingCredits] = useState(userData?.remainingCredits ?? 400);
+  const [remainingCredits, setRemainingCredits] = useState(userData?.remainingCredits ?? 30);
   const [inputFocused, setInputFocused] = useState(false);
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
 
@@ -359,7 +405,8 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
       const aiMessage = { 
         role: 'assistant' as const, 
         content: response, 
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isNew: true
       };
       
       setMessages(prev => [...prev, aiMessage]);
@@ -671,7 +718,11 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
                     </div>
                   )}
                   <div className={`prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-strong:text-[#C9A84C] ${m.role === 'user' ? 'prose-p:text-white' : 'prose-p:text-gray-300'}`}>
-                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                    {m.role === 'assistant' ? (
+                      <TypewriterMarkdown content={m.content} isNew={m.isNew} />
+                    ) : (
+                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                    )}
                   </div>
                 </div>
               </motion.div>

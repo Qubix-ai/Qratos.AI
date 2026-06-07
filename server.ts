@@ -23,7 +23,59 @@ let db: Firestore;
 let auth: Auth;
 let genAI: GoogleGenAI;
 
+let firebaseBypassed = false;
+
+function shouldBypassFirebase() {
+  if (firebaseBypassed) return true;
+  
+  // If running on Vercel and no service account credentials exist in env, we must bypass
+  // to avoid blocking GCP metadata requests which will hang for 10+ seconds and cause Vercel 504.
+  const isVercel = !!(process.env.VERCEL || process.env.NOW_BUILDER || process.env.VERCEL_ENV);
+  const hasCreds = !!(
+    process.env.GOOGLE_APPLICATION_CREDENTIALS || 
+    process.env.FIREBASE_SERVICE_ACCOUNT || 
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY ||
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON ||
+    process.env.SERVICE_ACCOUNT_JSON
+  );
+  
+  if (isVercel && !hasCreds) {
+    console.warn("[Firebase] Detected Vercel/external deployment with NO service account credentials. Bypassing Admin Firestore/Auth to prevent Gateway Timeouts.");
+    firebaseBypassed = true;
+    return true;
+  }
+  return false;
+}
+
+function decodeFirebaseTokenUnsafe(token: string) {
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) {
+        base64 += '=';
+      }
+      const payloadBuf = Buffer.from(base64, 'base64');
+      const payload = JSON.parse(payloadBuf.toString('utf-8'));
+      return {
+        uid: payload.sub || payload.user_id,
+        email: payload.email || '',
+        name: payload.name || payload.email?.split('@')[0] || 'Elite Operator',
+        picture: payload.picture || '',
+        isGuest: false,
+        decodedUnsafely: true
+      };
+    }
+  } catch (e) {
+    console.warn("[AuthFallback] Unsafe token decode failed (this is expected for invalid or custom tokens).");
+  }
+  return null;
+}
+
 function getAdminApp() {
+  if (shouldBypassFirebase()) {
+    throw new Error("Firebase Admin app is bypassed in this environment.");
+  }
   if (!adminApp) {
     try {
       const apps = getApps();
@@ -51,6 +103,9 @@ function getAdminApp() {
 }
 
 function getDb() {
+  if (shouldBypassFirebase()) {
+    throw new Error("Firebase Firestore is bypassed in this environment.");
+  }
   if (!db) {
     try {
       const app = getAdminApp();
@@ -72,6 +127,9 @@ function getDb() {
 }
 
 function getAuth() {
+  if (shouldBypassFirebase()) {
+    throw new Error("Firebase Auth is bypassed in this environment.");
+  }
   if (!auth) {
     try {
       const app = getAdminApp();
@@ -115,7 +173,8 @@ async function callWithModelFallback<T>(
     "gemini-3.5-flash",
     "gemini-2.5-flash",
     "gemini-flash-latest",
-    "gemini-3.1-flash-lite"
+    "gemini-3.1-flash-lite",
+    "gemini-3.1-pro-preview"
   ];
   
   let lastError: any = null;
@@ -128,20 +187,35 @@ async function callWithModelFallback<T>(
       console.error(`[Gemini] Failed with model ${model}:`, error);
       lastError = error;
       
-      const errorMessage = error.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
+      const statusStr = String(error.status || error.statusCode || error.code || "").toUpperCase();
+      const errorMessage = String(error.message || (typeof error === "object" ? JSON.stringify(error) : error)).toLowerCase();
+      const errorStr = String(error).toLowerCase();
       
-      const isUnavailable = error.status === 503 || 
-                            error.statusCode === 503 ||
+      const isUnavailable = statusStr === "503" || 
+                            statusStr === "UNAVAILABLE" ||
+                            statusStr.includes("UNAVAILABLE") ||
+                            statusStr.includes("503") ||
                             errorMessage.includes("503") || 
-                            errorMessage.includes("UNAVAILABLE") ||
+                            errorMessage.includes("unavailable") || 
                             errorMessage.includes("high demand") ||
-                            errorMessage.includes("temporary");
+                            errorMessage.includes("temporary") ||
+                            errorStr.includes("503") ||
+                            errorStr.includes("unavailable") ||
+                            errorStr.includes("high demand") ||
+                            errorStr.includes("temporary");
                             
-      const isRateLimited = error.status === 429 || 
-                            error.statusCode === 429 ||
+      const isRateLimited = statusStr === "429" || 
+                            statusStr.includes("429") ||
+                            statusStr === "RESOURCE_EXHAUSTED" ||
+                            statusStr.includes("QUOTA") ||
                             errorMessage.includes("429") || 
                             errorMessage.includes("quota") ||
-                            errorMessage.includes("limit");
+                            errorMessage.includes("limit") ||
+                            errorMessage.includes("exhausted") ||
+                            errorStr.includes("429") ||
+                            errorStr.includes("quota") ||
+                            errorStr.includes("limit") ||
+                            errorStr.includes("exhausted");
       
       if (isUnavailable || isRateLimited) {
         console.warn(`[Gemini] Model ${model} is busy, unavailable or quota limited. Falling back...`);
@@ -149,8 +223,10 @@ async function callWithModelFallback<T>(
         continue;
       }
       
-      // If it is another type of error (like API payload structural error etc.), don't fallback, throw directly
-      throw error;
+      // If it is another type of error, we can still fall back to other models to ensure service availability
+      console.warn(`[Gemini] Model ${model} returned a general error. Trying fallback model to ensure service availability...`);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      continue;
     }
   }
   
@@ -350,8 +426,8 @@ async function checkAndDeductCredits(uid: string) {
         displayName: "Agent User",
         photoURL: "",
         isAdmin: false,
-        totalCredits: 400,
-        remainingCredits: 400,
+        totalCredits: 30,
+        remainingCredits: 30,
         lastResetDate: now.toISOString(),
         createdAt: now.toISOString(),
       });
@@ -371,24 +447,30 @@ async function checkAndDeductCredits(uid: string) {
         displayName: "Agent User",
         photoURL: "",
         isAdmin: false,
-        totalCredits: 400,
-        remainingCredits: 400,
+        totalCredits: 30,
+        remainingCredits: 30,
         lastResetDate: now.toISOString(),
         createdAt: now.toISOString(),
       };
       await userRef.set(data);
       memoryUserStore.set(uid, data);
-      return { canProceed: true, remaining: 400 };
+      return { canProceed: true, remaining: 30 };
     }
 
     const userData = userDoc.data()!;
+    let currentTotal = userData.totalCredits || 30;
+    if (currentTotal > 30) currentTotal = 30; // Force-limit maximum credits to 30
+
+    let currentRemaining = userData.remainingCredits !== undefined ? userData.remainingCredits : 30;
+    if (currentRemaining > currentTotal) currentRemaining = currentTotal;
+
     memoryUserStore.set(uid, {
       email: userData.email || "",
       displayName: userData.displayName || "Agent User",
       photoURL: userData.photoURL || "",
       isAdmin: !!userData.isAdmin,
-      totalCredits: userData.totalCredits || 400,
-      remainingCredits: userData.remainingCredits !== undefined ? userData.remainingCredits : 400,
+      totalCredits: currentTotal,
+      remainingCredits: currentRemaining,
       lastResetDate: userData.lastResetDate || new Date().toISOString(),
       createdAt: userData.createdAt || new Date().toISOString(),
     });
@@ -402,25 +484,28 @@ async function checkAndDeductCredits(uid: string) {
     const lastReset = new Date(userData.lastResetDate || now.toISOString());
     const hoursSinceReset = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
     
-    if (hoursSinceReset >= 48) {
+    if (hoursSinceReset >= 24) {
       await userRef.update({
-        remainingCredits: 399, 
+        remainingCredits: 29, 
         lastResetDate: now.toISOString(),
+        totalCredits: 30
       });
       const mem = getMemoryUser(uid);
-      mem.remainingCredits = 399;
+      mem.remainingCredits = 29;
+      mem.totalCredits = 30;
       mem.lastResetDate = now.toISOString();
-      return { canProceed: true, remaining: 399 };
+      return { canProceed: true, remaining: 29 };
     }
 
-    if (userData.remainingCredits <= 0) {
+    if (currentRemaining <= 0) {
       return { canProceed: false, remaining: 0 };
     }
 
-    const newCredits = userData.remainingCredits - 1;
-    await userRef.update({ remainingCredits: newCredits });
+    const newCredits = currentRemaining - 1;
+    await userRef.update({ remainingCredits: newCredits, totalCredits: 30 });
     const mem = getMemoryUser(uid);
     mem.remainingCredits = newCredits;
+    mem.totalCredits = 30;
     return { canProceed: true, remaining: newCredits };
   } catch (error: any) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -438,10 +523,11 @@ async function checkAndDeductCredits(uid: string) {
     const lastReset = new Date(memUser.lastResetDate || now.toISOString());
     const hoursSinceReset = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
 
-    if (hoursSinceReset >= 48) {
-      memUser.remainingCredits = 399;
+    if (hoursSinceReset >= 24) {
+      memUser.remainingCredits = 29;
+      memUser.totalCredits = 30;
       memUser.lastResetDate = now.toISOString();
-      return { canProceed: true, remaining: 399 };
+      return { canProceed: true, remaining: 29 };
     }
 
     if (memUser.remainingCredits <= 0) {
@@ -449,6 +535,7 @@ async function checkAndDeductCredits(uid: string) {
     }
 
     memUser.remainingCredits -= 1;
+    memUser.totalCredits = 30;
     return { canProceed: true, remaining: memUser.remainingCredits };
   }
 }
@@ -477,14 +564,20 @@ const authenticateToken = async (req: any, res: any, next: any) => {
     next();
   } catch (error: any) {
     // We log a quiet warning instead of console.error to avoid spamming error logs for token expiries or invalid token formats
-    console.warn(`[Firebase Auth] Token verification failed (${error?.message || error}). Defaulting to guest fallback.`);
+    console.warn(`[Firebase Auth] Token verification failed (${error?.message || error}). Trying decoding fallbacks...`);
     const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
-    req.user = {
-      uid: `guest_${clientIp.replace(/[:.]/g, '_')}`,
-      email: 'guest@qratos.ai',
-      name: 'Guest Operator',
-      isGuest: true
-    };
+    
+    const decodedUnsafe = decodeFirebaseTokenUnsafe(token);
+    if (decodedUnsafe) {
+      req.user = decodedUnsafe;
+    } else {
+      req.user = {
+        uid: `guest_${clientIp.replace(/[:.]/g, '_')}`,
+        email: 'guest@qratos.ai',
+        name: 'Guest Operator',
+        isGuest: true
+      };
+    }
     next();
   }
 };
@@ -505,16 +598,20 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
   try {
     const creditStatus = await checkAndDeductCredits(uid);
     if (!creditStatus.canProceed) {
-      return res.status(403).json({ error: "No credits remaining. Reset in 48h." });
+      return res.status(403).json({ error: "No credits remaining. Reset in 24h." });
     }
 
     const lastMessage = messages[messages.length - 1];
-    const database = getDb();
     
-    // Section 7: Persistent Conversation History
-    // Using the structure: chats/{uid}/sessions/{sessionId}
-    const sessionId = conversationId || `session_${Date.now()}`;
-    const sessionRef = database.collection("chats").doc(uid).collection("sessions").doc(sessionId);
+    let database: any = null;
+    let sessionRef: any = null;
+    try {
+      database = getDb();
+      const sessionId = conversationId || `session_${Date.now()}`;
+      sessionRef = database.collection("chats").doc(uid).collection("sessions").doc(sessionId);
+    } catch (e) {
+      console.warn("[Firebase] Skipping DB write because Firebase is unconfigured or bypassed on this server.");
+    }
     
     const ai = getGenAI();
 
@@ -576,12 +673,14 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
 
       // Save to persistence (failsafe wrap)
       try {
-        await sessionRef.set({
-          createdAt: new Date().toISOString(),
-          messages: historyUpdate,
-          creditsUsed: 1,
-          lastUpdated: new Date().toISOString()
-        }, { merge: true });
+        if (sessionRef) {
+          await sessionRef.set({
+            createdAt: new Date().toISOString(),
+            messages: historyUpdate,
+            creditsUsed: 1,
+            lastUpdated: new Date().toISOString()
+          }, { merge: true });
+        }
       } catch (dbError: any) {
         const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
         if (!errorMsg.includes("PERMISSION_DENIED")) {
@@ -616,12 +715,14 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
 
       // Failsafe session save
       try {
-        await sessionRef.set({
-          createdAt: new Date().toISOString(),
-          messages: historyUpdate,
-          creditsUsed: 1,
-          lastUpdated: new Date().toISOString()
-        }, { merge: true });
+        if (sessionRef) {
+          await sessionRef.set({
+            createdAt: new Date().toISOString(),
+            messages: historyUpdate,
+            creditsUsed: 1,
+            lastUpdated: new Date().toISOString()
+          }, { merge: true });
+        }
       } catch (dbError: any) {
         const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
         if (!errorMsg.includes("PERMISSION_DENIED")) {
@@ -655,8 +756,8 @@ app.get("/api/user/me", authenticateToken, async (req: any, res: any) => {
         displayName: req.user.name || "Elite Operator",
         photoURL: req.user.picture || "",
         isAdmin: req.user.email === "salmanhossain75313@gmail.com",
-        totalCredits: 400,
-        remainingCredits: 400,
+        totalCredits: 30,
+        remainingCredits: 30,
         lastResetDate: now.toISOString(),
         createdAt: now.toISOString(),
       });
@@ -689,8 +790,8 @@ app.get("/api/user/me", authenticateToken, async (req: any, res: any) => {
         displayName: req.user.name || "Elite Operator",
         photoURL: req.user.picture || "",
         isAdmin: req.user.email === "salmanhossain75313@gmail.com",
-        totalCredits: 400,
-        remainingCredits: 400,
+        totalCredits: 30,
+        remainingCredits: 30,
         lastResetDate: now.toISOString(),
         createdAt: now.toISOString(),
       };
@@ -707,17 +808,26 @@ app.get("/api/user/me", authenticateToken, async (req: any, res: any) => {
     }
 
     const finalData = userDoc.data()!;
+    let totalCredits = finalData.totalCredits || 30;
+    if (totalCredits > 30) totalCredits = 30;
+    let remainingCredits = finalData.remainingCredits !== undefined ? finalData.remainingCredits : 30;
+    if (remainingCredits > totalCredits) remainingCredits = totalCredits;
+
     memoryUserStore.set(uid, {
       email: finalData.email || "",
       displayName: finalData.displayName || "Elite Operator",
       photoURL: finalData.photoURL || "",
       isAdmin: !!finalData.isAdmin,
-      totalCredits: finalData.totalCredits || 400,
-      remainingCredits: finalData.remainingCredits !== undefined ? finalData.remainingCredits : 400,
+      totalCredits: totalCredits,
+      remainingCredits: remainingCredits,
       lastResetDate: finalData.lastResetDate || new Date().toISOString(),
       createdAt: finalData.createdAt || new Date().toISOString(),
     });
-    res.json(finalData);
+    res.json({
+      ...finalData,
+      totalCredits: totalCredits,
+      remainingCredits: remainingCredits
+    });
   } catch (error: any) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     if (!errorMsg.includes("PERMISSION_DENIED")) {

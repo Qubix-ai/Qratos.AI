@@ -311,12 +311,12 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
             <div className="p-[16px_20px] border-t border-white/06">
                <div className="flex items-center justify-between">
                   <span className="text-[10px] font-[700] tracking-[0.15em] text-white/25 uppercase font-sans">Intelligence Reset</span>
-                  <span className="text-[12px] font-[700] text-[#C9A84C] font-sans">{userData?.remainingCredits ?? 400}/400</span>
+                  <span className="text-[12px] font-[700] text-[#C9A84C] font-sans">{userData?.remainingCredits ?? 30}/{userData?.totalCredits ?? 30}</span>
                </div>
                <div className="h-[3px] w-full bg-white/08 rounded-[4px] mt-[8px] overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: `${((userData?.remainingCredits ?? 0) / 400) * 100}%` }}
+                    animate={{ width: `${((userData?.remainingCredits ?? 0) / (userData?.totalCredits ?? 30)) * 100}%` }}
                     className="h-full bg-gradient-to-r from-[#C9A84C] to-[#E8C870] rounded-[4px] shadow-[0_0_8px_rgba(201,168,76,0.5)]"
                   />
                </div>

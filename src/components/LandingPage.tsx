@@ -2,6 +2,7 @@ import { motion, useSpring, useTransform, animate, AnimatePresence } from "motio
 import { BrainCircuit, Check, ArrowRight, Target, Sparkles, MessageSquare, ShieldCheck, Mail, FileText, Globe, Wand2, Zap, BarChart3, Activity, Layers, Network, Instagram, Facebook, Twitter, Lock, X, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { signInWithEmail, signUpWithEmail, resetPassword } from "../lib/firebase";
+import { PremiumBackground3D } from "./PremiumBackground3D";
 
 function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -279,31 +280,20 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden noise-bg selection:bg-[#FFB52E]/30 relative">
-      {/* Noise Texture Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      {/* Premium Subtle Grid Overlay */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-[1] opacity-[0.04]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 181, 46, 0.08) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 181, 46, 0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: "48px 48px"
+        }}
+      />
 
-      {/* Dynamic Background Particles */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {[...Array(4)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{ 
-              opacity: [0.03, 0.08, 0.03],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{ 
-              duration: 15 + i * 5, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
-            }}
-            className="absolute w-[500px] h-[500px] bg-[#FFB52E]/5 rounded-full blur-[100px] will-change-[opacity,transform]"
-            style={{
-              top: `${10 + i * 20}%`,
-              left: `${15 + (i % 2) * 40}%`
-            }}
-          />
-        ))}
-      </div>
+      {/* Premium 3D Ambient Background & Moving Glassmorphic UI elements */}
+      <PremiumBackground3D />
 
       {/* Interactive Cursor Spotlight */}
       <div
@@ -631,8 +621,8 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
                 "Strategic CTA optimization"
               ]}
               visual={
-                <div className="relative w-full h-full flex items-center justify-center p-8 perspective-[1500px]">
-                   <div className="grid grid-cols-2 gap-6 rotate-[15deg] skew-x-[-15deg] scale-110">
+                <div className="relative w-full h-full flex items-center justify-center p-6 sm:p-8 md:p-12 perspective-[1500px]">
+                   <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full max-w-[320px] xs:max-w-[380px] sm:max-w-[440px] md:max-w-[500px] lg:max-w-[460px] xl:max-w-[540px] rotate-[6deg] skew-x-[-6deg] scale-95 sm:scale-100 lg:scale-[1.05] xl:scale-110 group-hover:rotate-0 group-hover:skew-x-0 transition-all duration-700 ease-[0.16,1,0.3,1]">
                       {[
                         { icon: Layers, label: "CONVERSION ARCHITECTURE", desc: "Multi-layered logic" },
                         { icon: Zap, label: "DECISION TRIGGERS", desc: "Behavioral hooks" },
@@ -650,17 +640,17 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
                             ease: [0.16, 1, 0.3, 1] 
                           }}
                           style={{ transformStyle: "preserve-3d" }}
-                          className="group relative w-44 h-44 bg-white/[0.03] border-t border-l border-white/20 rounded-[32px] backdrop-blur-3xl p-6 flex flex-col justify-between overflow-hidden shadow-[20px_20px_60px_-15px_rgba(0,0,0,0.5)] hover:border-[#FFB52E]/50 transition-all duration-500"
+                          className="group/card relative w-full aspect-square md:aspect-auto md:h-44 xl:h-48 bg-white/[0.03] border border-white/10 rounded-[24px] sm:rounded-[32px] backdrop-blur-3xl p-4 sm:p-5 xl:p-6 flex flex-col justify-between overflow-hidden shadow-[10px_10px_35px_-10px_rgba(0,0,0,0.5)] md:shadow-[20px_20px_60px_-15px_rgba(0,0,0,0.5)] hover:border-[#FFB52E]/50 hover:bg-white/[0.06] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(255,181,46,0.12)]"
                         >
-                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50" />
-                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#FFB52E,transparent_80%)] opacity-0 group-hover:opacity-10 transition-opacity" />
+                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30 group-hover/card:opacity-50 transition-opacity" />
+                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#FFB52E,transparent_80%)] opacity-0 group-hover/card:opacity-10 transition-opacity" />
                            
-                           <div className="w-12 h-12 rounded-2xl bg-[#FFB52E]/10 flex items-center justify-center border border-[#FFB52E]/20 group-hover:scale-110 transition-transform duration-500">
-                             <item.icon size={24} className="text-[#FFB52E]" />
+                           <div className="w-9 h-9 sm:w-11 sm:h-11 xl:w-12 xl:h-12 rounded-xl sm:rounded-2xl bg-[#FFB52E]/10 flex items-center justify-center border border-[#FFB52E]/20 group-hover/card:scale-110 group-hover/card:bg-[#FFB52E]/20 transition-all duration-500">
+                             <item.icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 xl:w-6 xl:h-6 text-[#FFB52E]" />
                            </div>
-                           <div className="space-y-1">
-                              <span className="block text-[8px] font-sans text-gray-500 tracking-[0.2em] font-black uppercase">{item.label}</span>
-                              <span className="block text-[10px] text-gray-400 font-medium">{item.desc}</span>
+                           <div className="space-y-1 sm:space-y-2">
+                              <span className="block text-[7.5px] sm:text-[9px] font-sans text-gray-500 tracking-[0.15em] sm:tracking-[0.2em] font-black uppercase">{item.label}</span>
+                              <span className="block text-[11px] sm:text-[13px] text-gray-300 font-medium leading-tight">{item.desc}</span>
                            </div>
 
                            {/* Interactive Glowing Trace */}
@@ -861,7 +851,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-32 px-4 relative overflow-hidden bg-[#0A0A0A]">
+      <section className="py-32 px-4 relative overflow-hidden bg-transparent">
         {/* Background Luxury Elements - Glassmorphism Orbs */}
         <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#FFB52E]/5 rounded-full blur-[120px] animate-pulse pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#FFB52E]/3 rounded-full blur-[100px] pointer-events-none" />
@@ -925,7 +915,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
 
 
       {/* Footer Ecosystem */}
-      <footer className="relative pt-32 pb-12 overflow-hidden border-t border-white/5 bg-[#050505]">
+      <footer className="relative pt-32 pb-12 overflow-hidden border-t border-white/5 bg-transparent">
         {/* Cinematic Ambient Glows */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/30 to-transparent" />
         <div className="absolute top-0 right-[10%] w-[400px] h-[400px] bg-purple-900/5 rounded-full blur-[120px] pointer-events-none" />
