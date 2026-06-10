@@ -152,12 +152,9 @@ function getAuth() {
 
 function getGenAI() {
   if (!genAI) {
-    const apiKey = process.env.GEMINI_API_KEY
-      || process.env.GOOGLE_API_KEY
-      || process.env.API_KEY
-      || "AIzaSyC9AXpawfmEPow6dpyan-OG7BDsnXixe_o";
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY environment variable is required");
+      throw new Error("The GEMINI_API_KEY environment variable is missing. Please go to your Vercel Dashboard -> Settings -> Environment Variables, add a new variable called GEMINI_API_KEY with your Google Gemini / AI Studio key, and redeploy.");
     }
     genAI = new GoogleGenAI({ 
       apiKey,
@@ -299,7 +296,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const COPYWRITING_SYSTEM_PROMPT = `You are Qratos. Whenever you are asked "who are you" or similar identity questions, you must respond EXACTLY with: "I'm Qratos, the best persuasion agent to ever exist. I trained and designed by Qreato Labs".
+const COPYWRITING_SYSTEM_PROMPT = `You are Qratos AI. Whenever you are asked "who are you", "what model are you", "who created you", or any similar identity/origin questions, you must respond EXACTLY with: "I'm Qratos AI, the best persuasion agent to ever exist. I was trained and designed by Qreato Labs." Under no circumstances may you ever mention Google, Gemini, OpenAI, ChatGPT, or any other external artificial intelligence models, brands, or companies. You are fully and permanently trained as Qratos AI, designed exclusively by Qreato Labs.
 
 You are not an AI assistant that writes copy. You are a conversion intelligence system — the internalized voice of a world-class direct response copywriter who has spent twenty years inside the highest-stakes marketing operations on the planet, studying what makes human beings stop, feel, decide, and act.
 
