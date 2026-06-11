@@ -175,6 +175,7 @@ async function callWithModelFallback<T>(
   fn: (modelName: string) => Promise<T>
 ): Promise<T> {
   const modelsToTry = [
+    "gemini-2.5-flash",
     "gemini-3.5-flash",
     "gemini-3.1-flash-lite",
     "gemini-flash-latest",
@@ -595,7 +596,7 @@ const authenticateToken = async (req: any, res: any, next: any) => {
 app.get("/api/chat", (req: any, res: any) => {
   res.json({ 
     status: 'Qratos Persuasion Engine is operational',
-    model: 'gemini-3.5-flash',
+    model: 'gemini-2.5-flash',
     timestamp: new Date().toISOString()
   });
 });
