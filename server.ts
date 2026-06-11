@@ -176,9 +176,8 @@ async function callWithModelFallback<T>(
 ): Promise<T> {
   const modelsToTry = [
     "gemini-3.5-flash",
-    "gemini-2.5-flash",
-    "gemini-flash-latest",
     "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
     "gemini-3.1-pro-preview"
   ];
   
@@ -192,8 +191,13 @@ async function callWithModelFallback<T>(
       console.error(`[Gemini] Failed with model ${model}:`, error);
       lastError = error;
       
-      const statusStr = String(error.status || error.statusCode || error.code || "").toUpperCase();
-      const errorMessage = String(error.message || (typeof error === "object" ? JSON.stringify(error) : error)).toLowerCase();
+      if (error && error.noFallback) {
+        console.warn(`[Gemini] Fallback aborted due to noFallback flag (e.g. streaming already started)`);
+        throw error;
+      }
+      
+      const statusStr = String(error?.status || error?.statusCode || error?.code || "").toUpperCase();
+      const errorMessage = String(error?.message || (typeof error === "object" ? JSON.stringify(error) : error)).toLowerCase();
       const errorStr = String(error).toLowerCase();
       
       const isUnavailable = statusStr === "503" || 
@@ -642,8 +646,16 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
-      const result = await callWithModelFallback(async (modelName) => {
-        return await ai.models.generateContentStream({
+      let hasSentChunk = false;
+
+      await callWithModelFallback(async (modelName) => {
+        if (hasSentChunk) {
+          const err: any = new Error("Stream interrupted mid-generation");
+          err.noFallback = true;
+          throw err;
+        }
+
+        const streamResult = await ai.models.generateContentStream({
           model: modelName,
           contents,
           config: {
@@ -654,13 +666,16 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
             topK: 40
           },
         });
-      });
 
-      for await (const chunk of result) {
-        const text = chunk.text;
-        fullResponse += text;
-        res.write(`data: ${JSON.stringify({ text })}\n\n`);
-      }
+        let localResponse = "";
+        for await (const chunk of streamResult) {
+          const text = chunk.text || "";
+          localResponse += text;
+          hasSentChunk = true;
+          res.write(`data: ${JSON.stringify({ text })}\n\n`);
+        }
+        fullResponse = localResponse;
+      });
 
       // Save to persistence
       const historyUpdate = [
