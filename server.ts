@@ -175,11 +175,7 @@ async function callWithModelFallback<T>(
   fn: (modelName: string) => Promise<T>
 ): Promise<T> {
   const modelsToTry = [
-    "gemini-2.5-flash",
-    "gemini-3.5-flash",
-    "gemini-3.1-flash-lite",
-    "gemini-flash-latest",
-    "gemini-3.1-pro-preview"
+    "gemini-2.5-flash"
   ];
   
   let lastError: any = null;
@@ -260,7 +256,7 @@ const runAPIdiagnostic = async () => {
   
   // Test the actual API connection
   try {
-    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
     // Note: in Node.js, we can use global fetch
     const testResponse = await fetch(testUrl, {
