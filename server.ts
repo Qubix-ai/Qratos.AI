@@ -168,130 +168,7 @@ function getGenAI() {
   return genAI;
 }
 
-/**
- * Helper to call a Gemini generation function with automatic model fallbacks on 503/429/UNAVAILABLE errors
- */
-async function callWithModelFallback<T>(
-  fn: (modelName: string) => Promise<T>
-): Promise<T> {
-  const modelsToTry = [
-    "gemini-2.5-flash"
-  ];
-  
-  let lastError: any = null;
-  
-  for (const model of modelsToTry) {
-    try {
-      console.log(`[Gemini] Attempting generation with model: ${model}`);
-      return await fn(model);
-    } catch (error: any) {
-      console.error(`[Gemini] Failed with model ${model}:`, error);
-      lastError = error;
-      
-      if (error && error.noFallback) {
-        console.warn(`[Gemini] Fallback aborted due to noFallback flag (e.g. streaming already started)`);
-        throw error;
-      }
-      
-      const statusStr = String(error?.status || error?.statusCode || error?.code || "").toUpperCase();
-      const errorMessage = String(error?.message || (typeof error === "object" ? JSON.stringify(error) : error)).toLowerCase();
-      const errorStr = String(error).toLowerCase();
-      
-      const isUnavailable = statusStr === "503" || 
-                            statusStr === "UNAVAILABLE" ||
-                            statusStr.includes("UNAVAILABLE") ||
-                            statusStr.includes("503") ||
-                            errorMessage.includes("503") || 
-                            errorMessage.includes("unavailable") || 
-                            errorMessage.includes("high demand") ||
-                            errorMessage.includes("temporary") ||
-                            errorStr.includes("503") ||
-                            errorStr.includes("unavailable") ||
-                            errorStr.includes("high demand") ||
-                            errorStr.includes("temporary");
-                            
-      const isRateLimited = statusStr === "429" || 
-                            statusStr.includes("429") ||
-                            statusStr === "RESOURCE_EXHAUSTED" ||
-                            statusStr.includes("QUOTA") ||
-                            errorMessage.includes("429") || 
-                            errorMessage.includes("quota") ||
-                            errorMessage.includes("limit") ||
-                            errorMessage.includes("exhausted") ||
-                            errorStr.includes("429") ||
-                            errorStr.includes("quota") ||
-                            errorStr.includes("limit") ||
-                            errorStr.includes("exhausted");
-      
-      if (isUnavailable || isRateLimited) {
-        console.warn(`[Gemini] Model ${model} is busy, unavailable or quota limited. Falling back...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        continue;
-      }
-      
-      // If it is another type of error, we can still fall back to other models to ensure service availability
-      console.warn(`[Gemini] Model ${model} returned a general error. Trying fallback model to ensure service availability...`);
-      await new Promise(resolve => setTimeout(resolve, 200));
-      continue;
-    }
-  }
-  
-  throw lastError || new Error("All fallback models failed.");
-}
 
-const runAPIdiagnostic = async () => {
-  console.log('=== GEMINI API DIAGNOSTIC ===');
-  
-  const key = process.env.GEMINI_API_KEY 
-    || process.env.GOOGLE_API_KEY
-    || process.env.API_KEY
-    || "AIzaSyC9AXpawfmEPow6dpyan-OG7BDsnXixe_o";
-  
-  console.log('Key found:', key ? 'YES — ' + key.substring(0, 10) + '...' : 'NO — KEY IS MISSING');
-  
-  if (!key) {
-    console.log('DIAGNOSIS: API key is not reaching the server environment. This is the entire problem.');
-    return;
-  }
-  
-  // Test the actual API connection
-  try {
-    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-    
-    // Note: in Node.js, we can use global fetch
-    const testResponse = await fetch(testUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: 'Say the word TEST only' }] }]
-      })
-    });
-    
-    console.log('API response status:', testResponse.status);
-    
-    const responseText = await testResponse.text();
-    console.log('API response body:', responseText.substring(0, 400));
-    
-    if (testResponse.status === 200) {
-      console.log('DIAGNOSIS: API key works. Problem is in how it is passed to the chat function.');
-    } else if (testResponse.status === 400) {
-      console.log('DIAGNOSIS: Bad request format. Request body structure is wrong.');
-    } else if (testResponse.status === 403) {
-      console.log('DIAGNOSIS: API key is invalid or Generative Language API is not enabled in Google Cloud Console.');
-    } else if (testResponse.status === 429) {
-      console.log('DIAGNOSIS: Rate limit hit. Too many requests.');
-    } else {
-      console.log('DIAGNOSIS: Unexpected status. See response body above.');
-    }
-    
-  } catch (error: any) {
-    console.log('DIAGNOSIS: Fetch itself failed —', error.message);
-    console.log('This means the server cannot reach generativelanguage.googleapis.com');
-    console.log('Google AI Studio may be blocking outbound API calls to external URLs from server code.');
-  }
-  
-  console.log('=== END DIAGNOSTIC ===');
-};
 
 const app = express();
 app.use(cors());
@@ -643,36 +520,23 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
-      let hasSentChunk = false;
-
-      await callWithModelFallback(async (modelName) => {
-        if (hasSentChunk) {
-          const err: any = new Error("Stream interrupted mid-generation");
-          err.noFallback = true;
-          throw err;
-        }
-
-        const streamResult = await ai.models.generateContentStream({
-          model: modelName,
-          contents,
-          config: {
-            systemInstruction: COPYWRITING_SYSTEM_PROMPT,
-            temperature: 0.85,
-            maxOutputTokens: 2048,
-            topP: 0.95,
-            topK: 40
-          },
-        });
-
-        let localResponse = "";
-        for await (const chunk of streamResult) {
-          const text = chunk.text || "";
-          localResponse += text;
-          hasSentChunk = true;
-          res.write(`data: ${JSON.stringify({ text })}\n\n`);
-        }
-        fullResponse = localResponse;
+      const streamResult = await ai.models.generateContentStream({
+        model: 'gemini-2.5-flash',
+        contents,
+        config: {
+          systemInstruction: COPYWRITING_SYSTEM_PROMPT,
+          temperature: 0.85,
+          maxOutputTokens: 2048,
+          topP: 0.95,
+          topK: 40
+        },
       });
+
+      for await (const chunk of streamResult) {
+        const text = chunk.text || "";
+        fullResponse += text;
+        res.write(`data: ${JSON.stringify({ text })}\n\n`);
+      }
 
       // Save to persistence
       const historyUpdate = [
@@ -708,21 +572,19 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
       res.write('data: [DONE]\n\n');
       res.end();
     } else {
-      const result = await callWithModelFallback(async (modelName) => {
-        return await ai.models.generateContent({
-          model: modelName,
-          contents,
-          config: {
-            systemInstruction: COPYWRITING_SYSTEM_PROMPT,
-            temperature: 0.85,
-            maxOutputTokens: 2048,
-            topP: 0.95,
-            topK: 40
-          },
-        });
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents,
+        config: {
+          systemInstruction: COPYWRITING_SYSTEM_PROMPT,
+          temperature: 0.85,
+          maxOutputTokens: 2048,
+          topP: 0.95,
+          topK: 40
+        },
       });
       
-      const assistantResponse = result.text;
+      const assistantResponse = result.text || "";
       
       // Save to persistence
       const historyUpdate = [
@@ -945,9 +807,6 @@ async function startServer() {
     app.listen(PORT, HOST, () => {
       console.log(`[Qratos] Server listening at http://${HOST}:${PORT}`);
       console.log(`[Qratos] Mode: ${isProd ? "production" : "development"}`);
-      runAPIdiagnostic().catch(err => {
-        console.error("Failed to run API diagnostic:", err);
-      });
     });
   } catch (err) {
     console.error("Critical: Server failed to start:", err);
