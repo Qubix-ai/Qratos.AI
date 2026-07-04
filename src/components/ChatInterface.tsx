@@ -322,7 +322,7 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
   }, [messages, isLoading]);
 
   const callGeminiAPI = async (userMessage: string, history: any[] = []) => {
-    console.log('Securely routing API call through full-stack backend proxy...');
+    console.log('Routing API call directly to Google Generative Language API...');
     
     let currentSessionId = activeSessionId;
     if (!currentSessionId && user) {
@@ -335,7 +335,59 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
       }
     }
 
-    // Safe access to auth (Fix for Null Optional Chaining Crash on Guest Session)
+    // Client-side API key configuration for the free-tier pivot
+    // WARNING: Storing secrets in the frontend exposes them to user browsers.
+    // Ensure you configure this securely or use Vite's env injection on your deployment platform (e.g. Render).
+    const API_KEY = (import.meta as any).env.VITE_GEMINI_API_KEY || "YOUR_NEW_API_KEY_HERE";
+    const hasValidKey = API_KEY && API_KEY !== "YOUR_NEW_API_KEY_HERE" && !API_KEY.includes("YOUR_NEW_");
+
+    if (hasValidKey) {
+      try {
+        console.log('Routing API call directly to Google Generative Language API...');
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`;
+
+        // Structure the native payload with the complete Qratos copywriting system prompting and conversation memory
+        const payload = {
+          systemInstruction: {
+            parts: [{ text: COPYWRITING_SYSTEM_PROMPT }]
+          },
+          contents: [
+            ...history.map((m: any) => ({
+              role: m.role === 'model' || m.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: m.parts?.[0]?.text || m.content || '' }]
+            })),
+            { role: 'user', parts: [{ text: userMessage }] }
+          ],
+          generationConfig: {
+            temperature: 0.85,
+            maxOutputTokens: 2048,
+            topP: 0.95
+          }
+        };
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
+            return data.candidates[0].content.parts[0].text;
+          }
+        } else {
+          console.warn(`Direct client-side API call failed with status ${response.status}. Falling back to backend proxy...`);
+        }
+      } catch (err) {
+        console.warn('Direct client-side API call errored. Falling back to backend proxy...', err);
+      }
+    }
+
+    // Fallback path: Secure routing through the full-stack backend proxy
+    console.log('Securely routing API call through full-stack backend proxy...');
     const token = auth.currentUser ? await auth.currentUser.getIdToken().catch(() => null) : null;
     
     const headers: Record<string, string> = {
@@ -344,33 +396,37 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
-    
+
+    const payload = {
+      messages: [
+        ...history.map((m: any) => ({
+          role: m.role === 'model' || m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.parts?.[0]?.text || m.content || ''
+        })),
+        { role: 'user', content: userMessage }
+      ],
+      conversationId: currentSessionId,
+      stream: false
+    };
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        messages: [
-          ...history.map((m: any) => ({
-            role: m.role === 'model' || m.role === 'assistant' ? 'assistant' : 'user',
-            content: m.parts?.[0]?.text || m.content || ''
-          })),
-          { role: 'user', content: userMessage }
-        ],
-        conversationId: currentSessionId,
-        stream: false
-      })
+      body: JSON.stringify(payload)
     });
 
-    console.log('RESPONSE STATUS:', response.status);
+    console.log('PROXY RESPONSE STATUS:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('API ERROR RESPONSE:', errorText);
-      let errMsg = `API request failed with status ${response.status}`;
+      let errMsg = `Engine limit reached or key configuration error (status: ${response.status})`;
       try {
         const parsed = JSON.parse(errorText);
         if (parsed?.error) {
-          errMsg = parsed.error;
+          errMsg = typeof parsed.error === 'string' ? parsed.error : (parsed.error.message || errMsg);
+        } else if (parsed?.error?.message) {
+          errMsg = parsed.error.message;
         }
       } catch (parseErr) {
         if (errorText) {
@@ -381,7 +437,6 @@ export function ChatInterface({ user, userData, activeTab, activeSessionId, onSe
     }
 
     const data = await response.json();
-    console.log('RESPONSE DATA STRUCTURE:', JSON.stringify(data).substring(0, 300));
     return data.text;
   };
 
