@@ -12,13 +12,16 @@ export function FloatingRevenueObject3D({ className = "" }: FloatingRevenueObjec
     const container = mountRef.current;
     if (!container) return;
 
+    let isVisible = true;
+    let animationFrameId: number;
+
     // SCENE & CAMERA
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       45,
       container.clientWidth / container.clientHeight,
       0.1,
-      100
+      50
     );
     camera.position.set(0, 0, 5.2);
 
@@ -29,9 +32,9 @@ export function FloatingRevenueObject3D({ className = "" }: FloatingRevenueObjec
     });
     renderer.debug.checkShaderErrors = false;
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.4;
+    renderer.toneMappingExposure = 1.3;
 
     container.appendChild(renderer.domElement);
 
@@ -40,26 +43,25 @@ export function FloatingRevenueObject3D({ className = "" }: FloatingRevenueObjec
     scene.add(masterGroup);
 
     // 1. 24K GOLD ICOSAHEDRON / REVENUE VAULT CORE
-    const coreGeo = new THREE.IcosahedronGeometry(1.25, 1);
+    const coreGeo = new THREE.IcosahedronGeometry(1.25, 0); // Low poly smooth for high fps
     const goldMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color("#FFB52E"),
-      emissive: new THREE.Color("#825200"),
+      emissive: new THREE.Color("#6B4200"),
       emissiveIntensity: 0.35,
-      metalness: 0.95,
-      roughness: 0.18,
-      wireframe: false,
+      metalness: 0.9,
+      roughness: 0.22,
     });
 
     const coreMesh = new THREE.Mesh(coreGeo, goldMaterial);
     masterGroup.add(coreMesh);
 
     // 2. INNER GLOWING CYBER WIREFRAME
-    const wireGeo = new THREE.IcosahedronGeometry(1.28, 1);
+    const wireGeo = new THREE.IcosahedronGeometry(1.28, 0);
     const wireMat = new THREE.MeshBasicMaterial({
       color: new THREE.Color("#FFE28A"),
       wireframe: true,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.4,
     });
     const wireMesh = new THREE.Mesh(wireGeo, wireMat);
     masterGroup.add(wireMesh);
@@ -69,7 +71,7 @@ export function FloatingRevenueObject3D({ className = "" }: FloatingRevenueObjec
     masterGroup.add(ringGroup);
 
     // Equator Ring
-    const ring1Geo = new THREE.TorusGeometry(1.85, 0.02, 16, 64);
+    const ring1Geo = new THREE.TorusGeometry(1.85, 0.02, 8, 36);
     const ring1Mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color("#FFB52E"),
       transparent: true,
@@ -80,132 +82,130 @@ export function FloatingRevenueObject3D({ className = "" }: FloatingRevenueObjec
     ringGroup.add(ring1);
 
     // Polar Ring
-    const ring2Geo = new THREE.TorusGeometry(2.1, 0.015, 16, 64);
+    const ring2Geo = new THREE.TorusGeometry(2.1, 0.015, 8, 36);
     const ring2Mat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color("#00F0FF"),
+      color: new THREE.Color("#A855F7"),
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.7,
     });
     const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
     ring2.rotation.y = Math.PI / 4;
     ring2.rotation.x = -Math.PI / 6;
     ringGroup.add(ring2);
 
-    // 4. FLOATING GOLDEN STARDUST / PARTICLES
-    const particleCount = 75;
+    // 4. FLOATING PARTICLES
+    const particleCount = 40;
     const particleGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
-    const scales = new Float32Array(particleCount);
 
     for (let i = 0; i < particleCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(Math.random() * 2 - 1);
-      const r = 1.9 + Math.random() * 1.5;
+      const r = 1.8 + Math.random() * 1.2;
 
       positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = r * Math.cos(phi);
-      scales[i] = Math.random();
     }
 
     particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     const particleMat = new THREE.PointsMaterial({
       color: new THREE.Color("#FFD700"),
-      size: 0.06,
+      size: 0.05,
       transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.7,
     });
     const particlePoints = new THREE.Points(particleGeo, particleMat);
     masterGroup.add(particlePoints);
 
-    // 5. CINEMATIC LUXURY LIGHTING
-    const keyLight = new THREE.DirectionalLight(0xfffaed, 3.5);
+    // LIGHTS
+    const keyLight = new THREE.DirectionalLight(0xfffaed, 3.0);
     keyLight.position.set(4, 5, 4);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x00e5ff, 2.0);
+    const rimLight = new THREE.DirectionalLight(0xa855f7, 2.0);
     rimLight.position.set(-4, -3, -3);
     scene.add(rimLight);
 
-    const centerGlow = new THREE.PointLight(0xffb52e, 2.5, 8);
-    centerGlow.position.set(0, 0, 0);
-    scene.add(centerGlow);
+    // IntersectionObserver to pause loop when offscreen
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isVisible = entry.isIntersecting;
+          if (isVisible && !animationFrameId) {
+            animate();
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(container);
 
-    // MOUSE PARALLAX & SCROLL SCRUBBING
-    let mouseX = 0;
-    let mouseY = 0;
-    let scrollY = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      mouseY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-    };
-
-    const handleScroll = () => {
-      scrollY = window.scrollY || window.pageYOffset;
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    // ANIMATION LOOP
-    let animId: number;
-    const clock = new THREE.Clock();
-
+    let time = 0;
     const animate = () => {
-      animId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      if (!isVisible) {
+        animationFrameId = 0;
+        return;
+      }
 
-      // Scroll scrubbing effect
-      const scrollRotation = scrollY * 0.0025;
+      time += 0.01;
 
-      // Smooth floating physics
-      masterGroup.position.y = Math.sin(t * 1.5) * 0.12;
-      masterGroup.rotation.y = t * 0.4 + mouseX * 0.6 + scrollRotation;
-      masterGroup.rotation.x = Math.sin(t * 0.8) * 0.15 - mouseY * 0.4;
+      // Smooth idle rotation
+      coreMesh.rotation.y = time * 0.4;
+      coreMesh.rotation.x = Math.sin(time * 0.3) * 0.2;
+      wireMesh.rotation.y = time * 0.4;
+      wireMesh.rotation.x = Math.sin(time * 0.3) * 0.2;
 
-      // Reverse orbiting rings
-      ring1.rotation.z = t * 0.8;
-      ring2.rotation.z = -t * 0.6;
-      particlePoints.rotation.y = -t * 0.2;
+      ringGroup.rotation.y = -time * 0.3;
+      ring1.rotation.z = time * 0.2;
+      ring2.rotation.z = -time * 0.25;
+
+      particlePoints.rotation.y = time * 0.15;
+
+      // Subtle levitation
+      masterGroup.position.y = Math.sin(time * 1.2) * 0.1;
 
       renderer.render(scene, camera);
+      animationFrameId = requestAnimationFrame(animate);
     };
 
     animate();
 
-    // RESIZE OBSERVER
-    const ro = new ResizeObserver(() => {
+    const handleResize = () => {
       if (!container) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
+      camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    });
-    ro.observe(container);
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    };
+
+    window.addEventListener("resize", handleResize, { passive: true });
 
     return () => {
-      cancelAnimationFrame(animId);
-      ro.disconnect();
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("scroll", handleScroll);
-      renderer.dispose();
-      if (container && renderer.domElement) {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
+      window.removeEventListener("resize", handleResize);
+      if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      renderer.dispose();
+      coreGeo.dispose();
+      goldMaterial.dispose();
+      wireGeo.dispose();
+      wireMat.dispose();
+      ring1Geo.dispose();
+      ring1Mat.dispose();
+      ring2Geo.dispose();
+      ring2Mat.dispose();
+      particleGeo.dispose();
+      particleMat.dispose();
     };
   }, []);
 
   return (
-    <div className={`relative flex items-center justify-center ${className}`}>
-      {/* Background Volumetric Gold Radiance */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-[#FFB52E]/20 via-amber-500/10 to-transparent rounded-full blur-[60px] pointer-events-none animate-pulse" />
-      
-      {/* 3D Canvas Mount */}
-      <div ref={mountRef} className="w-full h-full min-h-[300px]" />
-    </div>
+    <div
+      ref={mountRef}
+      className={`relative w-full h-[320px] sm:h-[400px] flex items-center justify-center pointer-events-none select-none ${className}`}
+      style={{ transform: "translateZ(0)" }}
+    />
   );
 }

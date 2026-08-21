@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Eye, EyeOff, Lock, Mail, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { FloatingIridescentBlobs } from "./FloatingIridescentBlobs";
+import { recordUserActivity } from "../lib/sessionManager";
 import { QreatoLogo } from "./QreatoLogo";
 
 interface AuthModalProps {
@@ -68,10 +68,12 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
         });
         if (signInErr) throw signInErr;
         if (data.session) {
+          recordUserActivity();
           onSuccess?.();
           onClose();
         }
       } else {
+        // Frictionless Signup Flow (Email confirmation is disabled in Supabase)
         if (!trimmedPassword) {
           setError("Please enter a secure password.");
           setLoading(false);
@@ -82,27 +84,49 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           setLoading(false);
           return;
         }
-        const { data, error: signUpErr } = await supabase.auth.signUp({
+
+        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
           email: trimmedEmail,
           password: trimmedPassword,
         });
-        if (signUpErr) throw signUpErr;
 
-        if (data.session) {
+        if (signUpErr) {
+          throw signUpErr;
+        }
+
+        // If session returned directly, land straight in workspace
+        if (signUpData?.session) {
+          recordUserActivity();
           onSuccess?.();
           onClose();
-        } else {
-          setSuccessMessage("Account created successfully! You can now log in with your credentials.");
+          return;
+        }
+
+        // If user created without immediate session, seamlessly log in right away
+        const { data: signInData, error: autoSignInErr } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        });
+
+        if (autoSignInErr) {
+          // If auto sign in had an edge issue, switch to login mode cleanly
           setIsLogin(true);
+          setSuccessMessage("Account created! Please enter your password to enter the workspace.");
+        } else if (signInData?.session) {
+          recordUserActivity();
+          onSuccess?.();
+          onClose();
         }
       }
     } catch (err: any) {
       console.error("Supabase Auth Error:", err);
       let msg = err.message || "Authentication failed. Please verify your credentials.";
-      if (msg.includes("Invalid login credentials")) {
+      
+      const lower = msg.toLowerCase();
+      if (lower.includes("invalid login credentials") || lower.includes("invalid claim")) {
         msg = "Invalid email or password. Please check your credentials and try again.";
-      } else if (msg.includes("User already registered")) {
-        msg = "An account with this email already exists. Please log in.";
+      } else if (lower.includes("already registered") || lower.includes("already exists") || lower.includes("user already registered")) {
+        msg = "An account with this email already exists. Please log in instead.";
         setIsLogin(true);
       }
       setError(msg);
@@ -114,96 +138,100 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4 overflow-y-auto py-8">
+          {/* Backdrop with solid color & GPU blur */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/85 backdrop-blur-md"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            style={{ transform: "translateZ(0)" }}
           />
           
+          {/* Card Container: Solid dark background + hardware accelerated static gradients to prevent flickering */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={error ? { 
-              opacity: 1, 
-              scale: 1, 
-              y: 0,
-              x: [0, -8, 8, -8, 8, 0] 
-            } : { 
-              opacity: 1, 
-              scale: 1, 
-              y: 0,
-              x: 0
-            }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 15 }}
             transition={{ 
-              duration: error ? 0.35 : 0.45, 
+              duration: 0.25, 
               ease: [0.16, 1, 0.3, 1] 
             }}
-            className="relative w-full max-w-md bg-[#08070E] border border-[#8B5CF6]/35 rounded-[32px] p-8 md:p-10 overflow-hidden shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(139,92,246,0.25)]"
+            className="relative w-full max-w-md bg-[#0C0A14] border border-[#8B5CF6]/30 rounded-[28px] p-7 sm:p-9 shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_40px_rgba(139,92,246,0.2)] overflow-hidden z-10 will-change-transform"
+            style={{ transform: "translateZ(0)" }}
           >
-            {/* Iridescent background fluid blobs inside modal container */}
-            <FloatingIridescentBlobs variant="modal" />
+            {/* Stable static ambient glow (no animated heavy SVG filters) */}
+            <div 
+              className="absolute inset-0 pointer-events-none opacity-40"
+              style={{
+                background: "radial-gradient(circle at 85% 15%, rgba(217, 70, 239, 0.22) 0%, transparent 60%), radial-gradient(circle at 15% 85%, rgba(139, 92, 246, 0.22) 0%, transparent 60%)",
+              }}
+            />
 
-            {/* Top Specular Neon Beam */}
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-white/80 to-[#D946EF]" />
+            {/* Top Specular Accent Border */}
+            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#C084FC] to-transparent opacity-80" />
             
+            {/* Close Button */}
             <button 
               onClick={onClose} 
-              className="absolute top-6 right-6 p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer z-10"
+              className="absolute top-5 right-5 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer z-20"
+              aria-label="Close modal"
             >
               <X size={18} />
             </button>
 
+            {/* Header / Brand Mark */}
             <div className="flex flex-col items-center mb-6 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.6)] mb-3">
-                <QreatoLogo size={24} className="text-white" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center shadow-[0_0_25px_rgba(139,92,246,0.6)] mb-3">
+                <QreatoLogo size={22} className="text-white" />
               </div>
               <h2 className="text-2xl font-black tracking-tight text-white uppercase font-sans text-center">
-                {showForgot ? "Reset Access" : isLogin ? "Log In to Murgii" : "Create Murgii Account"}
+                {showForgot ? "Reset Password" : isLogin ? "Log In to Murgii" : "Create Murgii Account"}
               </h2>
-              <p className="text-xs text-[#C084FC]/90 font-mono tracking-widest mt-1 uppercase text-center">
-                Shared with Qreato Bolt Architecture
+              <p className="text-xs text-[#C084FC]/90 font-mono tracking-wider mt-1 uppercase text-center font-bold">
+                Qreato Persuasion Architecture
               </p>
             </div>
 
             {error && (
               <motion.div 
-                initial={{ opacity: 0, y: -6 }}
+                initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 rounded-xl bg-[#FF2A55]/10 border border-[#FF2A55]/30 text-xs text-[#FF859D] flex items-start gap-2.5 relative z-10"
+                className="mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2.5 relative z-10"
               >
-                <AlertCircle size={16} className="text-[#FF2A55] shrink-0 mt-0.5" />
-                <span className="leading-snug">{error}</span>
+                <AlertCircle size={16} className="text-rose-400 shrink-0 mt-0.5" />
+                <span className="leading-relaxed font-medium">{error}</span>
               </motion.div>
             )}
 
             {successMessage && (
               <motion.div 
-                initial={{ opacity: 0, y: -6 }}
+                initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-start gap-2.5 relative z-10"
+                className="mb-4 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-start gap-2.5 relative z-10"
               >
                 <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                <span className="leading-snug">{successMessage}</span>
+                <span className="leading-relaxed font-medium">{successMessage}</span>
               </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
               <div>
-                <label className="block text-[10px] font-mono font-bold text-gray-300 uppercase tracking-widest mb-1.5">
+                <label className="block text-[11px] font-mono font-bold text-gray-300 uppercase tracking-wider mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full bg-white/[0.04] border border-white/10 rounded-2xl py-3.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#8B5CF6]/60 focus:bg-white/[0.07] transition-all font-sans"
+                    autoComplete="email"
+                    className="w-full bg-white/[0.05] border border-white/12 rounded-xl py-3.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#8B5CF6] focus:bg-white/[0.08] transition-all font-sans"
                   />
                 </div>
               </div>
@@ -211,7 +239,7 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
               {!showForgot && (
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-[10px] font-mono font-bold text-gray-300 uppercase tracking-widest">
+                    <label className="block text-[11px] font-mono font-bold text-gray-300 uppercase tracking-wider">
                       Password
                     </label>
                     {isLogin && (
@@ -222,26 +250,28 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
                           setError(null);
                           setSuccessMessage(null);
                         }}
-                        className="text-[10px] font-mono text-[#D946EF] hover:underline cursor-pointer"
+                        className="text-[11px] font-mono font-semibold text-[#D946EF] hover:underline cursor-pointer"
                       >
                         Forgot password?
                       </button>
                     )}
                   </div>
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type={showPassword ? "text" : "password"}
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-white/[0.04] border border-white/10 rounded-2xl py-3.5 pl-10 pr-11 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#8B5CF6]/60 focus:bg-white/[0.07] transition-all font-sans"
+                      autoComplete={isLogin ? "current-password" : "new-password"}
+                      className="w-full bg-white/[0.05] border border-white/12 rounded-xl py-3.5 pl-10 pr-11 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#8B5CF6] focus:bg-white/[0.08] transition-all font-sans"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 cursor-pointer"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 cursor-pointer p-1"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -252,20 +282,20 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_35px_rgba(139,92,246,0.45)] disabled:opacity-50 cursor-pointer mt-2"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(139,92,246,0.4)] disabled:opacity-50 cursor-pointer mt-3"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>{showForgot ? "Send Reset Link" : isLogin ? "Sign In to Murgii" : "Create Account"}</span>
+                    <span>{showForgot ? "Send Reset Link" : isLogin ? "Sign In to Workspace" : "Create Account & Enter"}</span>
                     <ArrowRight size={16} />
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-white/08 text-center relative z-10">
+            <div className="mt-6 pt-5 border-t border-white/[0.08] text-center relative z-10">
               {showForgot ? (
                 <button
                   type="button"
@@ -274,13 +304,13 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
                     setError(null);
                     setSuccessMessage(null);
                   }}
-                  className="text-xs text-gray-400 hover:text-[#D946EF] transition-colors cursor-pointer"
+                  className="text-xs text-gray-400 hover:text-[#D946EF] font-medium transition-colors cursor-pointer"
                 >
                   Back to Sign In
                 </button>
               ) : (
                 <p className="text-xs text-gray-400">
-                  {isLogin ? "Don't have an account yet?" : "Already have a Bolt / Murgii account?"}{" "}
+                  {isLogin ? "Don't have an account yet?" : "Already have a Murgii account?"}{" "}
                   <button
                     type="button"
                     onClick={() => {
