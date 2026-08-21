@@ -1,101 +1,147 @@
 import { useState, useEffect } from "react";
-import { onAuthStateChanged, User, signInAnonymously } from "firebase/auth";
-import { auth } from "./lib/firebase";
+import { supabase } from "./lib/supabase";
 import { Sidebar } from "./components/Sidebar";
 import { ChatInterface } from "./components/ChatInterface";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { LandingPage } from "./components/LandingPage";
 import { SplashScreen } from "./components/SplashScreen";
+import { AuthModal } from "./components/AuthModal";
 import { AnimatePresence, motion } from "motion/react";
-import { LayoutDashboard, Target, Zap, ShieldCheck, BrainCircuit, Sparkles } from "lucide-react";
+import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
+import { SpotlightCursor } from "./components/SpotlightCursor";
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState("landing");
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("signup");
 
   useEffect(() => {
     let isMounted = true;
 
-    // Transition away from splash screen after 2s
+    // Splash Screen Timer (2s)
     const splashTimer = setTimeout(() => {
       if (isMounted) setShowSplash(false);
     }, 2000);
 
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (!isMounted) return;
-      
-      if (u) {
-        setUser(u);
-        try {
-          const token = await u.getIdToken();
-          const headers: Record<string, string> = {};
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
-          const res = await fetch("/api/user/me", { headers });
-          
-          if (res.ok) {
-            const data = await res.json();
-            if (isMounted) {
-              setUserData(data);
-            }
-          }
-        } catch (e) {
-          console.error("Error initializing user session:", e);
-        }
-      } else {
-        // No user - sign in anonymously immediately
-        signInAnonymously(auth).catch(err => {
-          console.warn("Anonymous auth restricted or disabled in Firebase. Continuing as guest.", err);
-          // We don't throw - user will just have null 'user' and app will still load
-        }).finally(() => {
-          if (isMounted) setLoading(false);
-        });
-        return; // loading will be set in finally
+    // Initial Supabase Session Check
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Supabase getSession error:", error);
       }
-      // Set loading false once auth state resolved (already signed in)
-      if (isMounted) setLoading(false);
+      if (isMounted) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    });
+
+    // Supabase Auth State Change Listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setUser(session?.user ?? null);
+        if (session?.user && activeTab === "landing") {
+          // If user logged in while on landing, they can continue or go to chat
+        }
+      }
     });
 
     return () => {
       isMounted = false;
-      unsubscribe();
+      subscription.unsubscribe();
       clearTimeout(splashTimer);
     };
   }, []);
 
-  // Return landing/chat structure always after initial loading
+  const handleStartWriting = (mode: "login" | "signup" = "signup") => {
+    if (user) {
+      setActiveTab("chat");
+    } else {
+      setAuthModalMode(mode);
+      setAuthModalOpen(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setActiveTab("landing");
+    setSidebarOpen(false);
+    setShowAdmin(false);
+  };
+
   if (loading) {
     return <SplashScreen />;
   }
 
-  // Full-screen Landing Page to match user vision
+  // Full-screen Landing Page
   if (activeTab === "landing" && !showAdmin) {
     return (
-      <div className="h-screen bg-[#050505] overflow-y-auto overflow-x-hidden selection:bg-[#FFB52E]/30">
+      <div className="h-screen bg-[#050505] overflow-y-auto overflow-x-hidden selection:bg-[#FFB52E]/30 relative">
+        <FilmGrainOverlay />
+        <SpotlightCursor />
         <AnimatePresence>
           {showSplash && <SplashScreen />}
         </AnimatePresence>
-        <LandingPage onStart={() => setActiveTab("chat")} />
+        <LandingPage 
+          user={user}
+          onStart={() => handleStartWriting("signup")}
+          onLogin={() => handleStartWriting("login")}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  // If user is not logged in and tries to view workspace, route back to landing / open login modal
+  if (!user && activeTab !== "landing") {
+    return (
+      <div className="h-screen bg-[#050505] overflow-y-auto overflow-x-hidden selection:bg-[#FFB52E]/30 relative flex items-center justify-center">
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <LandingPage 
+          user={user}
+          onStart={() => handleStartWriting("signup")}
+          onLogin={() => handleStartWriting("login")}
+        />
+        <AuthModal 
+          isOpen={true}
+          onClose={() => setActiveTab("landing")}
+          initialMode="login"
+          onSuccess={() => {
+            setActiveTab("chat");
+          }}
+        />
       </div>
     );
   }
 
   return (
     <div className="flex h-screen bg-[#050505] text-gray-200 overflow-hidden font-sans relative selection:bg-[#FFB52E]/30">
+      <FilmGrainOverlay />
+      <SpotlightCursor />
       <AnimatePresence>
         {showSplash && <SplashScreen />}
       </AnimatePresence>
 
       <Sidebar 
         user={user}
-        userData={userData} 
+        userData={{
+          displayName: user?.email ? user.email.split('@')[0] : "Elite Operator",
+          email: user?.email,
+        }} 
         activeTab={activeTab} 
         activeSessionId={activeSessionId}
         onTabChange={(tab) => {
@@ -107,7 +153,7 @@ export default function App() {
           setActiveSessionId(id);
           setActiveTab("chat");
         }}
-        onLogout={() => auth.signOut()}
+        onLogout={handleLogout}
         onShowAdmin={() => {
           setShowAdmin(true);
           setSidebarOpen(false);
@@ -139,18 +185,27 @@ export default function App() {
             >
               <ChatInterface 
                 user={user} 
-                userData={userData} 
                 activeTab={activeTab} 
                 activeSessionId={activeSessionId}
                 onSessionChange={(id) => setActiveSessionId(id)}
                 onMenuToggle={() => setSidebarOpen(true)}
                 onGoHome={() => setActiveTab("landing")}
+                onLogout={handleLogout}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </main>
+
+      <AuthModal 
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onSuccess={() => {
+          setAuthModalOpen(false);
+          setActiveTab("chat");
+        }}
+      />
     </div>
   );
 }
-

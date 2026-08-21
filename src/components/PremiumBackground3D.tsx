@@ -238,32 +238,32 @@ export function PremiumBackground3D() {
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute left-[4%] top-[25%] hidden xl:flex flex-col gap-3 p-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-[20px] shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(255,181,46,0.02)] min-w-[220px]"
+          className="absolute left-[4%] top-[25%] hidden xl:flex flex-col gap-3 p-4 bg-black/60 backdrop-blur-2xl border border-[#FFB52E]/20 rounded-[22px] shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(255,181,46,0.08)] min-w-[240px]"
         >
           {/* Neon micro gradient edge accent */}
-          <div className="absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/40 to-transparent" />
+          <div className="absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/60 via-white/50 to-transparent" />
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#FFB52E]/10 flex items-center justify-center border border-[#FFB52E]/20">
-                <BarChart3 size={14} className="text-[#FFB52E]" />
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFB52E]/20 to-[#FFB52E]/05 flex items-center justify-center border border-[#FFB52E]/30 shadow-[0_0_15px_rgba(255,181,46,0.2)]">
+                <BarChart3 size={15} className="text-[#FFB52E]" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[9px] text-[#FFB52E] font-black tracking-widest font-mono">CONVERSION KPI</span>
-                <span className="text-[12px] font-bold text-white tracking-tight font-sans">Ecomm Funnel B</span>
+                <span className="text-[9px] text-[#FFB52E] font-black tracking-widest font-mono">CONVERSION LIFT</span>
+                <span className="text-[12px] font-bold text-white tracking-tight font-sans">Murgii Multi-Hook</span>
               </div>
             </div>
-            <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-[6px] font-bold font-mono">+42.6%</span>
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-bold font-mono shadow-[0_0_10px_rgba(16,185,129,0.2)]">+342.8%</span>
           </div>
-          <div className="relative h-1.5 bg-white/5 rounded-full overflow-hidden">
+          <div className="relative h-1.5 bg-white/10 rounded-full overflow-hidden">
             <motion.div 
-              animate={{ width: ["60%", "92%", "84%"] }}
+              animate={{ width: ["65%", "96%", "88%"] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#FFB52E] to-amber-400 rounded-full"
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#FFB52E] via-amber-300 to-white rounded-full shadow-[0_0_8px_#FFB52E]"
             />
           </div>
-          <div className="flex justify-between items-center text-[8px] text-gray-500 font-mono tracking-wider">
-            <span>CTR: 8.42%</span>
-            <span>OPTIMAL STATS</span>
+          <div className="flex justify-between items-center text-[8px] text-gray-400 font-mono tracking-wider">
+            <span>CTR: 14.82%</span>
+            <span className="text-[#FFB52E] font-bold">ROAS: 6.8X</span>
           </div>
         </motion.div>
 
@@ -279,25 +279,26 @@ export function PremiumBackground3D() {
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute right-[5%] top-[38%] hidden lg:flex flex-col gap-2 p-4 bg-black/45 backdrop-blur-xl border border-white/10 rounded-[20px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] min-w-[210px]"
+          className="absolute right-[5%] top-[38%] hidden lg:flex flex-col gap-2.5 p-4 bg-black/60 backdrop-blur-2xl border border-[#FFB52E]/20 rounded-[22px] shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(255,181,46,0.08)] min-w-[220px]"
         >
+          <div className="absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/60 to-transparent" />
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#FFB52E] animate-ping" />
-            <span className="text-[9px] text-gray-400 font-bold font-mono tracking-widest">PERSUASION_CORE</span>
+            <div className="w-2 h-2 rounded-full bg-[#FF2A55] animate-ping" />
+            <span className="text-[9px] text-[#FFB52E] font-black font-mono tracking-widest uppercase">MURGII_ENGINE_V2</span>
           </div>
           
-          <div className="flex flex-col gap-1 mt-1">
+          <div className="flex flex-col gap-1.5 mt-1">
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-500 font-mono">MODEL :</span>
-              <span className="font-mono text-[#FFB52E] font-bold">1.5-FLASH</span>
+              <span className="text-gray-400 font-mono">LATENCY :</span>
+              <span className="font-mono text-[#FFB52E] font-bold">142ms</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-500 font-mono">LATENCY :</span>
-              <span className="font-mono text-white">418ms</span>
+              <span className="text-gray-400 font-mono">PERSUASION :</span>
+              <span className="font-mono text-emerald-400 font-bold">99.8% PEAK</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-500 font-mono">STATUS :</span>
-              <span className="font-mono text-emerald-400 font-bold">OPTIMAL</span>
+              <span className="text-gray-400 font-mono">VALUATION :</span>
+              <span className="font-mono text-white font-bold">$500M GRADE</span>
             </div>
           </div>
         </motion.div>
@@ -306,19 +307,19 @@ export function PremiumBackground3D() {
         <motion.div
           animate={{
             y: [-10, 10, -10],
-            rotate: [15, 5, 15]
+            rotate: [8, -2, 8]
           }}
           transition={{
             duration: 12,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute left-[8%] bottom-[20%] hidden xl:flex items-center gap-3 p-3 bg-black/30 backdrop-blur-lg border border-white/5 rounded-full shadow-lg text-[10px] text-gray-400 font-mono"
+          className="absolute left-[8%] bottom-[20%] hidden xl:flex items-center gap-3 p-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.5)] text-[10px] text-gray-300 font-mono"
         >
-          <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-white">
-            <ShieldCheck size={12} className="text-amber-400" />
+          <div className="w-6 h-6 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/30 flex items-center justify-center text-white">
+            <ShieldCheck size={12} className="text-[#FFB52E]" />
           </div>
-          <span>PERSUASION ALIGNMENT PRE-FILTERED</span>
+          <span className="font-bold tracking-wider text-white/90">MURGII PERSUASION NEURONS ACTIVE</span>
         </motion.div>
 
         {/* Abstract subtle radar sweep gradient / glowing ring in center behind or around logos */}

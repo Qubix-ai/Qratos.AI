@@ -1,6 +1,6 @@
 {
-  "name": "Qratos.ai",
-  "description": "Hyper-specialized AI copywriting operating system focused on persuasive marketing and conversion copy.",
+  "name": "Murgii AI",
+  "description": "The $500M persuasion and copywriting intelligence engine powered by Murgii AI.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

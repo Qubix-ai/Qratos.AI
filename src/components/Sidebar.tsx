@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { BrainCircuit, MessageSquare, Plus, Settings, User as UserIcon, LogOut, LayoutDashboard, History, Sparkles, Target, Mic, Mail, FileText, Globe, Search, X, PlusCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebase";
 
 interface SidebarProps {
   user: any;
@@ -32,26 +30,17 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch Session History (Last 20)
+  // Fetch Session History from local cache
   useEffect(() => {
     if (!user) return;
-    setLoadingHistory(true);
-    const sessionsRef = collection(db, "chats", user.uid, "sessions");
-    const q = query(sessionsRef, orderBy("lastUpdated", "desc"), limit(20));
-
-    const unsubscribe = onSnapshot(q, (snap) => {
-      const items = snap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setHistory(items);
-      setLoadingHistory(false);
-    }, (err) => {
-      console.error("Sidebar history sync error:", err);
-      setLoadingHistory(false);
-    });
-
-    return () => unsubscribe();
+    try {
+      const stored = localStorage.getItem(`murgii_sessions_${user.id || user.uid || 'user'}`);
+      if (stored) {
+        setHistory(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.warn("Could not load sessions from localStorage:", e);
+    }
   }, [user]);
 
   const filteredHistory = history.filter(item => {
@@ -125,21 +114,22 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
             {/* Sidebar Header Area */}
             <div className="p-[20px_20px_16px] border-b border-white/06 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                 <div className="w-[44px] h-[44px] rounded-[12px] bg-gradient-to-br from-[#C9A84C]/20 to-[#C9A84C]/08 border border-[#C9A84C]/25 shadow-[0_0_20px_rgba(201,168,76,0.12)] flex items-center justify-center">
-                    <BrainCircuit size={22} className="text-[#C9A84C]" />
+                 <div className="w-[44px] h-[44px] rounded-[12px] bg-gradient-to-br from-[#FFB52E]/25 via-[#C9A84C]/15 to-[#FF2A55]/10 border border-[#FFB52E]/35 shadow-[0_0_20px_rgba(255,181,46,0.25)] flex items-center justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-[#FFB52E]/20 to-transparent animate-pulse" />
+                    <Sparkles size={20} className="text-[#FFB52E] relative z-10" />
                  </div>
                  <div className="flex flex-col">
                     <div 
-                      className="text-[17px] font-[800] tracking-[0.06em] uppercase"
+                      className="text-[17px] font-[900] tracking-[0.08em] uppercase"
                       style={{
-                        background: 'linear-gradient(135deg, #FFFFFF 0%, #C9A84C 100%)',
+                        background: 'linear-gradient(135deg, #FFFFFF 0%, #FFB52E 60%, #FFA000 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                       }}
                     >
-                      QRATOS.AI
+                      MURGII.AI
                     </div>
-                    <span className="text-[9px] font-[600] tracking-[0.22em] text-[#C9A84C]/65 uppercase">PERSUASION OS</span>
+                    <span className="text-[9px] font-[700] tracking-[0.24em] text-[#FFB52E]/75 uppercase">PERSUASION OS</span>
                  </div>
               </div>
               <button 

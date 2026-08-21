@@ -1,225 +1,30 @@
 import { motion, useSpring, useTransform, animate, AnimatePresence } from "motion/react";
 import { BrainCircuit, Check, ArrowRight, Target, Sparkles, MessageSquare, ShieldCheck, Mail, FileText, Globe, Wand2, Zap, BarChart3, Activity, Layers, Network, Instagram, Facebook, Twitter, Lock, X, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
-import { signInWithEmail, signUpWithEmail, resetPassword } from "../lib/firebase";
+import { AuthModal } from "./AuthModal";
 import { PremiumBackground3D } from "./PremiumBackground3D";
+import { Murgii3DChicken } from "./Murgii3DChicken";
+import { MagneticButton } from "./MagneticButton";
+import { FloatingRevenueObject3D } from "./FloatingRevenueObject3D";
+import { AnimatedRevenueGraph } from "./AnimatedRevenueGraph";
 
-function AuthModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [resetSent, setResetSent] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);
-
-  // Clear state on open/close
-  useEffect(() => {
-    if (isOpen) {
-      setError(null);
-      setResetSent(false);
-      setShowPassword(false);
-    }
-  }, [isOpen]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
-
-    try {
-      if (showForgot) {
-        await resetPassword(trimmedEmail);
-        setResetSent(true);
-      } else if (isLogin) {
-        await signInWithEmail(trimmedEmail, trimmedPassword);
-        onClose();
-      } else {
-        await signUpWithEmail(trimmedEmail, trimmedPassword);
-        onClose();
-      }
-    } catch (err: any) {
-      console.error("Auth Error:", err);
-      // Map common Firebase errors to user-friendly messages
-      let msg = err.message;
-      if (err.code === "auth/operation-not-allowed") {
-        msg = "Email/Password login is not enabled in Firebase. Please enable it in the console.";
-      } else if (err.code === "auth/user-not-found") {
-        msg = "No account found with this email.";
-      } else if (err.code === "auth/wrong-password") {
-        msg = "Incorrect password.";
-      } else if (err.code === "auth/email-already-in-use") {
-        msg = "This email is already registered.";
-      }
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={error ? { 
-              opacity: 1, 
-              scale: 1, 
-              y: 0,
-              x: [0, -10, 10, -10, 10, 0] 
-            } : { 
-              opacity: 1, 
-              scale: 1, 
-              y: 0,
-              x: 0
-            }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ 
-              duration: error ? 0.4 : 0.5, 
-              ease: error ? "easeInOut" : [0.16, 1, 0.3, 1] 
-            }}
-            className="relative w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-[32px] p-8 md:p-10 overflow-hidden shadow-2xl"
-          >
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/30 to-transparent" />
-            <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
-              <X size={20} />
-            </button>
-
-            <div className="flex flex-col items-center mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E]/50 flex items-center justify-center shadow-[0_0_20px_-5px_#FFB52E] mb-4">
-                <BrainCircuit size={24} className="text-black" />
-              </div>
-              <h2 className="text-2xl font-bold tracking-tight text-white italic">
-                {showForgot ? "Reset Engine Access" : isLogin ? "Access Persuasion OS" : "Initialize Creator Link"}
-              </h2>
-              <p className="text-xs text-gray-500 mt-2 font-medium">
-                {showForgot ? "Enter your email to receive reset instructions" : isLogin ? "Welcome back to elite levels of conversion" : "Join the frontier of strategic copywriting"}
-              </p>
-            </div>
-
-            {resetSent ? (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
-                  <Check size={20} className="text-green-500" />
-                </div>
-                <p className="text-gray-300 mb-6">Password reset link sent! Check your inbox.</p>
-                <button 
-                  onClick={() => {
-                    setShowForgot(false);
-                    setResetSent(false);
-                  }}
-                  className="text-[#FFB52E] text-xs font-black uppercase tracking-widest hover:underline"
-                >
-                  Back to Login
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Professional Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
-                    <input 
-                      required
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@company.com"
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-sm text-white placeholder:text-gray-700 focus:outline-none focus:border-[#FFB52E]/30 transition-all font-medium"
-                    />
-                  </div>
-                </div>
-
-                {!showForgot && (
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Secure Keypass</label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={16} />
-                      <input 
-                        required
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-sm text-white placeholder:text-gray-700 focus:outline-none focus:border-[#FFB52E]/30 transition-all font-medium"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-[#FFB52E] transition-all p-2 -mr-2"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {error && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                    <p className="text-red-400 text-[10px] leading-relaxed text-center font-bold">{error}</p>
-                  </div>
-                )}
-
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full group relative flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-br from-white to-gray-300 text-black font-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50"
-                >
-                  <span className="text-sm tracking-tight uppercase">
-                    {loading ? "Authenticating..." : showForgot ? "Send Reset Link" : isLogin ? "Access System" : "Create Link"}
-                  </span>
-                  {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
-                </button>
-
-                <div className="flex flex-col items-center gap-3 pt-4 border-t border-white/5">
-                  {!showForgot && (
-                    <button 
-                      type="button"
-                      onClick={() => setShowForgot(true)}
-                      className="text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors"
-                    >
-                      Forgotten credentials?
-                    </button>
-                  )}
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      if (showForgot) setShowForgot(false);
-                      else setIsLogin(!isLogin);
-                    }}
-                    className="text-[#FFB52E] text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-125 transition-all"
-                  >
-                    {showForgot ? "Return to authentication" : isLogin ? "Request fresh access link" : "Already have access? Connect"}
-                  </button>
-                </div>
-              </form>
-            )}
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
+interface LandingPageProps {
+  user?: any;
+  onStart?: () => void;
+  onLogin?: () => void;
 }
 
-export function LandingPage({ onStart }: { onStart?: () => void }) {
+export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
 
   const handleLoginClick = () => {
-    if (onStart) {
+    if (user && onStart) {
+      onStart();
+    } else if (onStart) {
       onStart();
     } else {
+      setAuthMode("signup");
       setAuthModalOpen(true);
     }
   };
@@ -237,13 +42,13 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
     {
       name: "Alex Rivera",
       role: "Growth Lead at Scalar",
-      content: "Qratos didn't just write my ads; it re-engineered my entire conversion strategy. We tracked $400k in direct revenue in 30 days.",
+      content: "Murgii AI didn't just write my ads; it re-engineered my entire conversion strategy. We tracked $400k in direct revenue in 30 days.",
       image: "https://randomuser.me/api/portraits/men/32.jpg"
     },
     {
       name: "Sarah Jenkins",
       role: "Founder of Aura Agency",
-      content: "The persuasion depth is unparalleled. Finally, an AI that understands human emotion instead of just templates. It's a game changer.",
+      content: "The persuasion depth is unparalleled. Finally, an AI that understands human emotion instead of just templates. Murgii AI is a game changer.",
       image: "https://randomuser.me/api/portraits/women/44.jpg"
     },
     {
@@ -255,13 +60,13 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
     {
       name: "Elena Kosta",
       role: "Direct Response Copywriter",
-      content: "I was skeptical, but Qratos creates hooks that I couldn't even brainstorm myself. It's my secret weapon for high-ticket clients.",
+      content: "I was skeptical, but Murgii AI creates hooks that I couldn't even brainstorm myself. It's my secret weapon for high-ticket clients.",
       image: "https://randomuser.me/api/portraits/women/12.jpg"
     },
     {
       name: "David Miller",
       role: "E-comm Marketing Director",
-      content: "Scaling from 6 to 7 figures was a nightmare until we automated our funnel assets with Qratos. It engineered growth effortlessly.",
+      content: "Scaling from 6 to 7 figures was a nightmare until we automated our funnel assets with Murgii AI. It engineered growth effortlessly.",
       image: "https://randomuser.me/api/portraits/men/22.jpg"
     },
     {
@@ -273,7 +78,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
     {
       name: "James T. Wilson",
       role: "Performance Marketer",
-      content: "Every single iteration generated by Qratos is a winner. We've cut our creative testing time by 85%. Elite level intelligence.",
+      content: "Every single iteration generated by Murgii AI is a winner. We've cut our creative testing time by 85%. Elite level intelligence.",
       image: "https://randomuser.me/api/portraits/men/86.jpg"
     }
   ];
@@ -304,7 +109,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
       />
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-32 px-4 overflow-hidden">
+      <section className="relative pt-32 pb-32 px-4 overflow-hidden">
         {/* Cinematic Atmosphere */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,181,46,0.08)_0%,transparent_70%)] pointer-events-none" />
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[160px] pointer-events-none" />
@@ -317,20 +122,30 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-10 inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-sans tracking-[0.2em] font-bold text-[#FFB52E] backdrop-blur-md"
+            className="mb-8 inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-[#FFB52E]/20 text-[10px] font-sans tracking-[0.2em] font-bold text-[#FFB52E] backdrop-blur-md shadow-[0_0_20px_rgba(255,181,46,0.15)]"
           >
-            <Sparkles size={14} className="animate-pulse" />
-            THE FUTURE OF PERSUASION INTELLIGENCE
+            <Sparkles size={14} className="animate-pulse text-[#FFB52E]" />
+            $500M PERSUASION INTELLIGENCE ENGINE
+          </motion.div>
+
+          {/* 3D Animated Murgii Chicken Mascot Showcase */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center justify-center mb-6"
+          >
+            <Murgii3DChicken size="lg" interactive={true} showPedestal={true} showHologram={true} />
           </motion.div>
           
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl sm:text-6xl md:text-[10rem] tracking-tighter mb-10 leading-[0.8] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent will-change-transform"
+            className="text-5xl sm:text-6xl md:text-[8.5rem] tracking-tighter mb-8 leading-[0.85] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent will-change-transform"
           >
-            <span className="font-bold">QRATOS</span>
-            <span className="font-light">.AI</span>
+            <span className="font-black bg-gradient-to-r from-white via-[#FFB52E] to-[#FFA000] bg-clip-text text-transparent">MURGII</span>
+            <span className="font-light text-white/80">.AI</span>
           </motion.h1>
           
           <motion.p
@@ -339,7 +154,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
             transition={{ delay: 0.2, duration: 1 }}
             className="text-lg md:text-xl text-gray-400 max-w-xl mx-auto mb-6 leading-relaxed font-medium px-4"
           >
-            An elite AI persuasion system engineered to generate high-converting copy, strategic campaigns & scalable revenue assets across funnels, launches, emails, ads & premium brand ecosystems.
+            The $500M AI persuasion engine engineered to generate hyper-converting copy, strategic viral hooks & scalable revenue assets across funnels, launches, emails & high-stakes brands.
           </motion.p>
 
           <motion.div
@@ -355,44 +170,43 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 1 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 bg-white/[0.02] border border-white/5 backdrop-blur-3xl p-4 md:p-8 rounded-[32px] md:rounded-[40px] w-full sm:w-fit mx-auto shadow-2xl relative"
+            className="flex flex-col sm:flex-row items-center justify-center gap-5 px-4 bg-white/[0.02] border border-white/10 backdrop-blur-3xl p-4 md:p-8 rounded-[32px] md:rounded-[40px] w-full sm:w-fit mx-auto shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_40px_rgba(255,181,46,0.08)] relative"
           >
             {/* Inner Glow for Glass Effect */}
-            <div className="absolute inset-0 rounded-[32px] md:rounded-[40px] shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] pointer-events-none" />
+            <div className="absolute inset-0 rounded-[32px] md:rounded-[40px] shadow-[inset_0_0_25px_rgba(255,255,255,0.08)] pointer-events-none" />
             
-            <button
+            <MagneticButton
+              variant="gold"
               onClick={handleLoginClick}
-              className="w-full sm:w-auto group relative flex items-center justify-center gap-3 px-10 py-6 bg-gradient-to-br from-white/10 to-white/5 text-white border border-white/10 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all duration-500 shadow-[0_0_30px_-5px_rgba(255,181,46,0.1)] overflow-hidden"
+              className="w-full sm:w-auto px-10 py-6 text-base tracking-tight font-black rounded-2xl"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              <span className="text-base tracking-tight uppercase">
-                Start Writing Free
-              </span>
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </button>
+              <span>Start Writing with Murgii Free</span>
+              <ArrowRight size={18} />
+            </MagneticButton>
 
-            <button 
+            <MagneticButton 
+              variant="glass"
               onClick={handleLoginClick}
-              className="w-full sm:w-auto px-10 py-6 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-white font-bold tracking-tight uppercase text-xs glass-card"
+              className="w-full sm:w-auto px-10 py-6 text-xs font-bold tracking-tight uppercase rounded-2xl"
             >
               Explore Intelligence
-            </button>
+            </MagneticButton>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-24 flex flex-wrap justify-center px-4"
+            className="mt-16 flex flex-wrap justify-center px-4"
           >
-            <span className="text-[10px] md:text-sm font-sans tracking-[0.2em] md:tracking-[0.4em] font-bold text-gray-500 uppercase text-center border-t border-white/5 pt-12 w-full max-w-2xl">
-              specifically trained copywriting agent to generate $100M+ in sales
+            <span className="text-[10px] md:text-sm font-sans tracking-[0.2em] md:tracking-[0.4em] font-bold text-gray-500 uppercase text-center border-t border-white/10 pt-8 w-full max-w-2xl">
+              Specifically trained copywriting agent to generate $500M+ in sales
             </span>
           </motion.div>
         </div>
       </section>
 
-      {/* Why Qratos Section - Testimonial Marquee */}
+      {/* Why Murgii AI Section - Testimonial Marquee */}
       <section className="py-32 relative overflow-hidden contain-paint">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-24 flex flex-col items-center">
@@ -402,7 +216,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
               viewport={{ once: true }}
               className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight mb-8 text-white italic leading-[1.3] px-2 md:px-4 max-w-5xl"
             >
-              Why Qratos is the last <br className="hidden sm:block" /> 
+              Why Murgii AI is the last <br className="hidden sm:block" /> 
               <span className="bg-gradient-to-r from-[#FFB52E] via-[#FFD778] to-[#FFB52E] bg-clip-text text-transparent px-1 md:px-2">copywriting tool</span> 
               <span>you will ever need</span>
             </motion.h2>
@@ -475,7 +289,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
         </div>
       </section>
 
-      {/* How Qratos Engineers Conversion Section */}
+      {/* How Murgii AI Engineers Conversion Section */}
       <section className="py-44 px-4 relative overflow-hidden">
         {/* Cinematic Background Elements */}
         <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-purple-900/5 to-transparent pointer-events-none" />
@@ -490,14 +304,14 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
               className="text-[10px] font-sans text-[#FFB52E] tracking-[0.5em] uppercase mb-6 flex items-center justify-center gap-2"
             >
               <Sparkles size={12} className="animate-pulse" />
-              Elite Infrastructure
+              $500M Infrastructure
             </motion.div>
             <h2 className="text-4xl md:text-8xl font-bold mb-8 tracking-tighter leading-[0.9] bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic">
-              How Qratos Engineers <br className="hidden md:block" /> Conversion
+              How Murgii AI Engineers <br className="hidden md:block" /> Conversion
             </h2>
             <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] to-transparent mx-auto mb-10 shadow-[0_0_20px_#FFB52E]" />
             <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-6">
-              Qratos combines behavioral psychology, conversion intelligence, and strategic AI systems to generate persuasive assets engineered for measurable business growth.
+              Murgii AI combines behavioral psychology, conversion intelligence, and strategic AI systems to generate persuasive assets engineered for measurable business growth.
             </p>
           </div>
 
@@ -506,7 +320,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
             <FeatureBlock 
               index={1}
               title="AI Trained on Elite Conversion Psychology"
-              description="Qratos is engineered using direct response frameworks, behavioral economics, buyer psychology & high-performing persuasion systems optimized for real-world conversion outcomes."
+              description="Murgii AI is engineered using direct response frameworks, behavioral economics, buyer psychology & high-performing persuasion systems optimized for real-world conversion outcomes."
               trustLine="Built for modern digital markets and high-intent customer acquisition."
               points={[
                 "Understands buying psychology",
@@ -611,7 +425,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
               index={2}
               reversed
               title="Generate Complete Revenue Systems"
-              description="Qratos creates interconnected conversion systems including funnels, launch assets, landing pages, email sequences, VSLs, positioning frameworks & revenue-focused campaign structures."
+              description="Murgii AI creates interconnected conversion systems including funnels, launch assets, landing pages, email sequences, VSLs, positioning frameworks & revenue-focused campaign structures."
               points={[
                 "Launch campaign generation",
                 "Funnel architecture",
@@ -688,7 +502,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
             <FeatureBlock 
               index={3}
               title="Real-Time Persuasion Intelligence"
-              description="Qratos dynamically adapts messaging tone, emotional depth, positioning strategy, and persuasive structure based on audience behavior, platform context, and conversion objectives."
+              description="Murgii AI dynamically adapts messaging tone, emotional depth, positioning strategy, and persuasive structure based on audience behavior, platform context, and conversion objectives."
               points={[
                 "Emotional tone adaptation",
                 "Audience-aware copywriting",
@@ -850,6 +664,54 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
         </div>
       </section>
 
+      {/* $500M LIVE REVENUE & PERSUASION ENGINE SHOWCASE */}
+      <section className="py-36 px-4 relative overflow-hidden">
+        {/* Cinematic ambient background glow and subtle grid */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(255,181,46,0.09)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-16 px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/20 text-[10px] font-black text-[#FFB52E] uppercase tracking-[0.25em] mb-6 backdrop-blur-md shadow-[0_0_20px_rgba(255,181,46,0.2)]"
+            >
+              <Activity size={12} className="animate-pulse" />
+              $500M LIVE TELEMETRY MATRIX
+            </motion.div>
+            <h2 className="text-4xl md:text-8xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent italic leading-[0.95]">
+              Real-Time Revenue <br /> & Persuasion Analytics
+            </h2>
+            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Every copy asset generated by Murgii AI undergoes multi-vector psychological testing to maximize click-through rate, conversions, and direct-response returns.
+            </p>
+          </div>
+
+          {/* Dual 3D Vault & Live Graph Showcase */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* 3D Revenue Vault Object with Orbiting Telemetry */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-[32px] bg-black/60 border border-white/10 backdrop-blur-3xl shadow-[0_25px_60px_rgba(0,0,0,0.7)] relative group">
+              <div className="absolute top-4 left-6 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#FFB52E] animate-ping" />
+                <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">3D REVENUE VAULT</span>
+              </div>
+              <FloatingRevenueObject3D className="w-full h-[360px]" />
+              <div className="text-center mt-2">
+                <span className="text-xs font-mono text-[#FFB52E] font-bold tracking-widest uppercase">
+                  CALIBRATED FOR HIGH-TICKET ASSETS
+                </span>
+              </div>
+            </div>
+
+            {/* Interactive Animated Revenue Graph */}
+            <div className="lg:col-span-7">
+              <AnimatedRevenueGraph />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="py-32 px-4 relative overflow-hidden bg-transparent">
         {/* Background Luxury Elements - Glassmorphism Orbs */}
@@ -871,7 +733,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
               Frontier Access <br /> for Early Adopters
             </h2>
             <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Qratos is currently in focused MVP development. We are granting full frontier-level intelligence to a select group of growth-focused pioneers.
+              Murgii AI is currently in focused MVP development. We are granting full frontier-level intelligence to a select group of growth-focused pioneers.
             </p>
           </div>
 
@@ -930,12 +792,12 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
                   <BrainCircuit size={22} className="text-black" />
                 </div>
                 <div className="tracking-tighter text-white uppercase text-2xl italic">
-                  <span className="font-extrabold">QRATOS</span>
+                  <span className="font-extrabold">MURGII</span>
                   <span className="font-light">.AI</span>
                 </div>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed font-medium">
-                Qratos is an elite AI persuasion system engineered for founders, creators, agencies, and brands building scalable revenue through strategic communication.
+                Murgii AI is a $500M persuasion intelligence system engineered for founders, creators, agencies, and brands building scalable revenue through strategic communication.
               </p>
               <div className="flex flex-wrap gap-4 pt-2">
                 {[
@@ -988,7 +850,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
             <div>
               <h4 className="text-[10px] font-sans font-black text-gray-500 uppercase tracking-[0.3em] mb-8">Company</h4>
               <ul className="space-y-4">
-                {["About Qreato Labs", "Careers", "Contact", "Affiliate Program", "Press Kit", "Brand Assets", "Partnerships"].map(item => (
+                {["About Murgii Labs", "Careers", "Contact", "Affiliate Program", "Press Kit", "Brand Assets", "Partnerships"].map(item => (
                   <li key={item}>
                     <a href="#" className="text-xs font-bold text-gray-500 hover:text-white transition-colors relative group w-fit flex items-center gap-2">
                       <span className="w-0 h-[1px] bg-[#FFB52E] transition-all group-hover:w-3" />
@@ -1052,7 +914,7 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
           {/* LEGAL + TRUST STRIP */}
           <div className="pt-12 flex flex-col md:flex-row justify-between items-center gap-8 relative">
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-              <p className="text-[10px] font-sans text-gray-600 uppercase tracking-[0.2em]">© 2026 Qreato Labs. All rights reserved.</p>
+              <p className="text-[10px] font-sans text-gray-600 uppercase tracking-[0.2em]">© 2026 Murgii Labs. All rights reserved.</p>
               <div className="hidden md:block w-3 h-[1px] bg-white/10" />
               <p className="text-[10px] font-sans text-[#FFB52E]/60 uppercase tracking-[0.3em] font-black">Engineered with persuasion intelligence.</p>
             </div>
@@ -1072,7 +934,12 @@ export function LandingPage({ onStart }: { onStart?: () => void }) {
           </div>
         </div>
       </footer>
-      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+        initialMode={authMode} 
+        onSuccess={onStart} 
+      />
     </div>
   );
 }
@@ -1164,7 +1031,7 @@ function MVPPriceCard({
                   className="group relative w-full py-5 md:py-6 rounded-2xl bg-white text-black font-black text-xs md:text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-98 transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                  Claim Early Access
+                  Sign Up & Start Free
                   <ArrowRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
                 </button>
                 
