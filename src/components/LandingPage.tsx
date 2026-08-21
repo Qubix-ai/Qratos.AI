@@ -1,5 +1,5 @@
-import { motion, useSpring, useTransform, animate, AnimatePresence } from "motion/react";
-import { BrainCircuit, Check, ArrowRight, Target, Sparkles, MessageSquare, ShieldCheck, Mail, FileText, Globe, Wand2, Zap, BarChart3, Activity, Layers, Network, Instagram, Facebook, Twitter, Lock, X, Eye, EyeOff } from "lucide-react";
+import { motion, useSpring, useTransform } from "motion/react";
+import { Check, ArrowRight, Target, Sparkles, ShieldCheck, Mail, Globe, Zap, BarChart3, Activity, Layers, Network, Instagram, Facebook, Twitter } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AuthModal } from "./AuthModal";
 import { PremiumBackground3D } from "./PremiumBackground3D";
@@ -7,6 +7,7 @@ import { Murgii3DChicken } from "./Murgii3DChicken";
 import { MagneticButton } from "./MagneticButton";
 import { FloatingRevenueObject3D } from "./FloatingRevenueObject3D";
 import { AnimatedRevenueGraph } from "./AnimatedRevenueGraph";
+import { QreatoLogo } from "./QreatoLogo";
 
 interface LandingPageProps {
   user?: any;
@@ -14,7 +15,7 @@ interface LandingPageProps {
   onLogin?: () => void;
 }
 
-export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
+export function LandingPage({ user, onStart }: LandingPageProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
 
@@ -84,14 +85,14 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden noise-bg selection:bg-[#FFB52E]/30 relative">
+    <div className="min-h-screen bg-[#050508] text-white overflow-x-hidden noise-bg selection:bg-[#8B5CF6]/30 relative font-sans">
       {/* Premium Subtle Grid Overlay */}
       <div 
         className="fixed inset-0 pointer-events-none z-[1] opacity-[0.04]"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255, 181, 46, 0.08) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 181, 46, 0.08) 1px, transparent 1px)
+            linear-gradient(to right, rgba(139, 92, 246, 0.12) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(217, 70, 239, 0.12) 1px, transparent 1px)
           `,
           backgroundSize: "48px 48px"
         }}
@@ -104,16 +105,16 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
       <div
         className="fixed inset-0 pointer-events-none z-10 hidden lg:block"
         style={{
-          background: `radial-gradient(600px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(255,181,46,0.03), transparent 80%)`
+          background: `radial-gradient(600px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(139,92,246,0.05), transparent 80%)`
         }}
       />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-32 px-4 overflow-hidden">
         {/* Cinematic Atmosphere */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,181,46,0.08)_0%,transparent_70%)] pointer-events-none" />
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[160px] pointer-events-none" />
-        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-[#FFB52E]/5 rounded-full blur-[160px] pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.12)_0%,transparent_70%)] pointer-events-none" />
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/15 rounded-full blur-[160px] pointer-events-none" />
+        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-[#D946EF]/10 rounded-full blur-[160px] pointer-events-none" />
         
         {/* Animated Grid Lines */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
@@ -122,9 +123,9 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-[#FFB52E]/20 text-[10px] font-sans tracking-[0.2em] font-bold text-[#FFB52E] backdrop-blur-md shadow-[0_0_20px_rgba(255,181,46,0.15)]"
+            className="mb-8 inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-[#8B5CF6]/30 text-[10px] font-sans tracking-[0.2em] font-bold text-[#E879F9] backdrop-blur-md shadow-[0_0_25px_rgba(139,92,246,0.25)]"
           >
-            <Sparkles size={14} className="animate-pulse text-[#FFB52E]" />
+            <Sparkles size={14} className="animate-pulse text-[#D946EF]" />
             $500M PERSUASION INTELLIGENCE ENGINE
           </motion.div>
 
@@ -144,7 +145,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
             className="text-5xl sm:text-6xl md:text-[8.5rem] tracking-tighter mb-8 leading-[0.85] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent will-change-transform"
           >
-            <span className="font-black bg-gradient-to-r from-white via-[#FFB52E] to-[#FFA000] bg-clip-text text-transparent">MURGII</span>
+            <span className="font-black bg-gradient-to-r from-white via-[#C084FC] to-[#D946EF] bg-clip-text text-transparent">MURGII</span>
             <span className="font-light text-white/80">.AI</span>
           </motion.h1>
           
@@ -152,7 +153,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 1 }}
-            className="text-lg md:text-xl text-gray-400 max-w-xl mx-auto mb-6 leading-relaxed font-medium px-4"
+            className="text-lg md:text-xl text-gray-300 max-w-xl mx-auto mb-6 leading-relaxed font-medium px-4"
           >
             The $500M AI persuasion engine engineered to generate hyper-converting copy, strategic viral hooks & scalable revenue assets across funnels, launches, emails & high-stakes brands.
           </motion.p>
@@ -161,7 +162,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 1 }}
-            className="text-[10px] md:text-xs font-sans text-gray-500 uppercase tracking-[0.2em] mb-12 max-w-[280px] sm:max-w-none mx-auto"
+            className="text-[10px] md:text-xs font-sans text-gray-400 uppercase tracking-[0.2em] mb-12 max-w-[280px] sm:max-w-none mx-auto"
           >
             Built for founders, creators, agencies <br /> and growth-focused brands.
           </motion.div>
@@ -170,13 +171,13 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 1 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-5 px-4 bg-white/[0.02] border border-white/10 backdrop-blur-3xl p-4 md:p-8 rounded-[32px] md:rounded-[40px] w-full sm:w-fit mx-auto shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_40px_rgba(255,181,46,0.08)] relative"
+            className="flex flex-col sm:flex-row items-center justify-center gap-5 px-4 bg-white/[0.02] border border-white/10 backdrop-blur-3xl p-4 md:p-8 rounded-[32px] md:rounded-[40px] w-full sm:w-fit mx-auto shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_50px_rgba(139,92,246,0.15)] relative"
           >
             {/* Inner Glow for Glass Effect */}
-            <div className="absolute inset-0 rounded-[32px] md:rounded-[40px] shadow-[inset_0_0_25px_rgba(255,255,255,0.08)] pointer-events-none" />
+            <div className="absolute inset-0 rounded-[32px] md:rounded-[40px] shadow-[inset_0_0_25px_rgba(139,92,246,0.12)] pointer-events-none" />
             
             <MagneticButton
-              variant="gold"
+              variant="purple"
               onClick={handleLoginClick}
               className="w-full sm:w-auto px-10 py-6 text-base tracking-tight font-black rounded-2xl"
             >
@@ -217,10 +218,10 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
               className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight mb-8 text-white italic leading-[1.3] px-2 md:px-4 max-w-5xl"
             >
               Why Murgii AI is the last <br className="hidden sm:block" /> 
-              <span className="bg-gradient-to-r from-[#FFB52E] via-[#FFD778] to-[#FFB52E] bg-clip-text text-transparent px-1 md:px-2">copywriting tool</span> 
+              <span className="bg-gradient-to-r from-[#8B5CF6] via-[#C084FC] to-[#D946EF] bg-clip-text text-transparent px-1 md:px-2">copywriting tool</span> 
               <span>you will ever need</span>
             </motion.h2>
-            <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] to-transparent shadow-[0_0_10px_rgba(255,181,46,0.5)]" />
+            <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent shadow-[0_0_15px_rgba(139,92,246,0.6)]" />
           </div>
 
           <div className="relative h-[600px] w-full max-w-4xl mx-auto overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)]">
@@ -233,11 +234,10 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
               }}
               className="flex flex-col gap-6 py-6 will-change-transform"
             >
-              {/* Double mapping for seamless loop */}
               {[...testimonials, ...testimonials].map((t, i) => (
                 <div 
                   key={i}
-                  className="group relative px-6 md:px-10 py-8 rounded-[32px] bg-white/[0.02] border border-white/10 backdrop-blur-2xl transition-all duration-500 hover:bg-white/[0.04] hover:border-[#FFB52E]/30 overflow-hidden"
+                  className="group relative px-6 md:px-10 py-8 rounded-[32px] bg-white/[0.02] border border-white/10 backdrop-blur-2xl transition-all duration-500 hover:bg-white/[0.04] hover:border-[#8B5CF6]/40 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_15px_40px_rgba(139,92,246,0.15)]"
                 >
                   {/* Premium Animated Border Glow */}
                   <motion.div 
@@ -245,12 +245,12 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                     transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                     className="absolute -inset-[100%] opacity-0 group-hover:opacity-20 transition-opacity pointer-events-none"
                     style={{
-                      background: "conic-gradient(from 0deg, transparent, #FFB52E, transparent, #FFB52E, transparent)"
+                      background: "conic-gradient(from 0deg, transparent, #8B5CF6, transparent, #D946EF, transparent)"
                     }}
                   />
                   
-                  {/* Glowing Edge Effect (Legacy) */}
-                  <div className="absolute inset-x-12 -bottom-px h-px bg-gradient-to-r from-transparent via-[#FFB52E]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {/* Glowing Edge Effect */}
+                  <div className="absolute inset-x-12 -bottom-px h-px bg-gradient-to-r from-transparent via-[#8B5CF6]/50 via-[#D946EF]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
                     <div className="relative w-16 h-16 shrink-0">
@@ -262,14 +262,14 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                         loading="lazy"
                         decoding="async"
                       />
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#FFB52E] rounded-full border-4 border-[#050505] flex items-center justify-center">
-                        <Check size={8} className="text-black font-black" />
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] rounded-full border-2 border-[#050508] flex items-center justify-center">
+                        <Check size={8} className="text-white font-black" />
                       </div>
                     </div>
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-1 mb-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Sparkles key={i} size={10} className="text-[#FFB52E]" />
+                        {[...Array(5)].map((_, idx) => (
+                          <Sparkles key={idx} size={10} className="text-[#D946EF]" />
                         ))}
                       </div>
                       <p className="text-gray-300 text-base md:text-lg italic font-medium leading-relaxed">
@@ -278,7 +278,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-bold text-white">{t.name}</span>
                         <div className="w-1 h-1 rounded-full bg-gray-700" />
-                        <span className="text-xs font-bold text-[#FFB52E]/60 uppercase tracking-widest">{t.role}</span>
+                        <span className="text-xs font-bold text-[#C084FC]/80 uppercase tracking-widest">{t.role}</span>
                       </div>
                     </div>
                   </div>
@@ -292,8 +292,8 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
       {/* How Murgii AI Engineers Conversion Section */}
       <section className="py-44 px-4 relative overflow-hidden">
         {/* Cinematic Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-purple-900/5 to-transparent pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#FFB52E]/5 rounded-full blur-[180px] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/8 rounded-full blur-[180px] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
@@ -301,15 +301,15 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              className="text-[10px] font-sans text-[#FFB52E] tracking-[0.5em] uppercase mb-6 flex items-center justify-center gap-2"
+              className="text-[10px] font-sans text-[#E879F9] tracking-[0.5em] uppercase mb-6 flex items-center justify-center gap-2"
             >
-              <Sparkles size={12} className="animate-pulse" />
+              <Sparkles size={12} className="animate-pulse text-[#D946EF]" />
               $500M Infrastructure
             </motion.div>
             <h2 className="text-4xl md:text-8xl font-bold mb-8 tracking-tighter leading-[0.9] bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic">
               How Murgii AI Engineers <br className="hidden md:block" /> Conversion
             </h2>
-            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] to-transparent mx-auto mb-10 shadow-[0_0_20px_#FFB52E]" />
+            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent mx-auto mb-10 shadow-[0_0_20px_#8B5CF6]" />
             <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-6">
               Murgii AI combines behavioral psychology, conversion intelligence, and strategic AI systems to generate persuasive assets engineered for measurable business growth.
             </p>
@@ -331,7 +331,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
               ]}
               visual={
                 <div className="relative w-full h-full flex items-center justify-center perspective-[2000px] group/vis">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,181,46,0.15),transparent_70%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.2),transparent_70%)]" />
                   
                   {/* Floating 3D Orbital System */}
                   {[...Array(3)].map((_, i) => (
@@ -352,14 +352,14 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                         width: 250 + i * 100,
                         height: 250 + i * 100
                       }}
-                      className="absolute border border-[#FFB52E]/10 rounded-full blur-[0.5px] will-change-transform"
+                      className="absolute border border-[#8B5CF6]/15 rounded-full blur-[0.5px] will-change-transform"
                     />
                   ))}
  
                   <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-                    className="relative w-72 h-72 border border-[#FFB52E]/10 rounded-full flex items-center justify-center will-change-transform"
+                    className="relative w-72 h-72 border border-[#8B5CF6]/15 rounded-full flex items-center justify-center will-change-transform"
                   >
                     {[...Array(12)].map((_, i) => (
                       <div key={i} className="absolute inset-0 flex items-center justify-center" style={{ transform: `rotate(${i * 30}deg)` }}>
@@ -369,7 +369,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                              scale: [1, 1.3, 1]
                            }}
                            transition={{ duration: 3, delay: i * 0.2, repeat: Infinity }}
-                           className="w-1 h-2 bg-gradient-to-t from-[#FFB52E] to-transparent rounded-full translate-y-[-140px] will-change-[opacity,transform]" 
+                           className="w-1 h-2 bg-gradient-to-t from-[#D946EF] to-transparent rounded-full translate-y-[-140px] will-change-[opacity,transform]" 
                          />
                       </div>
                     ))}
@@ -378,19 +378,18 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                     <motion.div 
                       animate={{ scale: [0.98, 1.02, 0.98] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="w-48 h-48 bg-black/60 backdrop-blur-3xl border-2 border-[#FFB52E]/30 rounded-full flex items-center justify-center shadow-[0_0_100px_-20px_rgba(255,181,46,0.4),inset_0_0_40px_rgba(255,181,46,0.1)] relative group/core overflow-hidden"
+                      className="w-48 h-48 bg-black/60 backdrop-blur-3xl border-2 border-[#8B5CF6]/40 rounded-full flex items-center justify-center shadow-[0_0_100px_-20px_rgba(139,92,246,0.5),inset_0_0_40px_rgba(217,70,239,0.15)] relative group/core overflow-hidden"
                       style={{ transform: "translateZ(100px)" }}
                     >
-                       <div className="absolute inset-0 bg-gradient-to-tr from-[#FFB52E]/20 via-transparent to-white/5 opacity-50" />
-                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,181,46,0.1),transparent)]" />
+                       <div className="absolute inset-0 bg-gradient-to-tr from-[#8B5CF6]/25 via-transparent to-[#D946EF]/20 opacity-50" />
+                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent)]" />
                        
-                       <Network size={72} className="text-[#FFB52E] relative z-10 drop-shadow-[0_0_20px_rgba(255,181,46,0.6)]" />
+                       <Network size={72} className="text-[#E879F9] relative z-10 drop-shadow-[0_0_20px_rgba(217,70,239,0.7)]" />
                        
-                       {/* High-speed scanning ring */}
                        <motion.div 
                          animate={{ rotate: 360 }}
                          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                         className="absolute inset-2 border-t-2 border-[#FFB52E] rounded-full opacity-20"
+                         className="absolute inset-2 border-t-2 border-[#D946EF] rounded-full opacity-30"
                        />
                     </motion.div>
                   </motion.div>
@@ -400,7 +399,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                     <motion.div
                       key={`part-${i}`}
                       animate={{
-                        opacity: [0.3, 0.7, 0.3],
+                        opacity: [0.3, 0.8, 0.3],
                         scale: [1, 1.2, 1]
                       }}
                       transition={{
@@ -408,7 +407,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                         repeat: Infinity,
                         delay: i * 0.5
                       }}
-                      className="absolute w-2 h-2 bg-[#FFB52E] rounded-full blur-[2px]"
+                      className="absolute w-2 h-2 bg-[#D946EF] rounded-full blur-[2px]"
                       style={{
                         top: `${20 + Math.random() * 60}%`,
                         left: `${20 + Math.random() * 60}%`,
@@ -454,30 +453,28 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                             ease: [0.16, 1, 0.3, 1] 
                           }}
                           style={{ transformStyle: "preserve-3d" }}
-                          className="group/card relative w-full aspect-square md:aspect-auto md:h-44 xl:h-48 bg-white/[0.03] border border-white/10 rounded-[24px] sm:rounded-[32px] backdrop-blur-3xl p-4 sm:p-5 xl:p-6 flex flex-col justify-between overflow-hidden shadow-[10px_10px_35px_-10px_rgba(0,0,0,0.5)] md:shadow-[20px_20px_60px_-15px_rgba(0,0,0,0.5)] hover:border-[#FFB52E]/50 hover:bg-white/[0.06] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(255,181,46,0.12)]"
+                          className="group/card relative w-full aspect-square md:aspect-auto md:h-44 xl:h-48 bg-white/[0.03] border border-white/10 rounded-[24px] sm:rounded-[32px] backdrop-blur-3xl p-4 sm:p-5 xl:p-6 flex flex-col justify-between overflow-hidden shadow-[10px_10px_35px_-10px_rgba(0,0,0,0.5)] md:shadow-[20px_20px_60px_-15px_rgba(0,0,0,0.5)] hover:border-[#8B5CF6]/50 hover:bg-white/[0.06] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(139,92,246,0.2)]"
                         >
                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30 group-hover/card:opacity-50 transition-opacity" />
-                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#FFB52E,transparent_80%)] opacity-0 group-hover/card:opacity-10 transition-opacity" />
+                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#8B5CF6,transparent_80%)] opacity-0 group-hover/card:opacity-15 transition-opacity" />
                            
-                           <div className="w-9 h-9 sm:w-11 sm:h-11 xl:w-12 xl:h-12 rounded-xl sm:rounded-2xl bg-[#FFB52E]/10 flex items-center justify-center border border-[#FFB52E]/20 group-hover/card:scale-110 group-hover/card:bg-[#FFB52E]/20 transition-all duration-500">
-                             <item.icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 xl:w-6 xl:h-6 text-[#FFB52E]" />
+                           <div className="w-9 h-9 sm:w-11 sm:h-11 xl:w-12 xl:h-12 rounded-xl sm:rounded-2xl bg-[#8B5CF6]/15 flex items-center justify-center border border-[#8B5CF6]/30 group-hover/card:scale-110 group-hover/card:bg-[#8B5CF6]/25 transition-all duration-500">
+                             <item.icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 xl:w-6 xl:h-6 text-[#E879F9]" />
                            </div>
                            <div className="space-y-1 sm:space-y-2">
-                              <span className="block text-[7.5px] sm:text-[9px] font-sans text-gray-500 tracking-[0.15em] sm:tracking-[0.2em] font-black uppercase">{item.label}</span>
-                              <span className="block text-[11px] sm:text-[13px] text-gray-300 font-medium leading-tight">{item.desc}</span>
+                              <span className="block text-[7.5px] sm:text-[9px] font-sans text-gray-400 tracking-[0.15em] sm:tracking-[0.2em] font-black uppercase">{item.label}</span>
+                              <span className="block text-[11px] sm:text-[13px] text-gray-200 font-medium leading-tight">{item.desc}</span>
                            </div>
 
-                           {/* Interactive Glowing Trace */}
                            <motion.div 
                              animate={{ left: ["-100%", "200%"] }}
                              transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
-                             className="absolute top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/30 to-transparent"
+                             className="absolute top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6]/40 to-transparent"
                            />
                         </motion.div>
                       ))}
                    </div>
 
-                   {/* Floating depth particles */}
                    <div className="absolute inset-0 pointer-events-none">
                      {[...Array(6)].map((_, i) => (
                        <motion.div
@@ -512,7 +509,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
               ]}
               visual={
                 <div className="relative w-full h-full flex flex-col items-center justify-center gap-8 md:gap-16 p-6 md:p-16 overflow-hidden perspective-[1500px]">
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,181,46,0.1),transparent_70%)]" />
+                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_70%)]" />
                    
                    {/* Advanced 3D Waveform */}
                    <div className="relative w-full h-32 flex items-center justify-center gap-1.5 md:gap-2 contain-layout">
@@ -525,11 +522,11 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                          }}
                          transition={{ 
                            duration: 10 + (i * 0.5), 
-                           repeat: Infinity,
+                           repeat: Infinity, 
                            ease: "easeInOut"
                          }}
                          style={{ transform: "translateZ(50px)" }}
-                         className="w-2 md:w-3 bg-[#FFB52E] rounded-full shadow-[0_0_20px_rgba(255,181,46,0.3)] will-change-[height,opacity]"
+                         className="w-2 md:w-3 bg-gradient-to-t from-[#8B5CF6] to-[#D946EF] rounded-full shadow-[0_0_20px_rgba(139,92,246,0.4)] will-change-[height,opacity]"
                        />
                      ))}
                    </div>
@@ -545,19 +542,19 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                         <motion.div 
                           key={i}
                           whileHover={{ translateZ: 50, scale: 1.05 }}
-                          className="relative p-5 rounded-3xl bg-white/[0.02] border border-white/10 flex flex-col gap-3 backdrop-blur-3xl transition-all duration-500 hover:bg-white/[0.06] hover:border-[#FFB52E]/40 group will-change-transform shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)]"
+                          className="relative p-5 rounded-3xl bg-white/[0.02] border border-white/10 flex flex-col gap-3 backdrop-blur-3xl transition-all duration-500 hover:bg-white/[0.06] hover:border-[#8B5CF6]/40 group will-change-transform shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)]"
                         >
                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30 rounded-3xl" />
                            <div className="flex items-center justify-between relative z-10">
                              <div className="flex flex-col gap-1">
-                               <span className="text-[8px] font-sans text-gray-500 tracking-[0.2em] font-black uppercase">{item.label}</span>
+                               <span className="text-[8px] font-sans text-gray-400 tracking-[0.2em] font-black uppercase">{item.label}</span>
                                <div className="flex items-center gap-2">
-                                 <div className="w-1 h-1 rounded-full bg-[#FFB52E] animate-pulse" />
+                                 <div className="w-1 h-1 rounded-full bg-[#D946EF] animate-pulse" />
                                  <span className="text-[7px] text-white/40 font-bold tracking-widest">{item.status}</span>
                                </div>
                              </div>
-                             <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-[#FFB52E]/10 group-hover:border-[#FFB52E]/30 transition-all">
-                               <item.icon size={14} className="text-[#FFB52E]" />
+                             <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-[#8B5CF6]/15 group-hover:border-[#8B5CF6]/40 transition-all">
+                               <item.icon size={14} className="text-[#E879F9]" />
                              </div>
                            </div>
                            <span className="text-xl md:text-2xl font-sans text-white font-bold tracking-tighter relative z-10">{item.value}</span>
@@ -582,20 +579,20 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                 "Elite AI writing infrastructure"
               ]}
               visual={
-                <div className="relative w-full h-full p-8 md:p-20 flex flex-col gap-10 md:gap-16 bg-[#080808]/80 backdrop-blur-3xl overflow-hidden perspective-[2000px] group/growth">
+                <div className="relative w-full h-full p-8 md:p-20 flex flex-col gap-10 md:gap-16 bg-[#08070E]/80 backdrop-blur-3xl overflow-hidden perspective-[2000px] group/growth">
                    {/* Animated Background Flow */}
                    <div className="absolute inset-0 opacity-20">
                       <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:2rem_2rem]" />
                       <motion.div 
                         animate={{ x: ["-100%", "100%"] }}
                         transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FFB52E]/5 to-transparent skew-x-[-45deg]"
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8B5CF6]/10 to-transparent skew-x-[-45deg]"
                       />
                    </div>
 
                    <div className="flex items-center justify-between relative z-10" style={{ transform: "translateZ(60px)" }}>
                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] md:text-[12px] font-sans text-[#FFB52E] tracking-[0.4em] font-black uppercase drop-shadow-sm">REVENUE ARCHITECTURE</span>
+                        <span className="text-[10px] md:text-[12px] font-sans text-[#E879F9] tracking-[0.4em] font-black uppercase drop-shadow-sm">REVENUE ARCHITECTURE</span>
                         <span className="text-2xl md:text-4xl font-bold text-white tracking-tighter italic">Frontier Scaling Engine</span>
                      </div>
                      <motion.div 
@@ -604,9 +601,9 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                          scale: [1, 1.1, 1]
                        }}
                        transition={{ duration: 5, repeat: Infinity }}
-                       className="w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-gradient-to-br from-[#FFB52E] to-[#C98E1A] flex items-center justify-center border border-white/20 shadow-[0_0_50px_rgba(255,181,46,0.4)]"
+                       className="w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-gradient-to-br from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center border border-white/20 shadow-[0_0_50px_rgba(139,92,246,0.5)]"
                      >
-                        <Activity size={36} className="text-black" />
+                        <Activity size={36} className="text-white" />
                      </motion.div>
                    </div>
                    
@@ -625,11 +622,11 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                           className="relative flex-1 group/bar will-change-[height,transform] cursor-pointer"
                         >
                            {/* 3D Glass Pillar Effect */}
-                           <div className="absolute inset-0 bg-gradient-to-t from-[#FFB52E] via-[#FFB52E]/60 to-[#FFD778]/40 rounded-t-2xl shadow-[0_0_40px_rgba(255,181,46,0.2)] border-t border-x border-white/30" />
+                           <div className="absolute inset-0 bg-gradient-to-t from-[#8B5CF6] via-[#C084FC]/70 to-[#D946EF]/50 rounded-t-2xl shadow-[0_0_40px_rgba(139,92,246,0.3)] border-t border-x border-white/30" />
                            <div className="absolute inset-[1px] bg-white/10 rounded-t-2xl backdrop-blur-sm opacity-50" />
                            
                            {/* Top Glow Cap */}
-                           <div className="absolute inset-x-0 top-0 h-2 bg-white rounded-full blur-[3px] opacity-60 translate-y-[-1px]" />
+                           <div className="absolute inset-x-0 top-0 h-2 bg-white rounded-full blur-[3px] opacity-70 translate-y-[-1px]" />
                            
                            {/* Internal Energy Line */}
                            <motion.div 
@@ -652,11 +649,11 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                    </div>
  
                    <div className="flex justify-between text-[10px] font-sans text-gray-500 border-t border-white/10 pt-6 tracking-[0.4em] font-black uppercase relative z-10">
-                      {[ "JAN", "MAR", "MAY", "JUL", "SEP", "NOV", "DEC"].map(m => <span key={m} className="hover:text-[#FFB52E] transition-colors cursor-default">{m}</span>)}
+                      {[ "JAN", "MAR", "MAY", "JUL", "SEP", "NOV", "DEC"].map(m => <span key={m} className="hover:text-[#D946EF] transition-colors cursor-default">{m}</span>)}
                    </div>
                    
                    {/* Cinematic Surface Glow */}
-                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[120%] h-32 bg-[radial-gradient(ellipse_at_bottom,rgba(255,181,46,0.2),transparent_70%)] pointer-events-none" />
+                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[120%] h-32 bg-[radial-gradient(ellipse_at_bottom,rgba(139,92,246,0.25),transparent_70%)] pointer-events-none" />
                 </div>
               }
             />
@@ -667,7 +664,7 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
       {/* $500M LIVE REVENUE & PERSUASION ENGINE SHOWCASE */}
       <section className="py-36 px-4 relative overflow-hidden">
         {/* Cinematic ambient background glow and subtle grid */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(255,181,46,0.09)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(139,92,246,0.12)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
         
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16 px-4">
@@ -675,9 +672,9 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/20 text-[10px] font-black text-[#FFB52E] uppercase tracking-[0.25em] mb-6 backdrop-blur-md shadow-[0_0_20px_rgba(255,181,46,0.2)]"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[10px] font-black text-[#E879F9] uppercase tracking-[0.25em] mb-6 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.25)]"
             >
-              <Activity size={12} className="animate-pulse" />
+              <Activity size={12} className="animate-pulse text-[#D946EF]" />
               $500M LIVE TELEMETRY MATRIX
             </motion.div>
             <h2 className="text-4xl md:text-8xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent italic leading-[0.95]">
@@ -693,12 +690,12 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
             {/* 3D Revenue Vault Object with Orbiting Telemetry */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-[32px] bg-black/60 border border-white/10 backdrop-blur-3xl shadow-[0_25px_60px_rgba(0,0,0,0.7)] relative group">
               <div className="absolute top-4 left-6 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#FFB52E] animate-ping" />
+                <span className="w-2 h-2 rounded-full bg-[#D946EF] animate-ping" />
                 <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">3D REVENUE VAULT</span>
               </div>
               <FloatingRevenueObject3D className="w-full h-[360px]" />
               <div className="text-center mt-2">
-                <span className="text-xs font-mono text-[#FFB52E] font-bold tracking-widest uppercase">
+                <span className="text-xs font-mono text-[#C084FC] font-bold tracking-widest uppercase">
                   CALIBRATED FOR HIGH-TICKET ASSETS
                 </span>
               </div>
@@ -712,88 +709,24 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-32 px-4 relative overflow-hidden bg-transparent">
-        {/* Background Luxury Elements - Glassmorphism Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#FFB52E]/5 rounded-full blur-[120px] animate-pulse pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#FFB52E]/3 rounded-full blur-[100px] pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16 px-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/20 text-[10px] font-black text-[#FFB52E] uppercase tracking-[0.2em] mb-8 backdrop-blur-md"
-            >
-              <Sparkles size={12} />
-              Limited MVP Access
-            </motion.div>
-            <h2 className="text-4xl md:text-8xl font-bold tracking-tighter mb-8 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic leading-tight">
-              Frontier Access <br /> for Early Adopters
-            </h2>
-            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Murgii AI is currently in focused MVP development. We are granting full frontier-level intelligence to a select group of growth-focused pioneers.
-            </p>
-          </div>
-
-          {/* Single MVP Card with 3D Orbital Effect */}
-          <div className="flex justify-center mt-20 relative px-4">
-            {/* Orbital Rings Background */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none opacity-20">
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20 + i * 10, repeat: Infinity, ease: "linear" }}
-                  className="absolute border border-white/20 rounded-full"
-                  style={{ width: 400 + i * 200, height: 400 + i * 200 }}
-                />
-              ))}
-            </div>
-
-            <MVPPriceCard 
-              handleLoginClick={handleLoginClick} 
-            />
-          </div>
-
-          <div className="text-center mt-12 space-y-4">
-            <motion.p 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-gray-500 text-[10px] md:text-sm font-sans font-black uppercase tracking-[0.3em]"
-            >
-              pricings coming soon. App currently in MVP stage
-            </motion.p>
-            <div className="flex justify-center gap-1">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="w-1 h-1 rounded-full bg-[#FFB52E]/20" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-
       {/* Footer Ecosystem */}
-      <footer className="relative pt-32 pb-12 overflow-hidden border-t border-white/5 bg-transparent">
+      <footer className="relative pt-20 pb-12 overflow-hidden border-t border-white/5 bg-transparent">
         {/* Cinematic Ambient Glows */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/30 to-transparent" />
-        <div className="absolute top-0 right-[10%] w-[400px] h-[400px] bg-purple-900/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[10%] w-[300px] h-[300px] bg-[#FFB52E]/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6]/40 via-[#D946EF]/40 to-transparent" />
+        <div className="absolute top-0 right-[10%] w-[400px] h-[400px] bg-purple-900/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[10%] w-[300px] h-[300px] bg-[#D946EF]/8 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          {/* TOP SECTION: LOGO + NEWSLETTER */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12 mb-24">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-12 pb-16 border-b border-white/5">
+            {/* BRAND & VALUE PROP */}
             <div className="max-w-md space-y-6">
-              <div className="flex items-center gap-3 group cursor-pointer">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FFB52E] to-[#E2A72E]/50 flex items-center justify-center shadow-[0_0_20px_-5px_#FFB52E] group-hover:scale-110 transition-transform">
-                  <BrainCircuit size={22} className="text-black" />
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={onStart}>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] flex items-center justify-center shadow-[0_0_25px_rgba(139,92,246,0.6)] group-hover:scale-110 transition-transform">
+                  <QreatoLogo size={22} className="text-white" />
                 </div>
                 <div className="tracking-tighter text-white uppercase text-2xl italic">
-                  <span className="font-extrabold">MURGII</span>
-                  <span className="font-light">.AI</span>
+                  <span className="font-extrabold bg-gradient-to-r from-white via-[#C084FC] to-[#D946EF] bg-clip-text text-transparent">MURGII</span>
+                  <span className="font-light text-white/80">.AI</span>
                 </div>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed font-medium">
@@ -806,127 +739,117 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
                   { label: "Premium Conversion Intelligence", icon: Target }
                 ].map((trust, i) => (
                   <div key={i} className="flex items-center gap-2 text-[9px] font-sans text-gray-500 uppercase tracking-widest font-bold">
-                    <trust.icon size={12} className="text-[#FFB52E]/60" />
+                    <trust.icon size={12} className="text-[#C084FC]/70" />
                     {trust.label}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="w-full lg:max-w-sm space-y-6">
-              <div className="space-y-2">
-                <h4 className="text-xl font-bold tracking-tight text-white">Stay Ahead of Persuasion Intelligence</h4>
-                <p className="text-xs text-gray-500 leading-relaxed font-medium">Product updates, AI research, conversion systems, and strategic release notes.</p>
+            {/* REAL APP NAVIGATION & CONNECTED CHANNELS */}
+            <div className="flex flex-wrap gap-12 sm:gap-16">
+              <div>
+                <h4 className="text-[10px] font-sans font-black text-[#C084FC] uppercase tracking-[0.3em] mb-6">Workspace</h4>
+                <ul className="space-y-4">
+                  <li>
+                    <button 
+                      onClick={onStart}
+                      className="text-xs font-bold text-gray-400 hover:text-white transition-colors relative group flex items-center gap-2 cursor-pointer"
+                    >
+                      <span className="w-0 h-[1px] bg-[#8B5CF6] transition-all group-hover:w-3" />
+                      Launch AI Workspace
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      onClick={() => {
+                        const pricingEl = document.getElementById("pricing") || document.querySelector("section:has(.MVPPriceCard)");
+                        if (pricingEl) {
+                          pricingEl.scrollIntoView({ behavior: "smooth" });
+                        } else {
+                          handleLoginClick();
+                        }
+                      }}
+                      className="text-xs font-bold text-gray-400 hover:text-white transition-colors relative group flex items-center gap-2 cursor-pointer"
+                    >
+                      <span className="w-0 h-[1px] bg-[#8B5CF6] transition-all group-hover:w-3" />
+                      MVP Free Access
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      onClick={handleLoginClick}
+                      className="text-xs font-bold text-gray-400 hover:text-white transition-colors relative group flex items-center gap-2 cursor-pointer"
+                    >
+                      <span className="w-0 h-[1px] bg-[#8B5CF6] transition-all group-hover:w-3" />
+                      Sign In / Account
+                    </button>
+                  </li>
+                </ul>
               </div>
-              <div className="relative group">
-                <input 
-                  type="email" 
-                  placeholder="Enter your professional email"
-                  className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-6 pr-32 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[#FFB52E]/30 transition-all shadow-inner backdrop-blur-md"
-                />
-                <button className="absolute right-2 top-2 bottom-2 px-6 bg-white text-black font-extrabold text-[10px] uppercase tracking-widest rounded-xl hover:bg-[#FFB52E] transition-colors">
-                  Subscribe
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* MAIN GRID */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-12 pb-24 border-b border-white/5">
-            <div>
-              <h4 className="text-[10px] font-sans font-black text-gray-500 uppercase tracking-[0.3em] mb-8">Product</h4>
-              <ul className="space-y-4">
-                {["Features", "Pricing", "AI Workspace", "Brand Voice Engine", "Campaign Systems", "Prompt Library", "Release Notes", "API Access"].map(item => (
-                  <li key={item}>
-                    <a href="#" className="text-xs font-bold text-gray-500 hover:text-white transition-colors relative group w-fit flex items-center gap-2">
-                      <span className="w-0 h-[1px] bg-[#FFB52E] transition-all group-hover:w-3" />
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-sans font-black text-gray-500 uppercase tracking-[0.3em] mb-8">Company</h4>
-              <ul className="space-y-4">
-                {["About Murgii Labs", "Careers", "Contact", "Affiliate Program", "Press Kit", "Brand Assets", "Partnerships"].map(item => (
-                  <li key={item}>
-                    <a href="#" className="text-xs font-bold text-gray-500 hover:text-white transition-colors relative group w-fit flex items-center gap-2">
-                      <span className="w-0 h-[1px] bg-[#FFB52E] transition-all group-hover:w-3" />
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-sans font-black text-gray-500 uppercase tracking-[0.3em] mb-8">Resources</h4>
-              <ul className="space-y-4">
-                {["Documentation", "Help Center", "AI Copywriting Guides", "Persuasion Research", "System Tutorials", "Community", "Changelog"].map(item => (
-                  <li key={item}>
-                    <a href="#" className="text-xs font-bold text-gray-500 hover:text-white transition-colors relative group w-fit flex items-center gap-2">
-                      <span className="w-0 h-[1px] bg-[#FFB52E] transition-all group-hover:w-3" />
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-sans font-black text-gray-500 uppercase tracking-[0.3em] mb-8">Legal</h4>
-              <ul className="space-y-4">
-                {["Privacy Policy", "Terms of Service", "Cookie Policy", "AI Usage Policy", "Data Protection", "Refund Policy", "Acceptable Use Policy"].map(item => (
-                  <li key={item}>
-                    <a href="#" className="text-xs font-bold text-gray-500 hover:text-white transition-colors relative group w-fit flex items-center gap-2">
-                      <span className="w-0 h-[1px] bg-[#FFB52E] transition-all group-hover:w-3" />
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-sans font-black text-gray-500 uppercase tracking-[0.3em] mb-8">Connect</h4>
-              <ul className="space-y-6">
-                {[
-                  { label: "Instagram", icon: Instagram, href: "https://www.instagram.com/qreato.io?igsh=MTlmNHN6ampqYWF3bQ==" },
-                  { label: "Facebook", icon: Facebook, href: "#" },
-                  { label: "Newsletter", icon: Mail, href: "#" },
-                  { label: "X / Twitter", icon: Twitter, href: "https://x.com/s4lma9" }
-                ].map(social => (
-                  <li key={social.label}>
-                    <a href={social.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#FFB52E]/10 group-hover:border-[#FFB52E]/30 transition-all font-bold">
-                        <social.icon size={18} className="text-gray-500 group-hover:text-[#FFB52E] transition-colors" />
+              <div>
+                <h4 className="text-[10px] font-sans font-black text-[#C084FC] uppercase tracking-[0.3em] mb-6">Connect</h4>
+                <ul className="space-y-4">
+                  <li>
+                    <a 
+                      href="https://www.instagram.com/qreato.io?igsh=MTlmNHN6ampqYWF3bQ==" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-3 group text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#8B5CF6]/15 group-hover:border-[#8B5CF6]/40 transition-all">
+                        <Instagram size={15} className="text-gray-400 group-hover:text-[#D946EF] transition-colors" />
                       </div>
-                      <span className="text-xs font-bold text-gray-500 group-hover:text-white transition-colors">{social.label}</span>
+                      <span>Instagram</span>
                     </a>
                   </li>
-                ))}
-              </ul>
+                  <li>
+                    <a 
+                      href="https://x.com/s4lma9" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-3 group text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#8B5CF6]/15 group-hover:border-[#8B5CF6]/40 transition-all">
+                        <Twitter size={15} className="text-gray-400 group-hover:text-[#D946EF] transition-colors" />
+                      </div>
+                      <span>X / Twitter</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://whop.com/qreato/ai-leverage" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-3 group text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-[#8B5CF6]/15 group-hover:border-[#8B5CF6]/40 transition-all">
+                        <Target size={15} className="text-gray-400 group-hover:text-[#D946EF] transition-colors" />
+                      </div>
+                      <span>Whop Upgrade Portal</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
 
           {/* LEGAL + TRUST STRIP */}
-          <div className="pt-12 flex flex-col md:flex-row justify-between items-center gap-8 relative">
-            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-              <p className="text-[10px] font-sans text-gray-600 uppercase tracking-[0.2em]">© 2026 Murgii Labs. All rights reserved.</p>
-              <div className="hidden md:block w-3 h-[1px] bg-white/10" />
-              <p className="text-[10px] font-sans text-[#FFB52E]/60 uppercase tracking-[0.3em] font-black">Engineered with persuasion intelligence.</p>
+          <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-6 relative">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-center sm:text-left">
+              <p className="text-[11px] font-sans text-gray-500 uppercase tracking-[0.15em]">© 2026 Murgii Labs. All rights reserved.</p>
+              <div className="hidden sm:block w-3 h-[1px] bg-white/10" />
+              <p className="text-[11px] font-sans text-[#C084FC]/80 uppercase tracking-[0.2em] font-bold">Engineered with persuasion intelligence.</p>
             </div>
             
             <div className="flex items-center flex-wrap justify-center gap-6">
                {[
                  { label: "Secure Infrastructure", icon: ShieldCheck },
-                 { label: "Privacy Focused", icon: Globe },
                  { label: "Enterprise Ready", icon: Target }
                ].map((trust, i) => (
-                 <div key={i} className="flex items-center gap-2 text-[9px] font-sans text-gray-700 uppercase tracking-widest font-bold">
-                   <trust.icon size={10} className="text-gray-800" />
+                 <div key={i} className="flex items-center gap-2 text-[9px] font-sans text-gray-500 uppercase tracking-widest font-bold">
+                   <trust.icon size={11} className="text-[#8B5CF6]" />
                    {trust.label}
                  </div>
                ))}
@@ -941,114 +864,6 @@ export function LandingPage({ user, onStart, onLogin }: LandingPageProps) {
         onSuccess={onStart} 
       />
     </div>
-  );
-}
-
-function MVPPriceCard({ 
-  handleLoginClick 
-}: { 
-  handleLoginClick: () => void 
-}) {
-  const x = useSpring(0, { stiffness: 100, damping: 30 });
-  const y = useSpring(0, { stiffness: 100, damping: 30 });
-
-  const rotateX = useTransform(y, [-0.5, 0.5], [10, -10]);
-  const rotateY = useTransform(x, [-0.5, 0.5], [-10, 10]);
-
-  function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-    const xPct = (mouseX / width) - 0.5;
-    const yPct = (mouseY / height) - 0.5;
-    x.set(xPct);
-    y.set(yPct);
-  }
-
-  function handleMouseLeave() {
-    x.set(0);
-    y.set(0);
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className="relative w-full max-w-3xl p-6 md:p-12 rounded-[32px] md:rounded-[48px] bg-white/[0.02] border border-white/10 backdrop-blur-3xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] overflow-hidden group cursor-crosshair"
-    >
-       {/* Premium 3D Moving Light Streak */}
-       <motion.div 
-         animate={{ left: ['-100%', '200%'] }}
-         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-         className="absolute top-0 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] to-transparent opacity-30"
-       />
-
-       <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-center" style={{ transform: "translateZ(50px)" }}>
-          <div className="flex-1 space-y-6 md:space-y-8">
-             <div className="space-y-3 md:space-y-4 text-center lg:text-left">
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                   <h3 className="text-3xl md:text-5xl font-bold tracking-tight text-white italic">MVP FREE</h3>
-                   <div className="px-3 py-1 rounded-lg bg-[#FFB52E]/10 border border-[#FFB52E]/20 text-[8px] font-black text-[#FFB52E] tracking-[0.2em] uppercase">Limited Tier</div>
-                </div>
-                <div className="flex items-baseline justify-center lg:justify-start gap-2">
-                   <span className="text-5xl md:text-6xl font-bold tracking-tighter text-white">$0</span>
-                   <span className="text-gray-500 font-bold uppercase tracking-widest text-[9px] md:text-[10px]">Forever Free for Early Users</span>
-                </div>
-                <p className="text-gray-400 text-xs md:text-sm leading-relaxed font-medium max-w-lg mx-auto lg:mx-0">
-                  Experience the full persuasion engine. All advanced features have been unlocked for the first 1,000 MVP users.
-                </p>
-             </div>
-
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                {[
-                  "Unlimited Frontier AI Processing",
-                  "Deep Persuasion Engine Access",
-                  "AI Brand Voice Training",
-                  "Strategic Funnel Architect",
-                  "Complete Email Sequence Systems",
-                  "Advanced Audience Profiling",
-                  "Multi-Step Campaign Strategy",
-                  "Campaign Collaboration Mode"
-                ].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 group/item">
-                     <div className="w-4 h-4 rounded-full bg-[#FFB52E]/10 border border-[#FFB52E]/30 flex items-center justify-center group-hover/item:bg-[#FFB52E] transition-all duration-300">
-                        <Check size={10} className="text-[#FFB52E] group-hover:text-black transition-colors" />
-                     </div>
-                     <span className="text-[11px] text-gray-300 font-bold tracking-tight group-hover/item:text-white transition-colors">{feature}</span>
-                  </div>
-                ))}
-             </div>
-
-             <div className="space-y-4 pt-2">
-                <button 
-                  onClick={handleLoginClick}
-                  className="group relative w-full py-5 md:py-6 rounded-2xl bg-white text-black font-black text-xs md:text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-98 transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                  Sign Up & Start Free
-                  <ArrowRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
-                </button>
-                
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
-                  <div className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.2em] text-center sm:text-left">
-                    pricings coming soon. App currently in MVP stage
-                  </div>
-                  <div className="text-[9px] font-black text-[#FFB52E] uppercase tracking-[0.3em] flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#FFB52E] animate-pulse" />
-                    MVP STATUS: v0.8.2 ACTIVE
-                  </div>
-                </div>
-             </div>
-          </div>
-       </div>
-    </motion.div>
-
   );
 }
 
@@ -1099,23 +914,23 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
            <motion.span 
              animate={{ opacity: [0.6, 1, 0.6] }}
              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-             className="text-5xl md:text-8xl font-black bg-gradient-to-br from-[#FFB52E] via-white/30 to-transparent bg-clip-text text-transparent tracking-tighter select-none will-change-opacity"
+             className="text-5xl md:text-8xl font-black bg-gradient-to-br from-[#8B5CF6] via-[#D946EF] to-white/20 bg-clip-text text-transparent tracking-tighter select-none will-change-opacity"
            >
              0{index}
            </motion.span>
-           <div className="w-16 h-[1px] bg-gradient-to-r from-[#FFB52E]/60 to-transparent" />
+           <div className="w-16 h-[1px] bg-gradient-to-r from-[#8B5CF6]/60 via-[#D946EF]/60 to-transparent" />
         </div>
         <h3 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight text-white">{title}</h3>
         <div className="space-y-4">
-          <p className="text-gray-400 text-lg md:text-xl leading-relaxed">{description}</p>
+          <p className="text-gray-300 text-lg md:text-xl leading-relaxed">{description}</p>
           {trustLine && (
-            <p className="text-[#FFB52E]/60 text-xs font-sans tracking-widest uppercase font-bold">{trustLine}</p>
+            <p className="text-[#C084FC]/80 text-xs font-sans tracking-widest uppercase font-bold">{trustLine}</p>
           )}
         </div>
         <div className="space-y-4 pt-4">
            {points.map((p, i) => (
              <div key={i} className="flex items-center gap-4 group">
-               <div className="w-1.5 h-1.5 rounded-full bg-[#FFB52E] group-hover:scale-150 group-hover:shadow-[0_0_10px_#FFB52E] transition-all" />
+               <div className="w-1.5 h-1.5 rounded-full bg-[#D946EF] group-hover:scale-150 group-hover:shadow-[0_0_10px_#D946EF] transition-all" />
                <span className="text-sm md:text-base font-medium text-gray-300 group-hover:text-white transition-colors">{p}</span>
              </div>
            ))}
@@ -1133,19 +948,19 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
         className="flex-1 w-full aspect-square md:aspect-auto md:h-[600px] relative group cursor-crosshair"
       >
         <div 
-          className="absolute inset-0 rounded-[48px] bg-white/[0.03] border border-white/10 backdrop-blur-xl overflow-hidden group-hover:border-[#FFB52E]/50 transition-all duration-700 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]"
+          className="absolute inset-0 rounded-[48px] bg-white/[0.03] border border-white/10 backdrop-blur-xl overflow-hidden group-hover:border-[#8B5CF6]/50 transition-all duration-700 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]"
           style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }}
         >
            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent" />
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,181,46,0.1),transparent_50%)]" />
+           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.15),transparent_50%)]" />
            <div className="relative w-full h-full flex items-center justify-center" style={{ transform: "translateZ(80px)" }}>
              {visual}
            </div>
         </div>
         
         {/* Floating Accents */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FFB52E]/10 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#8B5CF6]/15 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#D946EF]/15 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
       </motion.div>
     </div>
   );

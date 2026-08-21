@@ -38,13 +38,13 @@ export function SpotlightCursor() {
 
   return (
     <>
-      {/* 1. Large Ambient Gold Radial Glow tracking cursor */}
+      {/* 1. Large Ambient Violet-Magenta Radial Glow tracking cursor */}
       <motion.div
         className="pointer-events-none fixed top-0 left-0 z-[9990] w-[700px] h-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full mix-blend-screen opacity-70 hidden md:block"
         style={{
           x: smoothX,
           y: smoothY,
-          background: "radial-gradient(circle, rgba(255, 181, 46, 0.08) 0%, rgba(255, 130, 0, 0.03) 40%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, rgba(217, 70, 239, 0.04) 40%, transparent 70%)",
         }}
       />
 
@@ -54,7 +54,7 @@ export function SpotlightCursor() {
         style={{
           x: smoothX,
           y: smoothY,
-          background: "radial-gradient(circle, rgba(255, 235, 160, 0.12) 0%, rgba(255, 181, 46, 0.05) 50%, transparent 80%)",
+          background: "radial-gradient(circle, rgba(233, 213, 255, 0.12) 0%, rgba(139, 92, 246, 0.06) 50%, transparent 80%)",
         }}
       />
     </>

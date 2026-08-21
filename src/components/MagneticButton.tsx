@@ -5,14 +5,14 @@ interface MagneticButtonProps extends Omit<HTMLMotionProps<"button">, "ref"> {
   children: React.ReactNode;
   strength?: number;
   className?: string;
-  variant?: "gold" | "glass" | "ghost" | "crimson";
+  variant?: "gold" | "purple" | "glass" | "ghost" | "crimson";
 }
 
 export function MagneticButton({
   children,
   strength = 0.35,
   className = "",
-  variant = "gold",
+  variant = "purple",
   onClick,
   ...props
 }: MagneticButtonProps) {
@@ -46,10 +46,11 @@ export function MagneticButton({
     setIsHovered(true);
   };
 
-  // Pre-configured Luxury Variants
+  // Pre-configured Luxury Variants matching Bolt Product Family
   const variantStyles = {
-    gold: "bg-gradient-to-br from-[#FFB52E] via-[#FFA000] to-[#E28A00] text-black font-black border border-[#FFDC78]/40 shadow-[0_10px_30px_rgba(255,181,46,0.35),inset_0_1px_0_rgba(255,255,255,0.6)] hover:shadow-[0_15px_40px_rgba(255,181,46,0.55),inset_0_1px_0_rgba(255,255,255,0.8)]",
-    glass: "bg-white/[0.04] text-white border border-white/12 backdrop-blur-2xl shadow-[0_15px_35px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-white/[0.08] hover:border-[#FFB52E]/40 hover:text-[#FFB52E]",
+    purple: "bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-black border border-white/20 shadow-[0_10px_35px_rgba(139,92,246,0.4),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_15px_45px_rgba(217,70,239,0.55),inset_0_1px_0_rgba(255,255,255,0.6)]",
+    gold: "bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-black border border-white/20 shadow-[0_10px_35px_rgba(139,92,246,0.4),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_15px_45px_rgba(217,70,239,0.55),inset_0_1px_0_rgba(255,255,255,0.6)]",
+    glass: "bg-white/[0.04] text-white border border-white/12 backdrop-blur-2xl shadow-[0_15px_35px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-white/[0.08] hover:border-[#8B5CF6]/50 hover:text-[#D946EF]",
     ghost: "bg-transparent text-gray-400 hover:text-white border border-transparent hover:border-white/10 hover:bg-white/5",
     crimson: "bg-gradient-to-br from-[#FF2A55] to-[#C9002B] text-white font-bold border border-[#FF6B8B]/30 shadow-[0_10px_30px_rgba(255,42,85,0.35)] hover:shadow-[0_15px_40px_rgba(255,42,85,0.55)]",
   }[variant];
@@ -63,7 +64,7 @@ export function MagneticButton({
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
       whileTap={{ scale: 0.96 }}
-      className={`relative inline-flex items-center justify-center select-none overflow-hidden transition-colors rounded-2xl ${variantStyles} ${className}`}
+      className={`relative inline-flex items-center justify-center select-none overflow-hidden transition-all duration-300 rounded-2xl cursor-pointer ${variantStyles} ${className}`}
       {...props}
     >
       {/* Specular Light Flare Sweep on Hover */}

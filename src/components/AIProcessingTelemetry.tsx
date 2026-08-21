@@ -1,111 +1,68 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, Brain, Cpu, Zap, CheckCircle2 } from "lucide-react";
 
 interface AIProcessingTelemetryProps {
   isGenerating: boolean;
   statusText?: string;
 }
 
-export function AIProcessingTelemetry({ isGenerating, statusText }: AIProcessingTelemetryProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+const ROTATING_STATUS_LINES = [
+  "Synthesizing your copy...",
+  "Engineering the hook...",
+  "Finalizing conversion angle...",
+  "Applying behavioral triggers..."
+];
 
-  const steps = [
-    { label: "NEURAL FRICTION ANALYSIS", desc: "Mapping buyer skepticism & psychological barriers" },
-    { label: "CIALDINI SCARCITY INJECTION", desc: "Calibrating urgency multipliers & loss aversion" },
-    { label: "MULTI-HOOK SYNTHESIS", desc: "Generating high-CTR viral open loops" },
-    { label: "$500M PERSUASION ALIGNMENT", desc: "Finalizing copy with high-ticket conversion weights" },
-  ];
+export function AIProcessingTelemetry({ isGenerating, statusText }: AIProcessingTelemetryProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (!isGenerating) {
-      setCurrentStep(0);
+      setCurrentIndex(0);
       return;
     }
     const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
-    }, 1800);
+      setCurrentIndex((prev) => (prev + 1) % ROTATING_STATUS_LINES.length);
+    }, 2400);
     return () => clearInterval(interval);
   }, [isGenerating]);
 
   if (!isGenerating) return null;
 
+  const displayLine = statusText || ROTATING_STATUS_LINES[currentIndex];
+
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 15, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-xl mx-auto my-4 p-4 rounded-2xl bg-black/80 backdrop-blur-2xl border border-[#FFB52E]/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(255,181,46,0.15)] relative overflow-hidden"
-      >
-        {/* Top Specular Neon Beam */}
-        <div className="absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E] via-white/80 to-transparent" />
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+      className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#0C0A14]/85 border border-white/10 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.6)] relative overflow-hidden"
+    >
+      {/* Subtle iridescent shimmer sweep */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8B5CF6]/10 via-[#D946EF]/10 to-transparent animate-[shimmerSweep_2.5s_infinite] pointer-events-none" />
 
-        {/* Ambient Pulsing Radar Aura */}
-        <div className="absolute -right-8 -top-8 w-28 h-28 bg-[#FFB52E]/10 rounded-full blur-2xl pointer-events-none animate-pulse" />
+      {/* Subtle pulsing indicator */}
+      <div className="relative flex items-center justify-center w-5 h-5 shrink-0 z-10">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] animate-ping opacity-35" />
+        <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-[#8B5CF6] via-[#C084FC] to-[#D946EF] shadow-[0_0_8px_rgba(217,70,239,0.7)]" />
+      </div>
 
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFB52E]/20 to-[#FFB52E]/05 border border-[#FFB52E]/30 flex items-center justify-center shadow-[0_0_15px_rgba(255,181,46,0.2)]">
-              <Brain size={16} className="text-[#FFB52E] animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-black text-[#FFB52E] uppercase tracking-[0.2em]">
-                  MURGII NEURAL PIPELINE
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF2A55] animate-ping" />
-              </div>
-              <span className="text-xs font-bold text-white tracking-tight">
-                {statusText || steps[currentStep].label}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono font-bold text-[#FFB52E]">
-            <Sparkles size={11} className="animate-spin" style={{ animationDuration: "3s" }} />
-            <span>STAGE {currentStep + 1}/{steps.length}</span>
-          </div>
-        </div>
-
-        {/* Step Progress Bar */}
-        <div className="relative h-1.5 w-full bg-white/10 rounded-full overflow-hidden mb-3">
-          <motion.div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#FFB52E] via-amber-300 to-white rounded-full shadow-[0_0_10px_#FFB52E]"
-            initial={{ width: "10%" }}
-            animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-          />
-        </div>
-
-        {/* Audio / Neural Frequency Waveforms */}
-        <div className="flex items-center justify-between gap-1 h-5 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/06">
-          {[...Array(24)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="w-1 rounded-full bg-gradient-to-t from-[#FFB52E]/30 to-[#FFB52E]"
-              animate={{
-                height: [
-                  `${Math.max(4, Math.sin(i * 0.5) * 16 + 4)}px`,
-                  `${Math.max(4, Math.cos(i * 0.8) * 18 + 4)}px`,
-                  `${Math.max(4, Math.sin(i * 0.5) * 16 + 4)}px`,
-                ],
-              }}
-              transition={{
-                duration: 0.8 + (i % 5) * 0.15,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center text-[9px] font-mono text-gray-400 mt-2.5">
-          <span>{steps[currentStep].desc}</span>
-          <span className="text-[#FFB52E] font-bold">LATENCY: 180ms</span>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+      {/* Short rotating status line */}
+      <div className="overflow-hidden relative z-10">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={displayLine}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
+            className="text-xs font-medium text-white/90 tracking-wide block"
+          >
+            {displayLine}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }

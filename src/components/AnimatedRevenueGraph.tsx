@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, DollarSign, Activity, Zap, ArrowUpRight, ShieldCheck, BarChart3, Users } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export function AnimatedRevenueGraph() {
   const [timeframe, setTimeframe] = useState<"7D" | "30D" | "90D" | "ALL">("30D");
@@ -88,16 +88,16 @@ export function AnimatedRevenueGraph() {
   const areaD = `${pathD} L ${width},${height} L 0,${height} Z`;
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto rounded-[32px] bg-black/70 backdrop-blur-3xl border border-[#FFB52E]/25 p-6 md:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8),0_0_50px_rgba(255,181,46,0.08)] overflow-hidden">
+    <div className="relative w-full max-w-4xl mx-auto rounded-[32px] bg-black/70 backdrop-blur-3xl border border-[#8B5CF6]/30 p-6 md:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8),0_0_50px_rgba(139,92,246,0.15)] overflow-hidden">
       {/* Specular Top Border Highlight */}
-      <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFB52E]/80 via-white/70 to-transparent" />
+      <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6]/80 via-white/80 to-[#D946EF]/80" />
 
       {/* Header telemetry row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-white/08">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#FF2A55] animate-ping" />
-            <span className="text-[10px] font-mono font-black tracking-[0.25em] text-[#FFB52E] uppercase">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#D946EF] animate-ping" />
+            <span className="text-[10px] font-mono font-black tracking-[0.25em] text-[#C084FC] uppercase">
               LIVE MURGII CONVERSION ENGINE
             </span>
           </div>
@@ -120,9 +120,9 @@ export function AnimatedRevenueGraph() {
                 setTimeframe(tf);
                 setActiveMetric(dataSets[tf].points.length - 1);
               }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono tracking-wider transition-all duration-300 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono tracking-wider transition-all duration-300 cursor-pointer ${
                 timeframe === tf
-                  ? "bg-gradient-to-r from-[#FFB52E] to-[#FFA000] text-black shadow-[0_0_15px_rgba(255,181,46,0.5)]"
+                  ? "bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white shadow-[0_0_15px_rgba(139,92,246,0.5)]"
                   : "text-gray-400 hover:text-white"
               }`}
             >
@@ -136,7 +136,7 @@ export function AnimatedRevenueGraph() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/06 flex flex-col">
           <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1">CONVERSION CTR</span>
-          <span className="text-lg font-black text-[#FFB52E] font-mono">{liveConversionRate}%</span>
+          <span className="text-lg font-black text-[#D946EF] font-mono">{liveConversionRate}%</span>
         </div>
         <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/06 flex flex-col">
           <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider mb-1">AVERAGE ROAS</span>
@@ -166,16 +166,16 @@ export function AnimatedRevenueGraph() {
           <defs>
             {/* Smooth Area Gradient */}
             <linearGradient id="revenueAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FFB52E" stopOpacity="0.45" />
-              <stop offset="60%" stopColor="#FFB52E" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#FFB52E" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.45" />
+              <stop offset="60%" stopColor="#D946EF" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.0" />
             </linearGradient>
 
             {/* Glowing Stroke Gradient */}
             <linearGradient id="revenueStrokeGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#FFB52E" />
-              <stop offset="70%" stopColor="#FFE28A" />
-              <stop offset="100%" stopColor="#FFFFFF" />
+              <stop offset="0%" stopColor="#8B5CF6" />
+              <stop offset="60%" stopColor="#C084FC" />
+              <stop offset="100%" stopColor="#D946EF" />
             </linearGradient>
           </defs>
 
@@ -211,7 +211,7 @@ export function AnimatedRevenueGraph() {
                   cy={pt.y}
                   r="12"
                   fill="none"
-                  stroke="#FFB52E"
+                  stroke="#D946EF"
                   strokeWidth="1.5"
                   className="animate-ping"
                   opacity="0.75"
@@ -222,7 +222,7 @@ export function AnimatedRevenueGraph() {
                 cx={pt.x}
                 cy={pt.y}
                 r={activeMetric === idx ? "6.5" : "4.5"}
-                fill={activeMetric === idx ? "#FFFFFF" : "#FFB52E"}
+                fill={activeMetric === idx ? "#FFFFFF" : "#D946EF"}
                 stroke="#0A0812"
                 strokeWidth="2.5"
                 className="transition-all duration-300"
@@ -237,9 +237,9 @@ export function AnimatedRevenueGraph() {
             key={activeMetric}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute top-3 right-3 px-3 py-2 rounded-xl bg-black/80 border border-[#FFB52E]/40 backdrop-blur-xl shadow-xl flex items-center gap-3 pointer-events-none"
+            className="absolute top-3 right-3 px-3 py-2 rounded-xl bg-black/80 border border-[#8B5CF6]/40 backdrop-blur-xl shadow-xl flex items-center gap-3 pointer-events-none"
           >
-            <div className="w-2 h-2 rounded-full bg-[#FFB52E]" />
+            <div className="w-2 h-2 rounded-full bg-[#D946EF]" />
             <div className="flex flex-col">
               <span className="text-[10px] text-gray-400 font-mono uppercase">{coords[activeMetric].label} REVENUE</span>
               <span className="text-sm font-black text-white font-mono">{coords[activeMetric].rev}</span>
@@ -256,12 +256,12 @@ export function AnimatedRevenueGraph() {
       {/* Bottom Live Feed Telemetry Strip */}
       <div className="mt-4 pt-4 border-t border-white/06 flex flex-wrap items-center justify-between gap-2 text-[10px] text-gray-400 font-mono">
         <div className="flex items-center gap-2">
-          <ShieldCheck size={13} className="text-[#FFB52E]" />
+          <ShieldCheck size={13} className="text-[#C084FC]" />
           <span>REAL-TIME MULTI-TOUCH ATTRIBUTION ACTIVE</span>
         </div>
         <div className="flex items-center gap-4">
           <span>LATENCY: 14ms</span>
-          <span className="text-[#FFB52E] font-bold">500M+ TELEMETRY VERIFIED</span>
+          <span className="text-[#D946EF] font-bold">500M+ TELEMETRY VERIFIED</span>
         </div>
       </div>
     </div>

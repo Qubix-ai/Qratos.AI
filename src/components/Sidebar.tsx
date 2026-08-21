@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { BrainCircuit, MessageSquare, Plus, Settings, User as UserIcon, LogOut, LayoutDashboard, History, Sparkles, Target, Mic, Mail, FileText, Globe, Search, X, PlusCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, Plus, ArrowLeft, Search, LogOut, User as UserIcon, Trash2, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface SidebarProps {
   user: any;
@@ -10,15 +10,24 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   onSessionSelect: (sessionId: string) => void;
   onLogout: () => void;
-  onShowAdmin: () => void;
+  onShowAdmin?: () => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChange, onSessionSelect, onLogout, onShowAdmin, isOpen, onClose }: SidebarProps) {
+export function Sidebar({
+  user,
+  userData,
+  activeTab,
+  activeSessionId,
+  onTabChange,
+  onSessionSelect,
+  onLogout,
+  isOpen,
+  onClose,
+}: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [history, setHistory] = useState<any[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -31,21 +40,30 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
   }, []);
 
   // Fetch Session History from local cache
-  useEffect(() => {
+  const loadSessions = () => {
     if (!user) return;
     try {
-      const stored = localStorage.getItem(`murgii_sessions_${user.id || user.uid || 'user'}`);
+      const stored = localStorage.getItem(`murgii_sessions_${user.id || user.uid || "user"}`);
       if (stored) {
-        setHistory(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setHistory(parsed);
+        }
       }
     } catch (e) {
       console.warn("Could not load sessions from localStorage:", e);
     }
+  };
+
+  useEffect(() => {
+    loadSessions();
+    const interval = setInterval(loadSessions, 3000);
+    return () => clearInterval(interval);
   }, [user]);
 
-  const filteredHistory = history.filter(item => {
-    if (!searchQuery) return true;
-    const title = item.title || item.messages?.[0]?.content || "Archive Entry";
+  const filteredHistory = history.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const title = item.title || item.messages?.[0]?.content || "Chat Session";
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -53,30 +71,26 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
     if (session.title) return session.title;
     const firstMsg = session.messages?.[0]?.content || "";
     if (!firstMsg) return "New Session";
-    // Generate concise title: first 40 chars
-    return firstMsg.length > 40 ? firstMsg.substring(0, 40) + "..." : firstMsg;
+    return firstMsg.length > 35 ? firstMsg.substring(0, 35) + "..." : firstMsg;
   };
 
-  const menuItems = [
-    { id: "chat", icon: MessageSquare, label: "Neural Engine" },
-    { id: "history", icon: History, label: "Archive" },
-    { id: "settings", icon: Settings, label: "Tuning" },
-  ];
-
-  const categories = [
-    { id: "landing", icon: LayoutDashboard, label: "Landing Pages" },
-    { id: "funnels", icon: Target, label: "Conversion Funnels" },
-    { id: "emails", icon: Mail, label: "Email Sequences" },
-    { id: "vsl", icon: Mic, label: "VSL Scripts" },
-  ];
-
-  const filteredCategories = categories.filter(item => 
-    item.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDeleteSession = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    try {
+      const updated = history.filter((s) => s.id !== sessionId);
+      setHistory(updated);
+      localStorage.setItem(`murgii_sessions_${user.id || user.uid || "user"}`, JSON.stringify(updated));
+      if (activeSessionId === sessionId) {
+        onSessionSelect("");
+      }
+    } catch (err) {
+      console.error("Could not delete session:", err);
+    }
+  };
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile Backdrop */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -85,254 +99,190 @@ export function Sidebar({ user, userData, activeTab, activeSessionId, onTabChang
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70 backdrop-blur-[4px] z-50 lg:hidden"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 lg:hidden"
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {(!isMobile || isOpen) && (
-          <motion.div
+          <motion.aside
             initial={isMobile ? { x: "-100%", opacity: 0 } : false}
             animate={{ x: 0, opacity: 1 }}
             exit={isMobile ? { x: "-100%", opacity: 0 } : undefined}
-            transition={{ 
-              type: "spring", 
-              stiffness: 300, 
+            transition={{
+              type: "spring",
+              stiffness: 300,
               damping: 30,
-              mass: 0.8
+              mass: 0.8,
             }}
             className={`
-              fixed inset-y-0 left-0 z-50 w-[85%] max-w-[320px] h-screen
-              border-r border-[rgba(201,168,76,0.12)] shadow-[4px_0_40px_rgba(0,0,0,0.6),1px_0_0_rgba(201,168,76,0.08)] backdrop-blur-[30px]
+              fixed inset-y-0 left-0 z-50 w-[85%] max-w-[290px] h-screen
+              border-r border-white/[0.08] shadow-[4px_0_40px_rgba(0,0,0,0.7)] backdrop-blur-[35px]
               flex flex-col lg:relative lg:translate-x-0
             `}
             style={{
-              background: 'linear-gradient(180deg, rgba(10, 8, 18, 0.98) 0%, rgba(7, 6, 13, 0.99) 100%)'
+              background: "linear-gradient(180deg, rgba(10, 8, 18, 0.98) 0%, rgba(6, 5, 10, 0.99) 100%)",
             }}
           >
-            {/* Sidebar Header Area */}
-            <div className="p-[20px_20px_16px] border-b border-white/06 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                 <div className="w-[44px] h-[44px] rounded-[12px] bg-gradient-to-br from-[#FFB52E]/25 via-[#C9A84C]/15 to-[#FF2A55]/10 border border-[#FFB52E]/35 shadow-[0_0_20px_rgba(255,181,46,0.25)] flex items-center justify-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-[#FFB52E]/20 to-transparent animate-pulse" />
-                    <Sparkles size={20} className="text-[#FFB52E] relative z-10" />
-                 </div>
-                 <div className="flex flex-col">
-                    <div 
-                      className="text-[17px] font-[900] tracking-[0.08em] uppercase"
-                      style={{
-                        background: 'linear-gradient(135deg, #FFFFFF 0%, #FFB52E 60%, #FFA000 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      }}
-                    >
-                      MURGII.AI
-                    </div>
-                    <span className="text-[9px] font-[700] tracking-[0.24em] text-[#FFB52E]/75 uppercase">PERSUASION OS</span>
-                 </div>
-              </div>
-              <button 
+            {/* Top Navigation Header: Back Arrow to Landing Page */}
+            <div className="p-4 border-b border-white/[0.08] flex items-center justify-between">
+              <button
                 type="button"
-                onClick={onClose}
-                className="lg:hidden w-[28px] h-[28px] rounded-[8px] bg-white/5 border border-white/08 flex items-center justify-center text-white/35 hover:text-white/80 hover:bg-white/9 transition-all"
+                onClick={() => {
+                  onTabChange("landing");
+                  onClose?.();
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#8B5CF6]/40 text-gray-300 hover:text-white transition-all cursor-pointer group"
+                title="Navigate to Landing Page"
               >
-                <X size={18} />
+                <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform text-[#E879F9]" />
+                <span className="text-xs font-semibold">Back to Home</span>
+              </button>
+
+              {/* Mobile Close Button */}
+              {isMobile && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                  title="Close sidebar"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* New Chat Button */}
+            <div className="p-4 pb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onSessionSelect("");
+                  onTabChange("chat");
+                  onClose?.();
+                }}
+                className="w-full bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] rounded-xl p-3 flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(139,92,246,0.35)] group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(217,70,239,0.45)] cursor-pointer"
+              >
+                <Plus size={16} className="text-white group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+                <span className="text-xs font-bold text-white uppercase tracking-wider">New Chat</span>
               </button>
             </div>
 
-            {/* Universal Search */}
-            <div className="m-[16px] bg-white/5 border border-white/08 rounded-[12px] p-[10px_14px] flex items-center gap-[10px] transition-all focus-within:border-[#C9A84C]/30 focus-within:bg-white/7">
-              <Search size={14} className="text-white/25" />
-              <input 
-                type="text"
-                placeholder="Universal Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-none p-0 focus:ring-0 text-[14px] text-white/75 placeholder:text-white/25 outline-none flex-1"
-              />
+            {/* Real Search Bar for Chat Sessions */}
+            <div className="px-4 py-2">
+              <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2 transition-all focus-within:border-[#8B5CF6]/50 focus-within:bg-white/10">
+                <Search size={14} className="text-gray-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search chats..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent border-none p-0 focus:ring-0 text-xs text-white placeholder-gray-500 outline-none flex-1 min-w-0"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="text-gray-400 hover:text-white text-xs cursor-pointer"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Neural Logic Button Area */}
-            <div className="px-4 mb-5">
-               <button
-                 type="button"
-                 onClick={() => {
-                   onSessionSelect("");
-                   onTabChange("chat");
-                   onClose?.();
-                 }}
-                 className="w-full bg-gradient-to-br from-[#C9A84C] to-[#B8922A] rounded-[14px] p-[14px_16px] flex items-center gap-[12px] shadow-[0_4px_20px_rgba(201,168,76,0.30),0_2px_6px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.20)] group transition-all duration-[0.25s] hover:-translate-y-[2px] hover:shadow-[0_8px_28px_rgba(201,168,76,0.40),inset_0_1px_0_rgba(255,255,255,0.25)]"
-               >
-                 <div className="w-[32px] h-[32px] rounded-[10px] bg-black/20 flex items-center justify-center text-black/80">
-                   <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" strokeWidth={3} />
-                 </div>
-                 <div className="flex flex-col items-start leading-tight">
-                   <span className="text-[13px] font-[700] tracking-[0.08em] text-black/85 uppercase">New Neural Logic</span>
-                   <span className="text-[11px] text-black/55 font-[400] tracking-[0.02em]">Initialize fresh session</span>
-                 </div>
-               </button>
-            </div>
+            {/* Saved Chat Sessions List */}
+            <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar">
+              <div className="px-2 py-1 flex items-center justify-between">
+                <span className="text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+                  Recent Chats {filteredHistory.length > 0 && `(${filteredHistory.length})`}
+                </span>
+              </div>
 
-            {/* Nav Sections */}
-            <div className="flex-1 overflow-y-auto no-scrollbar scrollbar-hide">
-              
-              {/* CORE SYSTEMS */}
-              <div className="mb-6">
-                <h3 className="text-[10px] font-[700] tracking-[0.18em] text-white/25 uppercase px-[20px] mb-[8px]">Core Systems</h3>
-                <div className="space-y-[2px]">
-                  {menuItems.map((item, i) => (
-                    <motion.button
-                      key={item.id}
-                      initial={isMobile ? { opacity: 0, x: -25 } : false}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ 
-                        delay: 0.1 + (i * 0.06), 
-                        duration: 0.4,
-                        ease: [0.23, 1, 0.32, 1]
-                      }}
-                      onClick={() => {
-                        onTabChange(item.id);
-                        onClose?.();
-                      }}
-                      className={`flex items-center gap-[12px] w-full p-[11px_20px] transition-all duration-200 relative group nav-item ${
-                        activeTab === item.id 
-                        ? "active bg-gradient-to-r from-[#C9A84C]/12 to-[#C9A84C]/03" 
-                        : "hover:bg-white/04"
-                      }`}
-                    >
-                      {activeTab === item.id && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#C9A84C] shadow-[0_0_8px_rgba(201,168,76,0.8),0_0_16px_rgba(201,168,76,0.4)]" />
-                      )}
-                      <item.icon size={18} className={`transition-colors ${
-                        activeTab === item.id ? "text-[#C9A84C] drop-shadow-[0_0_6px_rgba(201,168,76,0.6)]" : "text-white/35 group-hover:text-white/70"
-                      }`} />
-                      <span className={`text-[14px] transition-colors ${
-                        activeTab === item.id ? "text-[#C9A84C] font-[600]" : "text-white/55 font-[500] group-hover:text-white/85"
-                      }`}>{item.label}</span>
-                    </motion.button>
-                  ))}
+              {filteredHistory.length === 0 ? (
+                <div className="py-8 px-4 text-center">
+                  <MessageSquare size={20} className="text-gray-600 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs text-gray-500 font-medium">
+                    {searchQuery ? "No matching chats found" : "No saved chats yet"}
+                  </p>
+                  <p className="text-[10px] text-gray-600 mt-1">
+                    {searchQuery ? "Try another keyword" : "Start a new conversation"}
+                  </p>
                 </div>
-              </div>
+              ) : (
+                filteredHistory.map((session) => (
+                  <div
+                    key={session.id}
+                    onClick={() => {
+                      onSessionSelect(session.id);
+                      onTabChange("chat");
+                      onClose?.();
+                    }}
+                    className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer relative ${
+                      activeSessionId === session.id
+                        ? "bg-[#8B5CF6]/15 border border-[#8B5CF6]/40 text-white font-semibold shadow-[0_0_12px_rgba(139,92,246,0.2)]"
+                        : "text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                      <MessageSquare
+                        size={14}
+                        className={`shrink-0 ${
+                          activeSessionId === session.id ? "text-[#E879F9]" : "text-gray-500 group-hover:text-gray-300"
+                        }`}
+                      />
+                      <span className="truncate">{getSessionTitle(session)}</span>
+                    </div>
 
-              <div className="m-[12px_20px] h-[1px] bg-gradient-to-r from-transparent via-white/06 to-transparent" />
-
-              {/* SPECIALIZED AGENTS */}
-              <div className="mb-6">
-                <h3 className="text-[10px] font-[700] tracking-[0.18em] text-white/25 uppercase px-[20px] mb-[8px]">Specialized Agents</h3>
-                <div className="space-y-[2px]">
-                  {filteredCategories.map((item, i) => (
-                    <motion.button
-                      key={item.id}
-                      initial={isMobile ? { opacity: 0, x: -25 } : false}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ 
-                        delay: 0.1 + ((i + menuItems.length) * 0.06), 
-                        duration: 0.4,
-                        ease: [0.23, 1, 0.32, 1]
-                      }}
-                      onClick={() => {
-                        onTabChange(item.id);
-                        onClose?.();
-                      }}
-                      className={`flex items-center gap-[12px] w-full p-[11px_20px] transition-all duration-200 relative group nav-item ${
-                        activeTab === item.id 
-                        ? "active bg-gradient-to-r from-[#C9A84C]/12 to-[#C9A84C]/03" 
-                        : "hover:bg-white/04"
-                      }`}
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteSession(e, session.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 text-gray-500 transition-all rounded"
+                      title="Delete chat"
                     >
-                      {activeTab === item.id && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#C9A84C] shadow-[0_0_8px_rgba(201,168,76,0.8),0_0_16px_rgba(201,168,76,0.4)]" />
-                      )}
-                      <item.icon size={18} className={`transition-colors ${
-                        activeTab === item.id ? "text-[#C9A84C] drop-shadow-[0_0_6px_rgba(201,168,76,0.6)]" : "text-white/35 group-hover:text-white/70"
-                      }`} />
-                      <span className={`text-[14px] transition-colors ${
-                        activeTab === item.id ? "text-[#C9A84C] font-[600]" : "text-white/55 font-[500] group-hover:text-white/85"
-                      }`}>{item.label}</span>
-                    </motion.button>
-                  ))}
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Bottom Credits & User Profile */}
+            <div className="p-3 border-t border-white/[0.08] space-y-2">
+              <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/05 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Credits</span>
+                <span className="text-xs font-bold text-[#E879F9] font-mono">
+                  {userData?.remainingCredits ?? 20} / {userData?.totalCredits ?? 20}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/05">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] flex items-center justify-center text-white text-[10px] font-black shrink-0">
+                    {user?.email ? user.email.charAt(0).toUpperCase() : <UserIcon size={12} />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-white truncate max-w-[130px]">
+                      {user?.email ? user.email.split("@")[0] : "Operator"}
+                    </p>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">
+                      {userData?.plan || "Basic"} Plan
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="m-[12px_20px] h-[1px] bg-gradient-to-r from-transparent via-white/06 to-transparent" />
-
-              {/* NEURAL ARCHIVE */}
-              <div className="mb-6">
-                <h3 className="text-[10px] font-[700] tracking-[0.18em] text-white/25 uppercase px-[20px] mb-[8px]">Neural Archive</h3>
-                <div className="space-y-[2px]">
-                  {filteredHistory.slice(0, 10).map((session, i) => (
-                    <motion.button
-                      key={session.id}
-                      initial={isMobile ? { opacity: 0, x: -25 } : false}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ 
-                        delay: 0.1 + ((i + menuItems.length + filteredCategories.length) * 0.05), 
-                        duration: 0.4,
-                        ease: [0.23, 1, 0.32, 1]
-                      }}
-                      onClick={() => {
-                        onSessionSelect(session.id);
-                        onTabChange("chat");
-                        onClose?.();
-                      }}
-                      className={`flex items-center gap-[12px] w-full p-[11px_20px] transition-all duration-200 relative group truncate nav-item ${
-                        activeSessionId === session.id 
-                        ? "active bg-gradient-to-r from-[#C9A84C]/12 to-[#C9A84C]/03" 
-                        : "hover:bg-white/04"
-                      }`}
-                    >
-                      {activeSessionId === session.id && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#C9A84C] shadow-[0_0_8px_rgba(201,168,76,0.8),0_0_16px_rgba(201,168,76,0.4)]" />
-                      )}
-                      <MessageSquare size={16} className={`shrink-0 ${
-                        activeSessionId === session.id ? "text-[#C9A84C]" : "text-white/30 group-hover:text-white/50"
-                      }`} />
-                      <span className={`text-[13px] truncate transition-colors ${
-                        activeSessionId === session.id ? "text-[#C9A84C] font-[500]" : "text-white/45 group-hover:text-white/75"
-                      }`}>{getSessionTitle(session)}</span>
-                    </motion.button>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer"
+                  title="Sign out"
+                >
+                  <LogOut size={14} />
+                </button>
               </div>
             </div>
-
-            {/* Intelligence Reset Section */}
-            <div className="p-[16px_20px] border-t border-white/06">
-               <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-[700] tracking-[0.15em] text-white/25 uppercase font-sans">Intelligence Reset</span>
-                  <span className="text-[12px] font-[700] text-[#C9A84C] font-sans">{userData?.remainingCredits ?? 30}/{userData?.totalCredits ?? 30}</span>
-               </div>
-               <div className="h-[3px] w-full bg-white/08 rounded-[4px] mt-[8px] overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${((userData?.remainingCredits ?? 0) / (userData?.totalCredits ?? 30)) * 100}%` }}
-                    className="h-full bg-gradient-to-r from-[#C9A84C] to-[#E8C870] rounded-[4px] shadow-[0_0_8px_rgba(201,168,76,0.5)]"
-                  />
-               </div>
-            </div>
-
-            {/* User Profile Card */}
-            <div className="m-[12px_16px_20px] bg-white/04 border border-white/07 rounded-[14px] p-[14px] flex items-center gap-[12px] group">
-              <div className="w-[40px] h-[40px] rounded-[12px] bg-gradient-to-br from-[rgba(80,80,120,0.6)] to-[rgba(40,40,80,0.6)] border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                 {userData?.photoURL ? (
-                   <img src={userData.photoURL} className="w-full h-full object-cover" alt="User" />
-                 ) : (
-                   <UserIcon size={20} className="text-white/50" />
-                 )}
-              </div>
-              <div className="flex-1 min-w-0">
-                 <p className="text-[14px] font-[600] text-white/80 truncate">{userData?.displayName || "Agent User"}</p>
-                 <p className="text-[10px] font-[700] tracking-[0.10em] text-[#C9A84C] uppercase">Level: Elite Operator</p>
-              </div>
-              <button 
-                onClick={onLogout}
-                className="text-white/25 hover:text-white/60 transition-colors cursor-pointer"
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-          </motion.div>
+          </motion.aside>
         )}
       </AnimatePresence>
     </>
