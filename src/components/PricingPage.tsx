@@ -290,103 +290,107 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className={`relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl border transition-all duration-300 overflow-hidden ${
-              isMax
-                ? "bg-gradient-to-b from-[#8B5CF6]/15 via-[#D946EF]/10 to-transparent border-[#D946EF]/60 shadow-[0_25px_60px_rgba(217,70,239,0.3)]"
-                : "bg-gradient-to-b from-white/[0.05] to-white/[0.02] border-[#8B5CF6]/40 hover:border-[#D946EF]/60 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_30px_rgba(139,92,246,0.15)]"
-            }`}
+            className="relative h-full"
           >
-            {/* MOST POPULAR BADGE */}
-            <div className="absolute top-0 right-0">
-              <div className="bg-gradient-to-l from-[#D946EF] to-[#8B5CF6] text-white text-[9px] font-black uppercase tracking-[0.2em] py-1.5 px-5 rounded-bl-2xl shadow-[0_0_15px_rgba(217,70,239,0.6)]">
-                Most Popular
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#D946EF] via-[#A855F7] to-[#8B5CF6] flex items-center justify-center text-white shadow-[0_0_16px_rgba(217,70,239,0.6)]">
-                    <Crown size={16} />
-                  </div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Max</h2>
+            <div
+              className={`relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 overflow-hidden h-full ${
+                isMax
+                  ? "bg-gradient-to-b from-[#8B5CF6]/15 via-[#D946EF]/10 to-transparent border border-[#D946EF]/60 shadow-[0_25px_60px_rgba(217,70,239,0.3),0_0_24px_rgba(168,85,247,0.25)]"
+                  : "bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-[rgba(168,85,247,0.4)] hover:border-[#D946EF]/60 shadow-[0_0_24px_rgba(168,85,247,0.25),0_20px_50px_rgba(0,0,0,0.6)]"
+              }`}
+            >
+              {/* MOST POPULAR BADGE */}
+              <div className="absolute top-0 right-0 z-20">
+                <div className="bg-gradient-to-l from-[#D946EF] to-[#8B5CF6] text-white text-[9px] font-black uppercase tracking-[0.2em] py-1.5 px-5 rounded-bl-2xl shadow-[0_0_15px_rgba(217,70,239,0.6)]">
+                  Most Popular
                 </div>
-                {isMax && (
-                  <span className="px-2.5 py-1 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 text-[9px] font-black text-[#F472B6] tracking-wider uppercase">
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#D946EF] via-[#A855F7] to-[#8B5CF6] flex items-center justify-center text-white shadow-[0_0_16px_rgba(217,70,239,0.6)]">
+                      <Crown size={16} />
+                    </div>
+                    <h2 className="text-xl font-bold text-white tracking-tight">Max</h2>
+                  </div>
+                  {isMax && (
+                    <span className="px-2.5 py-1 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 text-[9px] font-black text-[#F472B6] tracking-wider uppercase">
+                      Your Current Plan
+                    </span>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-white tracking-tight">$97</span>
+                    <span className="text-[#E879F9] text-xs font-bold uppercase tracking-wider">/ month</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                    Maximum credit capacity & complete Qreato AI ecosystem integration.
+                  </p>
+                </div>
+
+                <div className="h-px bg-white/10 my-6" />
+
+                <div className="space-y-3.5 mb-8">
+                  <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">Everything in Core, plus:</p>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-[#F472B6]" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      <strong className="text-white font-bold">100 credits</strong> per day (5x capacity)
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-[#F472B6]" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      Connects to <strong className="text-white">Bolt Max</strong> suite
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-[#F472B6]" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      <strong className="text-[#E879F9] font-bold">AI Blueprint Assist</strong> & Qreato AI engine
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-[#F472B6]" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      Your Business Blueprint interactive studio
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/05">
+                {isMax ? (
+                  <div className="w-full py-3.5 rounded-xl bg-[#D946EF]/20 border border-[#D946EF]/40 text-center text-xs font-black text-[#F472B6] uppercase tracking-wider cursor-default">
                     Your Current Plan
-                  </span>
+                  </div>
+                ) : (
+                  <a
+                    href="https://whop.com/qreato/qreato-max"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] hover:opacity-90 text-white text-center text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(217,70,239,0.5)] cursor-pointer"
+                  >
+                    <span>Get Max</span>
+                    <ExternalLink size={13} />
+                  </a>
                 )}
               </div>
-
-              <div className="mb-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-white tracking-tight">$97</span>
-                  <span className="text-[#E879F9] text-xs font-bold uppercase tracking-wider">/ month</span>
-                </div>
-                <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-                  Maximum credit capacity & complete Qreato AI ecosystem integration.
-                </p>
-              </div>
-
-              <div className="h-px bg-white/10 my-6" />
-
-              <div className="space-y-3.5 mb-8">
-                <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">Everything in Core, plus:</p>
-                
-                <div className="flex items-start gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check size={11} className="text-[#F472B6]" />
-                  </div>
-                  <span className="text-xs text-gray-200 font-medium leading-tight">
-                    <strong className="text-white font-bold">100 credits</strong> per day (5x capacity)
-                  </span>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check size={11} className="text-[#F472B6]" />
-                  </div>
-                  <span className="text-xs text-gray-200 font-medium leading-tight">
-                    Connects to <strong className="text-white">Bolt Max</strong> suite
-                  </span>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check size={11} className="text-[#F472B6]" />
-                  </div>
-                  <span className="text-xs text-gray-200 font-medium leading-tight">
-                    <strong className="text-[#E879F9] font-bold">AI Blueprint Assist</strong> & Qreato AI engine
-                  </span>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#D946EF]/25 border border-[#D946EF]/50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check size={11} className="text-[#F472B6]" />
-                  </div>
-                  <span className="text-xs text-gray-200 font-medium leading-tight">
-                    Your Business Blueprint interactive studio
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-white/05">
-              {isMax ? (
-                <div className="w-full py-3.5 rounded-xl bg-[#D946EF]/20 border border-[#D946EF]/40 text-center text-xs font-black text-[#F472B6] uppercase tracking-wider cursor-default">
-                  Your Current Plan
-                </div>
-              ) : (
-                <a
-                  href="https://whop.com/qreato/qreato-max"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] hover:opacity-90 text-white text-center text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(217,70,239,0.5)] cursor-pointer"
-                >
-                  <span>Get Max</span>
-                  <ExternalLink size={13} />
-                </a>
-              )}
             </div>
           </motion.div>
 

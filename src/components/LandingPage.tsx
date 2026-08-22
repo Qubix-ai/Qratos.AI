@@ -1,6 +1,38 @@
-import { motion, useSpring, useTransform } from "motion/react";
-import { Check, ArrowRight, Target, Sparkles, ShieldCheck, Mail, Globe, Zap, BarChart3, Activity, Layers, Network, Instagram, Facebook, Twitter } from "lucide-react";
-import { useState, useEffect } from "react";
+import { motion, useSpring, useTransform, AnimatePresence } from "motion/react";
+import { 
+  Check, 
+  ArrowRight, 
+  Target, 
+  Sparkles, 
+  ShieldCheck, 
+  Mail, 
+  Globe, 
+  Zap, 
+  BarChart3, 
+  Activity, 
+  Layers, 
+  Network, 
+  Instagram, 
+  Facebook, 
+  Twitter,
+  Menu,
+  X,
+  Wand2,
+  SlidersHorizontal,
+  Lock,
+  ExternalLink,
+  Sliders,
+  CheckCircle2,
+  RefreshCw,
+  ChevronRight,
+  FileText,
+  User,
+  CreditCard,
+  LayoutDashboard,
+  Bot,
+  Copy
+} from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { AuthModal } from "./AuthModal";
 import { PremiumBackground3D } from "./PremiumBackground3D";
 import { Murgii3DChicken } from "./Murgii3DChicken";
@@ -8,16 +40,22 @@ import { MagneticButton } from "./MagneticButton";
 import { FloatingRevenueObject3D } from "./FloatingRevenueObject3D";
 import { AnimatedRevenueGraph } from "./AnimatedRevenueGraph";
 import { QreatoLogo } from "./QreatoLogo";
+import { MoltenMetal } from "./MoltenMetal";
 
 interface LandingPageProps {
   user?: any;
+  userData?: any;
   onStart?: () => void;
   onLogin?: () => void;
+  onNavigate?: (tab: string) => void;
 }
 
-export function LandingPage({ user, onStart }: LandingPageProps) {
+export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: LandingPageProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [activeDemoMode, setActiveDemoMode] = useState<"email" | "ads" | "landing" | "psych">("email");
 
   const handleLoginClick = () => {
     if (user && onStart) {
@@ -27,6 +65,29 @@ export function LandingPage({ user, onStart }: LandingPageProps) {
     } else {
       setAuthMode("signup");
       setAuthModalOpen(true);
+    }
+  };
+
+  const handleCraftPromptClick = () => {
+    const rawPlan = (user?.user_metadata?.plan || user?.app_metadata?.plan || user?.plan || userData?.plan || 'none').toLowerCase();
+    const hasAccess = rawPlan === 'core' || rawPlan === 'max' || rawPlan === 'admin' || rawPlan === 'pro';
+
+    if (user && hasAccess) {
+      if (onNavigate) onNavigate("prompt-builder");
+      else if (onStart) onStart();
+    } else {
+      setLockModalOpen(true);
+    }
+  };
+
+  const handleNavigate = (tab: string) => {
+    setMenuOpen(false);
+    if (tab === "prompt-builder") {
+      handleCraftPromptClick();
+    } else if (onNavigate) {
+      onNavigate(tab);
+    } else {
+      handleLoginClick();
     }
   };
 
@@ -86,6 +147,245 @@ export function LandingPage({ user, onStart }: LandingPageProps) {
 
   return (
     <div className="min-h-screen bg-[#050508] text-white overflow-x-hidden noise-bg selection:bg-[#8B5CF6]/30 relative font-sans">
+      {/* Top Navigation Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 sm:h-20 px-4 sm:px-8 flex items-center justify-between border-b border-white/[0.08] bg-black/40 backdrop-blur-xl transition-all duration-300">
+        {/* Left: Qreato Brand Mark */}
+        <div 
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center shadow-[0_0_18px_rgba(139,92,246,0.45)] group-hover:scale-105 transition-transform shrink-0">
+            <QreatoLogo size={20} className="text-white" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-['Nohemi',sans-serif] font-bold text-sm sm:text-base tracking-[0.1em] text-white uppercase leading-none">
+              MURGII AI
+            </span>
+            <span className="text-[9px] font-mono tracking-[0.2em] text-white uppercase leading-none mt-1">
+              PERSUASION ENGINE
+            </span>
+          </div>
+        </div>
+
+        {/* Center: Navigation Links */}
+        <nav className="hidden md:flex items-center gap-6 lg:gap-8">
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate("pricing") : handleLoginClick()}
+            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          >
+            Pricing
+          </button>
+          <button
+            type="button"
+            onClick={handleCraftPromptClick}
+            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          >
+            Prompt Builder
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate("chat") : handleLoginClick()}
+            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          >
+            AI Engine
+          </button>
+          <a
+            href="#how-it-works"
+            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          >
+            How It Works
+          </a>
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate("account") : handleLoginClick()}
+            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
+          >
+            Account
+          </button>
+        </nav>
+
+        {/* Right Action Buttons & Hamburger Menu */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={handleLoginClick}
+            className="px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold text-white/80 hover:text-white transition-colors hidden sm:block cursor-pointer"
+          >
+            {user ? "Dashboard" : "Log In"}
+          </button>
+          <button
+            type="button"
+            onClick={handleLoginClick}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white text-xs font-bold shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <span className="text-white font-bold">{user ? "Open Workspace" : "Get Started"}</span>
+          </button>
+
+          {/* 3-Line Hamburger Menu Icon Button */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white transition-all cursor-pointer flex items-center justify-center"
+            title="Navigation Shortcuts"
+            aria-label="Toggle navigation menu"
+          >
+            {menuOpen ? <X size={18} className="text-[#E879F9]" /> : <Menu size={18} />}
+          </button>
+        </div>
+      </header>
+
+      {/* Hamburger Dropdown / Slide-out Menu Overlay */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: -12, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.97 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="fixed top-20 right-4 sm:right-8 z-50 w-[92vw] max-w-sm rounded-3xl bg-[#0C091A]/95 border border-[#8B5CF6]/30 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(139,92,246,0.25)] backdrop-blur-2xl p-4 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.08]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#D946EF] animate-pulse" />
+                  <span className="text-[10px] font-mono tracking-[0.2em] text-white/60 uppercase">
+                    QUICK NAVIGATION
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(false)}
+                  className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Shortcuts List */}
+              <div className="py-3 space-y-1.5">
+                {/* 1. Workspace */}
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("chat")}
+                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#8B5CF6]/40 transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-[#E879F9] group-hover:scale-105 transition-transform shrink-0">
+                    <Bot size={17} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Workspace</span>
+                      <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">LIVE</span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Interactive AI Persuasion Engine</p>
+                  </div>
+                </button>
+
+                {/* 2. Prompt Builder */}
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("prompt-builder")}
+                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#D946EF]/40 transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#D946EF]/15 border border-[#D946EF]/30 flex items-center justify-center text-[#D946EF] group-hover:scale-105 transition-transform shrink-0">
+                    <Wand2 size={17} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Prompt Builder</span>
+                      <span className="text-[9px] font-mono text-[#D946EF] bg-[#D946EF]/10 px-1.5 py-0.5 rounded border border-[#D946EF]/20">CORE/MAX</span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Custom Prompt Architecture Engine</p>
+                  </div>
+                </button>
+
+                {/* 3. Pricing */}
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("pricing")}
+                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#8B5CF6]/40 transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-[#E879F9] group-hover:scale-105 transition-transform shrink-0">
+                    <CreditCard size={17} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Pricing & Plans</span>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Tiered intelligence & access</p>
+                  </div>
+                </button>
+
+                {/* 4. Account & Profile Settings */}
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("account")}
+                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#8B5CF6]/40 transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/80 group-hover:scale-105 transition-transform shrink-0">
+                    <User size={17} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Account & Profile Settings</span>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Subscription & Operator Settings</p>
+                  </div>
+                </button>
+
+                {/* 5. Memory & Personalization */}
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("memory")}
+                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#D946EF]/40 transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#D946EF]/15 border border-[#D946EF]/30 flex items-center justify-center text-[#E879F9] group-hover:scale-105 transition-transform shrink-0">
+                    <SlidersHorizontal size={17} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Memory & Personalization</span>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Brand voice & persistent context</p>
+                  </div>
+                </button>
+
+                {/* 6. How It Works */}
+                <a
+                  href="#how-it-works"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/20 transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/70 group-hover:scale-105 transition-transform shrink-0">
+                    <Sparkles size={17} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-white group-hover:text-white transition-colors">How It Works</span>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">$500M Persuasion Architecture</p>
+                  </div>
+                </a>
+              </div>
+
+              {/* Footer Action */}
+              <div className="pt-3 border-t border-white/[0.08]">
+                <button
+                  type="button"
+                  onClick={handleLoginClick}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>{user ? "Open Workspace" : "Get Started Free"}</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Premium Subtle Grid Overlay */}
       <div 
         className="fixed inset-0 pointer-events-none z-[1] opacity-[0.04]"
@@ -110,26 +410,47 @@ export function LandingPage({ user, onStart }: LandingPageProps) {
       />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-32 px-4 overflow-hidden">
+      <section className="relative pt-36 pb-32 px-4 overflow-hidden">
+        {/* MoltenMetal WebGL2 Fragment Shader Caustic Background */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden [mask-image:radial-gradient(ellipse_95%_85%_at_50%_45%,black_55%,transparent_100%)] z-0">
+          <MoltenMetal
+            color1="#2e0854"
+            color2="#c026d3"
+            color3="#ffffff"
+            speed={0.28}
+            scale={3.8}
+            detail={4}
+            glow={1.2}
+            coreSize={0.12}
+            swirl={1.1}
+            fold={-0.22}
+            blackPoint={0.05}
+            brightness={0.85}
+            colorMode="molten"
+            grain={true}
+            grainIntensity={0.03}
+            mouseInteraction={true}
+            mouseStrength={0.2}
+            opacity={0.4}
+          />
+        </div>
+
+        {/* Semi-transparent dark overlay for high text legibility */}
+        <div className="absolute inset-0 bg-black/45 pointer-events-none z-[1]" />
+
+        {/* Subtle Dark Vignette Overlay for High Contrast Text Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050508]/40 via-transparent to-[#050508]/90 pointer-events-none z-[1]" />
+
         {/* Cinematic Atmosphere */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.12)_0%,transparent_70%)] pointer-events-none" />
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/15 rounded-full blur-[160px] pointer-events-none" />
-        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-[#D946EF]/10 rounded-full blur-[160px] pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.1)_0%,transparent_70%)] pointer-events-none z-[2]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/15 rounded-full blur-[160px] pointer-events-none z-[2]" />
+        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-[#D946EF]/10 rounded-full blur-[160px] pointer-events-none z-[2]" />
         
         {/* Animated Grid Lines */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none z-[2]" />
 
         <div className="max-w-7xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-[#8B5CF6]/30 text-[10px] font-sans tracking-[0.2em] font-bold text-[#E879F9] backdrop-blur-md shadow-[0_0_25px_rgba(139,92,246,0.25)]"
-          >
-            <Sparkles size={14} className="animate-pulse text-[#D946EF]" />
-            $500M PERSUASION INTELLIGENCE ENGINE
-          </motion.div>
-
-          {/* 3D Animated Murgii Chicken Mascot Showcase */}
+          {/* 3D Animated Murgii Circular Orb Mascot Showcase with Centered Qreato Geometric Mark */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -139,70 +460,71 @@ export function LandingPage({ user, onStart }: LandingPageProps) {
             <Murgii3DChicken size="lg" interactive={true} showPedestal={true} showHologram={true} />
           </motion.div>
           
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl sm:text-6xl md:text-[8.5rem] tracking-tighter mb-8 leading-[0.85] bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent will-change-transform"
-          >
-            <span className="font-black bg-gradient-to-r from-white via-[#C084FC] to-[#D946EF] bg-clip-text text-transparent">MURGII</span>
-            <span className="font-light text-white/80">.AI</span>
-          </motion.h1>
+          {/* Main Hero Headline in Nohemi Bold with Solid White & Rich Gold Keyword Highlights */}
+          <div className="w-full max-w-5xl mx-auto mb-8 px-4">
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-['Nohemi',sans-serif] font-bold tracking-tight leading-[1.12] text-white [text-shadow:0_4px_28px_rgba(0,0,0,0.85)] select-none text-center"
+            >
+              <span className="block whitespace-nowrap">
+                Your only <span className="text-[#FFBE0B]">unfair</span>
+              </span>
+              <span className="block whitespace-nowrap">
+                <span className="text-[#FFBE0B]">COPYWRITING</span> advantage
+              </span>
+            </motion.h1>
+          </div>
           
+          {/* Benefit-Focused Subheadline with Balanced Line Wrapping */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 1 }}
-            className="text-lg md:text-xl text-gray-300 max-w-xl mx-auto mb-6 leading-relaxed font-medium px-4"
+            className="text-base sm:text-lg md:text-xl text-neutral-200 max-w-2xl mx-auto mb-10 leading-relaxed font-normal px-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]"
+            style={{ textWrap: "balance" }}
           >
-            The $500M AI persuasion engine engineered to generate hyper-converting copy, strategic viral hooks & scalable revenue assets across funnels, launches, emails & high-stakes brands.
+            The AI copywriting engine that turns any brief into hooks, emails, and sales pages that convert — built for founders and creators who need results, not busywork.
           </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="text-[10px] md:text-xs font-sans text-gray-400 uppercase tracking-[0.2em] mb-12 max-w-[280px] sm:max-w-none mx-auto"
-          >
-            Built for founders, creators, agencies <br /> and growth-focused brands.
-          </motion.div>
           
+          {/* Glassmorphic Primary CTA with Strong Contrast */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 1 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-5 px-4 bg-white/[0.02] border border-white/10 backdrop-blur-3xl p-4 md:p-8 rounded-[32px] md:rounded-[40px] w-full sm:w-fit mx-auto shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_50px_rgba(139,92,246,0.15)] relative"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5 px-4 w-full sm:w-fit mx-auto relative z-20"
           >
-            {/* Inner Glow for Glass Effect */}
-            <div className="absolute inset-0 rounded-[32px] md:rounded-[40px] shadow-[inset_0_0_25px_rgba(139,92,246,0.12)] pointer-events-none" />
-            
-            <MagneticButton
-              variant="purple"
+            <motion.button
+              whileHover={{ scale: 1.03, backgroundColor: "rgba(255, 255, 255, 0.18)" }}
+              whileTap={{ scale: 0.97 }}
               onClick={handleLoginClick}
-              className="w-full sm:w-auto px-10 py-6 text-base tracking-tight font-black rounded-2xl"
+              className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg font-bold text-white flex items-center justify-center gap-3 transition-all duration-300 cursor-pointer shadow-[0_15px_35px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)] [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]"
+              style={{
+                background: "rgba(255, 255, 255, 0.12)",
+                backdropFilter: "blur(16px) saturate(1.5)",
+                WebkitBackdropFilter: "blur(16px) saturate(1.5)",
+                border: "1px solid rgba(255, 255, 255, 0.25)",
+              }}
             >
-              <span>Start Writing with Murgii Free</span>
-              <ArrowRight size={18} />
-            </MagneticButton>
+              <span className="font-bold text-white tracking-tight">Start Writing with Murgii Free</span>
+              <ArrowRight size={20} className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+            </motion.button>
 
-            <MagneticButton 
-              variant="glass"
+            <motion.button 
+              whileHover={{ scale: 1.03, backgroundColor: "rgba(255, 255, 255, 0.08)" }}
+              whileTap={{ scale: 0.97 }}
               onClick={handleLoginClick}
-              className="w-full sm:w-auto px-10 py-6 text-xs font-bold tracking-tight uppercase rounded-2xl"
+              className="w-full sm:w-auto px-8 py-4 sm:py-5 rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase text-neutral-300 hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
+              style={{
+                background: "rgba(255, 255, 255, 0.04)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+              }}
             >
               Explore Intelligence
-            </MagneticButton>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-16 flex flex-wrap justify-center px-4"
-          >
-            <span className="text-[10px] md:text-sm font-sans tracking-[0.2em] md:tracking-[0.4em] font-bold text-gray-500 uppercase text-center border-t border-white/10 pt-8 w-full max-w-2xl">
-              Specifically trained copywriting agent to generate $500M+ in sales
-            </span>
+            </motion.button>
           </motion.div>
         </div>
       </section>
@@ -290,7 +612,7 @@ export function LandingPage({ user, onStart }: LandingPageProps) {
       </section>
 
       {/* How Murgii AI Engineers Conversion Section */}
-      <section className="py-44 px-4 relative overflow-hidden">
+      <section id="how-it-works" className="py-44 px-4 relative overflow-hidden">
         {/* Cinematic Background Elements */}
         <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/8 rounded-full blur-[180px] pointer-events-none" />
@@ -661,6 +983,214 @@ export function LandingPage({ user, onStart }: LandingPageProps) {
         </div>
       </section>
 
+      {/* PROMPT BUILDER ARCHITECTURE SECTION */}
+      <section id="prompt-builder" className="py-32 px-4 relative overflow-hidden">
+        {/* Ambient Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(139,92,246,0.14)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#D946EF]/8 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          {/* Section Header */}
+          <div className="text-center mb-16 px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[10px] font-black text-[#E879F9] uppercase tracking-[0.25em] mb-6 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.25)]"
+            >
+              <Wand2 size={12} className="animate-pulse text-[#D946EF]" />
+              CUSTOM PROMPT GENERATOR
+            </motion.div>
+            <h2 className="text-4xl md:text-8xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent italic leading-[0.95]">
+              Build Custom Prompts, <br className="hidden md:block" /> Engineered for You
+            </h2>
+            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent mx-auto mb-8 shadow-[0_0_20px_#8B5CF6]" />
+            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Answer a few guided questions about your niche, offer, and goal — Prompt Builder assembles a tailored, role-framed master prompt engineered specifically for Murgii&apos;s persuasion engine, so every generation starts from context that&apos;s actually yours.
+            </p>
+          </div>
+
+          {/* Interactive Supporting Visual: Prompt Builder UI Mockup & Synthesis Engine */}
+          <div className="max-w-6xl mx-auto rounded-[36px] bg-[#0A0716]/90 border border-[#8B5CF6]/30 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(139,92,246,0.2)] backdrop-blur-2xl p-6 sm:p-10 relative overflow-hidden">
+            {/* Top Toolbar / Mode Selector */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.4)] shrink-0">
+                  <Wand2 size={18} className="text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>Prompt Architecture Studio</span>
+                    <span className="text-[9px] font-mono text-[#D946EF] bg-[#D946EF]/15 px-2 py-0.5 rounded-full border border-[#D946EF]/30 uppercase">
+                      Neural Synthesizer
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-gray-400">Select an asset archetype to preview guided parameter assembly</p>
+                </div>
+              </div>
+
+              {/* Mode Selection Pills */}
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10 overflow-x-auto max-w-full">
+                {[
+                  { id: "email", label: "Email Sequence", icon: Mail },
+                  { id: "ads", label: "Ad Copy & Hooks", icon: Target },
+                  { id: "landing", label: "Landing Page", icon: Globe },
+                  { id: "psych", label: "Psych Persuasion", icon: Zap }
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeDemoMode === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveDemoMode(tab.id as any)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]"
+                          : "text-gray-400 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <Icon size={13} />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2-Column Guided Assembly Visual Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8 items-stretch">
+              {/* Left Column: Guided Questions Mockup */}
+              <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
+                <div className="space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#E879F9] font-bold">
+                      01. Guided Context Injection
+                    </span>
+                    <span className="text-[10px] font-mono text-gray-500">4 / 4 Complete</span>
+                  </div>
+
+                  {/* Question Field 1 */}
+                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-[#8B5CF6]/30 transition-all">
+                    <label className="text-[11px] font-mono text-gray-400 block mb-1">Target Niche & Audience</label>
+                    <div className="text-xs font-semibold text-white bg-black/40 px-3 py-2 rounded-xl border border-white/[0.05] flex items-center justify-between">
+                      <span>{activeDemoMode === "email" ? "B2B SaaS & High-Ticket Consultants" : activeDemoMode === "ads" ? "Direct-to-Consumer Fitness & Wellness" : activeDemoMode === "landing" ? "Enterprise AI Developer Platform" : "High-Ticket Course Buyers & Founders"}</span>
+                      <Check size={14} className="text-emerald-400 shrink-0" />
+                    </div>
+                  </div>
+
+                  {/* Question Field 2 */}
+                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-[#8B5CF6]/30 transition-all">
+                    <label className="text-[11px] font-mono text-gray-400 block mb-1">Primary Conversion Goal</label>
+                    <div className="text-xs font-semibold text-white bg-black/40 px-3 py-2 rounded-xl border border-white/[0.05] flex items-center justify-between">
+                      <span>{activeDemoMode === "email" ? "Drive urgency for demo bookings before launch" : activeDemoMode === "ads" ? "Break through ad fatigue with pattern-interrupt hooks" : activeDemoMode === "landing" ? "Convert cold traffic with proof & risk reversal" : "Overcome deep buying friction with cognitive reframing"}</span>
+                      <Check size={14} className="text-emerald-400 shrink-0" />
+                    </div>
+                  </div>
+
+                  {/* Question Field 3 */}
+                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-[#8B5CF6]/30 transition-all">
+                    <label className="text-[11px] font-mono text-gray-400 block mb-1">Tone of Voice & Frame</label>
+                    <div className="text-xs font-semibold text-white bg-black/40 px-3 py-2 rounded-xl border border-white/[0.05] flex items-center justify-between">
+                      <span>{activeDemoMode === "email" ? "Bold, authoritative, and direct" : activeDemoMode === "ads" ? "Punchy, relatable, and high-energy" : activeDemoMode === "landing" ? "Polished, high-contrast, and deeply persuasive" : "Subtle, loss-averse, and psychologically locked"}</span>
+                      <Check size={14} className="text-emerald-400 shrink-0" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Synthesis Indicator */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/10 via-[#A855F7]/10 to-[#D946EF]/10 border border-[#8B5CF6]/25 flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#E879F9] animate-ping shrink-0" />
+                  <p className="text-xs text-gray-300 font-medium">
+                    <span className="text-white font-bold">Dynamic Prompt Compiler:</span> Translates custom parameters into role-framed cognitive structures for Murgii&apos;s $500M neural core.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Column: Synthesized Master Prompt Output Preview */}
+              <div className="lg:col-span-7 flex flex-col rounded-2xl bg-black/60 border border-white/10 p-5 sm:p-6 relative font-mono text-xs overflow-hidden shadow-inner">
+                {/* Code Header */}
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                    </div>
+                    <span className="text-[11px] font-mono text-gray-400 ml-2">master_prompt_output.md</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#E879F9] bg-[#8B5CF6]/20 px-2 py-0.5 rounded border border-[#8B5CF6]/40 uppercase tracking-widest">
+                    SYNTHESIZED & READY
+                  </span>
+                </div>
+
+                {/* Formatted Master Prompt Output */}
+                <div className="flex-1 space-y-3 text-gray-300 leading-relaxed overflow-hidden">
+                  <div>
+                    <span className="text-[#D946EF] font-bold">[ROLE & FRAME]</span>
+                    <p className="text-gray-200 mt-1 font-sans text-xs">
+                      Act as an elite world-class Direct Response Copywriter and Conversion Psychologist specializing in {activeDemoMode === "email" ? "high-converting email sequencing" : activeDemoMode === "ads" ? "viral paid performance advertising" : activeDemoMode === "landing" ? "high-ticket landing page funnels" : "behavioral persuasion engineering"}.
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[#8B5CF6] font-bold">[TARGET MARKET & PAIN VECTOR]</span>
+                    <p className="text-gray-200 mt-1 font-sans text-xs">
+                      Target Audience: {activeDemoMode === "email" ? "B2B SaaS executives and agency operators facing pipeline drop-offs" : activeDemoMode === "ads" ? "High-intent consumers scrolling through congested feeds" : activeDemoMode === "landing" ? "Enterprise decision-makers needing immediate ROI validation" : "Skeptical high-ticket prospects requiring proof mechanisms"}.
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[#38BDF8] font-bold">[COGNITIVE TRIGGERS & CONVERSION MECHANICS]</span>
+                    <p className="text-gray-200 mt-1 font-sans text-xs">
+                      Apply Cialdini Scarcity, the Von Restorff novelty bias, and extreme micro-commitment pacing. Eliminate filler and engineer immediate action.
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[#34D399] font-bold">[STRUCTURAL DELIVERABLES]</span>
+                    <p className="text-gray-200 mt-1 font-sans text-xs">
+                      Generate 3 hook variants, body persuasion loops, risk-reversal stack, and high-impact CTA.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Output Footnote / Badge */}
+                <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-gray-500">
+                  <span>Tokens: ~480</span>
+                  <span className="text-[#C084FC] font-semibold">1-Click Import into Workspace</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom CTA & Tier Gating Action */}
+            <div className="mt-10 pt-8 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-2xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-[#E879F9] shrink-0">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h5 className="text-sm font-bold text-white">Unlock Unlimited Custom Prompt Synthesis</h5>
+                  <p className="text-xs text-gray-400">Available on Bolt Core and Max tiers with full workspace synchronization.</p>
+                </div>
+              </div>
+
+              {/* Primary CTA Button */}
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCraftPromptClick}
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-extrabold text-sm tracking-tight shadow-[0_0_30px_rgba(139,92,246,0.4)] hover:brightness-110 transition-all flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
+              >
+                <Wand2 size={16} />
+                <span>Craft Your First Prompt</span>
+                <ArrowRight size={15} />
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* $500M LIVE REVENUE & PERSUASION ENGINE SHOWCASE */}
       <section className="py-36 px-4 relative overflow-hidden">
         {/* Cinematic ambient background glow and subtle grid */}
@@ -857,6 +1387,114 @@ export function LandingPage({ user, onStart }: LandingPageProps) {
           </div>
         </div>
       </footer>
+
+      {/* Tier-Gated Upgrade / Paywall Modal for Prompt Builder */}
+      <AnimatePresence>
+        {lockModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setLockModalOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-lg rounded-3xl bg-[#0C091A] border border-[#8B5CF6]/40 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(139,92,246,0.3)] p-6 sm:p-8 z-10 overflow-hidden"
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setLockModalOpen(false)}
+                className="absolute top-5 right-5 p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Ambient Badge and Icon */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.5)] shrink-0">
+                  <Lock size={22} className="text-white" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[9px] font-black text-[#E879F9] uppercase tracking-wider mb-1">
+                    <Sparkles size={10} />
+                    Bolt Core & Max Feature
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">Available on Bolt Core or Max</h3>
+                </div>
+              </div>
+
+              <p className="text-gray-300 text-sm leading-relaxed mb-6">
+                The <span className="text-white font-semibold">Prompt Builder Architecture Engine</span> is unlocked exclusively for Bolt Core and Max members. Craft customized, role-framed master prompts tailored specifically to your niche, offer, and conversion goal.
+              </p>
+
+              {/* Unlocked Benefits */}
+              <div className="space-y-2.5 mb-8 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08]">
+                {[
+                  "Multi-archetype prompt synthesis (Email, Ads, Landing Pages, Psych)",
+                  "Custom niche, target audience & conversion outcome injection",
+                  "Automated cognitive trigger & behavioral persuasion framing",
+                  "1-click master prompt transfer directly into Murgii AI workspace"
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-2.5 text-xs text-gray-300">
+                    <CheckCircle2 size={14} className="text-[#D946EF] shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <a
+                  href="https://whop.com/qreato/ai-leverage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:flex-1 py-3.5 px-5 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_25px_rgba(139,92,246,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Upgrade on Whop</span>
+                  <ExternalLink size={13} />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLockModalOpen(false);
+                    if (onNavigate) onNavigate("pricing");
+                    else handleLoginClick();
+                  }}
+                  className="w-full sm:w-auto py-3.5 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  View Pricing
+                </button>
+              </div>
+
+              {!user && (
+                <p className="text-center text-[11px] text-gray-400 mt-4">
+                  Already a subscriber?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLockModalOpen(false);
+                      setAuthMode("login");
+                      setAuthModalOpen(true);
+                    }}
+                    className="text-[#E879F9] hover:underline font-semibold cursor-pointer"
+                  >
+                    Log in here
+                  </button>
+                </p>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AuthModal 
         isOpen={authModalOpen} 
         onClose={() => setAuthModalOpen(false)} 

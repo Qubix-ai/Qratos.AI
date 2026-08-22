@@ -236,6 +236,7 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [selectedMode, setSelectedMode] = useState<MurgiiMode>("email");
+  const [activeSelectedTile, setActiveSelectedTile] = useState<MurgiiMode | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [remainingCredits, setRemainingCredits] = useState<number | null>(propCredits ?? null);
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
@@ -288,14 +289,6 @@ export function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
-
-  // Tool / Mode definitions mapping to Supabase Edge Function modes
-  const toolButtons: { id: MurgiiMode | 'hook'; mode: MurgiiMode; icon: any; label: string; prompt: string }[] = [
-    { id: 'email', mode: 'email', icon: Mail, label: 'Email', prompt: 'Create a high-converting email sequence for ' },
-    { id: 'ads', mode: 'ads', icon: Target, label: 'Ads', prompt: 'Create 5 scroll-stopping Facebook ad hooks for ' },
-    { id: 'landing', mode: 'landing', icon: FileText, label: 'Landing', prompt: 'Architect a long-form sales page headline and lead for ' },
-    { id: 'hook', mode: 'ads', icon: Zap, label: 'Hook', prompt: 'Generate 10 viral-style ad hooks for ' },
-  ];
 
   const detectMode = (text: string, currentSelectedMode: MurgiiMode): MurgiiMode => {
     const lower = text.toLowerCase();
@@ -386,6 +379,7 @@ export function ChatInterface({
     if (pendingPrompt && pendingPrompt.text) {
       if (pendingPrompt.mode) {
         setSelectedMode(pendingPrompt.mode);
+        setActiveSelectedTile(pendingPrompt.mode);
       }
       if (pendingPrompt.autoSubmit) {
         executePrompt(pendingPrompt.text, pendingPrompt.mode);
@@ -491,21 +485,21 @@ export function ChatInterface({
           {messages.length === 0 && (
             <div className="flex flex-col items-center pt-1 sm:pt-2">
               
-              {/* COMPACT INLINE MASCOT & HEADING */}
+              {/* CLEAN PRODUCT UTILITY HEADER */}
               <div className="flex flex-col items-center text-center">
                 <motion.div 
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex items-center justify-center gap-2.5 sm:gap-3 mb-1"
+                  className="flex items-center justify-center gap-3 mb-1.5"
                 >
-                  {/* Inline 3D Mascot Avatar */}
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#8B5CF6]/30 via-[#A855F7]/20 to-[#D946EF]/30 border border-[#8B5CF6]/40 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.3)] shrink-0 overflow-hidden">
-                    <Murgii3DChicken size="avatar" interactive={false} showPedestal={false} showHologram={false} />
+                  {/* Qreato Brand Geometric Mark Badge */}
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#8B5CF6]/30 via-[#A855F7]/20 to-[#D946EF]/30 border border-[#8B5CF6]/40 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.25)] shrink-0">
+                    <QreatoLogo size={18} className="text-white" />
                   </div>
 
-                  <h1 className="text-lg sm:text-2xl font-[900] tracking-tight uppercase text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
-                    WELCOME TO MURGII.AI
+                  <h1 className="text-xl sm:text-2xl font-bold font-['Nohemi',sans-serif] tracking-tight text-white">
+                    What are we writing today?
                   </h1>
                 </motion.div>
                 
@@ -513,9 +507,9 @@ export function ChatInterface({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.15 }}
-                  className="text-[11px] sm:text-xs text-gray-400 max-w-md mx-auto leading-normal px-2 font-medium"
+                  className="text-xs sm:text-sm text-neutral-400 max-w-md mx-auto leading-normal px-2 font-normal"
                 >
-                  The $500M persuasive copywriting engine. Select a formula below to engineer conversion.
+                  Choose a mode to start generating conversion-focused copy.
                 </motion.p>
               </div>
 
@@ -527,7 +521,7 @@ export function ChatInterface({
                   { mode: "landing" as MurgiiMode, icon: FileText, title: "Pages", desc: "Sales Leads", prompt: "Brief me on sales landing page for " },
                   { mode: "psych" as MurgiiMode, icon: Zap, title: "Psych", desc: "Biases & Triggers", prompt: "Brief me on behavioral triggers and psychological hooks for " }
                 ].map((item, i) => {
-                  const isSelected = selectedMode === item.mode && !inputValue;
+                  const isSelected = activeSelectedTile === item.mode;
                   return (
                     <motion.button
                       key={item.mode}
@@ -539,6 +533,7 @@ export function ChatInterface({
                       whileTap={{ scale: 0.97 }}
                       onClick={() => {
                         if (!dailyLimitReached) {
+                          setActiveSelectedTile(item.mode);
                           setSelectedMode(item.mode);
                           setInputValue(item.prompt);
                           inputRef.current?.focus();
@@ -662,6 +657,7 @@ export function ChatInterface({
                             type="button"
                             onClick={() => {
                               if (!dailyLimitReached) {
+                                setActiveSelectedTile(promptItem.mode);
                                 setSelectedMode(promptItem.mode);
                                 setInputValue(promptItem.brief);
                                 inputRef.current?.focus();
@@ -768,37 +764,12 @@ export function ChatInterface({
         </div>
       </div>
 
-      {/* SECTION FIVE — BOTTOM INPUT BAR & FILTER PILLS */}
+      {/* SECTION FIVE — BOTTOM INPUT BAR */}
       <footer className="input-bar-container fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-b from-[#08070E]/85 via-[#08070E]/97 to-[#06050A] backdrop-blur-[24px] saturate-[200%] border-t border-[rgba(139,92,246,0.18)] p-[12px_16px_20px] pb-[max(20px,env(safe-area-inset-bottom))]">
         {/* Top shimmer line */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6]/40 via-[#E9D5FF]/60 via-[#D946EF]/40 to-transparent" />
         
         <div className="max-w-2xl mx-auto">
-          {/* Tab / Filter Row */}
-          <div className="flex gap-2 mb-[10px] overflow-x-auto no-scrollbar scrollbar-hide py-1">
-            {toolButtons.map(tool => (
-              <button
-                type="button"
-                key={tool.id}
-                onClick={() => {
-                  if (!dailyLimitReached) {
-                    setSelectedMode(tool.mode);
-                    setInputValue(tool.prompt);
-                    inputRef.current?.focus();
-                  }
-                }}
-                className={`flex items-center gap-[6px] px-[14px] py-[6px] rounded-full border text-[11px] font-[600] tracking-[0.10em] whitespace-nowrap transition-all duration-300 cursor-pointer ${
-                  selectedMode === tool.mode || inputValue.startsWith(tool.prompt)
-                  ? "bg-gradient-to-r from-[#8B5CF6]/25 to-[#D946EF]/20 border-[#8B5CF6]/50 text-[#E879F9] shadow-[0_0_16px_rgba(139,92,246,0.25)]"
-                  : "bg-white/5 border-white/10 text-white/50 hover:bg-white/8 hover:text-white/75 hover:border-white/15"
-                }`}
-              >
-                <tool.icon size={13} className={selectedMode === tool.mode || inputValue.startsWith(tool.prompt) ? "text-[#D946EF] drop-shadow-[0_0_6px_rgba(217,70,239,0.8)]" : "text-white/40"} />
-                <span className="uppercase">{tool.label}</span>
-              </button>
-            ))}
-          </div>
-
           <form 
             onSubmit={(e) => {
               e.preventDefault();

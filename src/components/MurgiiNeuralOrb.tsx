@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
+import { QreatoLogo } from "./QreatoLogo";
 
 interface MurgiiNeuralOrbProps {
   size?: "avatar" | "xs" | "sm" | "md" | "lg" | "hero" | "splash";
@@ -129,7 +130,7 @@ export function MurgiiNeuralOrb({
             </>
           )}
 
-          {/* 5. Central Quantum Core Orb */}
+          {/* 5. Central Quantum Core Orb with Qreato Geometric Logo Mark */}
           <motion.div
             animate={{
               scale: isHovered ? [1.05, 1.1, 1.05] : [1, 1.04, 1],
@@ -143,35 +144,36 @@ export function MurgiiNeuralOrb({
             style={{
               width: isCompact ? "75%" : "58%",
               height: isCompact ? "75%" : "58%",
-              background: "radial-gradient(circle at 35% 30%, #E879F9 0%, #9333EA 30%, #4C1D95 65%, #0F0B1E 100%)",
+              background: "radial-gradient(circle at 35% 30%, #A855F7 0%, #7C3AED 35%, #4C1D95 70%, #0F0B1E 100%)",
               border: "1.5px solid rgba(255, 255, 255, 0.4)",
             }}
           >
             {/* Specular High-Gloss Reflection */}
             <div 
-              className="absolute top-1 left-2 w-1/2 h-1/3 rounded-full opacity-60 pointer-events-none"
+              className="absolute top-1 left-2 w-1/2 h-1/3 rounded-full opacity-60 pointer-events-none z-20"
               style={{
                 background: "linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 100%)",
                 transform: "rotate(-25deg)",
               }}
             />
 
-            {/* Inner Refractive Core Pulse */}
-            <motion.div
-              animate={{
-                opacity: [0.4, 0.85, 0.4],
-                scale: [0.8, 1.15, 0.8],
-              }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="w-1/2 h-1/2 rounded-full bg-gradient-to-tr from-[#F43F5E] via-[#D946EF] to-[#60A5FA] blur-[4px]"
-            />
+            {/* Subtle Inner Glow */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#D946EF]/20 via-transparent to-[#8B5CF6]/30 pointer-events-none" />
 
-            {/* Core Neural Center Point */}
-            <div className="absolute w-2 h-2 rounded-full bg-white shadow-[0_0_12px_#ffffff]" />
+            {/* Centered Qreato Geometric Logo Mark */}
+            <div className="relative z-10 flex items-center justify-center pointer-events-none">
+              <QreatoLogo
+                size={
+                  size === "avatar" ? 14 :
+                  size === "xs" ? 18 :
+                  size === "sm" ? 38 :
+                  size === "splash" ? 75 :
+                  size === "lg" ? 92 :
+                  size === "hero" ? 120 : 64
+                }
+                className="text-black"
+              />
+            </div>
           </motion.div>
 
           {/* 6. Base Refraction Floor Shadow */}

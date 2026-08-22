@@ -124,8 +124,26 @@ export default function App() {
         </AnimatePresence>
         <LandingPage 
           user={user}
+          userData={userPlanData}
           onStart={() => handleStartWriting("signup")}
           onLogin={() => handleStartWriting("login")}
+          onNavigate={(tab) => {
+            if (tab === "pricing") {
+              setActiveTab("pricing");
+            } else if (tab === "prompt-builder") {
+              if (user) setActiveTab("prompt-builder");
+              else handleStartWriting("login");
+            } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
+              if (user) setActiveTab("chat");
+              else handleStartWriting("login");
+            } else if (tab === "account") {
+              if (user) setActiveTab("account");
+              else handleStartWriting("login");
+            } else if (tab === "memory") {
+              if (user) setActiveTab("memory");
+              else handleStartWriting("login");
+            }
+          }}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -149,8 +167,22 @@ export default function App() {
         <SpotlightCursor />
         <LandingPage 
           user={user}
+          userData={userPlanData}
           onStart={() => handleStartWriting("signup")}
           onLogin={() => handleStartWriting("login")}
+          onNavigate={(tab) => {
+            if (tab === "pricing") {
+              setActiveTab("pricing");
+            } else if (tab === "prompt-builder") {
+              handleStartWriting("login");
+            } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
+              handleStartWriting("login");
+            } else if (tab === "account") {
+              handleStartWriting("login");
+            } else if (tab === "memory") {
+              handleStartWriting("login");
+            }
+          }}
         />
         <AuthModal 
           isOpen={true}

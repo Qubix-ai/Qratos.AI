@@ -75,18 +75,11 @@ export function TopNav({
         <button
           type="button"
           onClick={() => onTabChange("chat")}
-          className="flex items-center gap-2.5 group cursor-pointer text-left"
+          className="flex items-center group cursor-pointer"
+          aria-label="Workspace home"
         >
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center shadow-[0_0_18px_rgba(139,92,246,0.5)] group-hover:scale-105 transition-transform">
             <QreatoLogo size={18} className="text-white" />
-          </div>
-          <div className="flex flex-col">
-            <div className="text-sm font-black tracking-[0.08em] uppercase text-white hover:text-white/90 transition-colors italic leading-tight">
-              MURGII.AI
-            </div>
-            <span className="text-[8px] font-bold tracking-[0.2em] text-neutral-400 uppercase leading-none mt-0.5">
-              PERSUASION ENGINE
-            </span>
           </div>
         </button>
       </div>
@@ -181,6 +174,36 @@ export function TopNav({
                 </div>
 
                 <div className="py-1 space-y-1">
+                  {/* Workspace */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      onTabChange("chat");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left group"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-[#8B5CF6]/15 flex items-center justify-center text-[#E879F9] group-hover:bg-[#8B5CF6]/25">
+                      <Sparkles size={13} />
+                    </div>
+                    <span>Workspace</span>
+                  </button>
+
+                  {/* Prompt Builder */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      onTabChange("prompt-builder");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left group"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-[#8B5CF6]/15 flex items-center justify-center text-[#E879F9] group-hover:bg-[#8B5CF6]/25">
+                      <Wand2 size={13} />
+                    </div>
+                    <span>Prompt Builder</span>
+                  </button>
+
                   {/* Pricing & Plans */}
                   <button
                     type="button"
@@ -226,6 +249,21 @@ export function TopNav({
                     <div className="flex-1 min-w-0">
                       <span className="block truncate">Memory & Personalization</span>
                     </div>
+                  </button>
+
+                  {/* Landing Control */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSettingsMenuOpen(false);
+                      onTabChange("landing");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left group"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white group-hover:bg-white/15">
+                      <ExternalLink size={13} />
+                    </div>
+                    <span>Landing Page</span>
                   </button>
                 </div>
 

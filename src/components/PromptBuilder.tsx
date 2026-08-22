@@ -21,6 +21,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { MurgiiMode } from "../lib/supabase";
 import { FloatingIridescentBlobs } from "./FloatingIridescentBlobs";
+import { ElectricBorder } from "./ElectricBorder";
 
 interface PromptBuilderProps {
   user: any;
@@ -242,62 +243,73 @@ Develop a deep behavioral persuasion framework and psychological hook stack. Str
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="max-w-xl w-full p-8 sm:p-10 rounded-3xl bg-[#0F0B1E]/90 border border-[#8B5CF6]/30 backdrop-blur-2xl shadow-[0_10px_50px_rgba(139,92,246,0.25)] text-center relative overflow-hidden"
+            className="max-w-xl w-full"
           >
-            {/* Top iridescent glow */}
-            <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#D946EF] to-transparent" />
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#8B5CF6]/25 rounded-full blur-[60px] pointer-events-none" />
+            <ElectricBorder
+              color="#E879F9"
+              speed={0.8}
+              chaos={0.12}
+              thickness={2}
+              borderRadius={24}
+              className="w-full"
+            >
+              <div className="p-8 sm:p-10 rounded-3xl bg-[#0F0B1E]/95 border border-[#8B5CF6]/30 backdrop-blur-2xl shadow-[0_10px_50px_rgba(139,92,246,0.25)] text-center relative overflow-hidden">
+                {/* Top iridescent glow */}
+                <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#D946EF] to-transparent" />
+                <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#8B5CF6]/25 rounded-full blur-[60px] pointer-events-none" />
 
-            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-tr from-[#8B5CF6]/20 to-[#D946EF]/20 border border-[#8B5CF6]/50 flex items-center justify-center shadow-[0_0_30px_rgba(217,70,239,0.3)]">
-              <Lock size={28} className="text-[#E879F9]" />
-            </div>
-
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-xs font-black text-[#D946EF] uppercase tracking-widest mb-4">
-              <Sparkles size={12} />
-              Bolt Core & Max Exclusive
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">
-              Available on Bolt Core or Max
-            </h2>
-
-            <p className="text-sm text-gray-400 leading-relaxed max-w-md mx-auto mb-8">
-              The Custom Prompt Generator architects tailored, role-framed master prompts engineered specifically for Murgii&apos;s persuasion engine.
-            </p>
-
-            <div className="space-y-3 text-left max-w-md mx-auto mb-8 p-4 rounded-2xl bg-white/[0.03] border border-white/06">
-              {[
-                "Multi-category prompt synthesis (Email, Ads, Pages, Psych)",
-                "Industry & offer-specific context injection",
-                "Behavioral outcome and cognitive trigger alignment",
-                "1-click workspace execution & direct neural generation",
-              ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-3 text-xs text-gray-300">
-                  <CheckCircle2 size={15} className="text-[#D946EF] shrink-0" />
-                  <span>{feature}</span>
+                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-tr from-[#8B5CF6]/20 to-[#D946EF]/20 border border-[#8B5CF6]/50 flex items-center justify-center shadow-[0_0_30px_rgba(217,70,239,0.3)]">
+                  <Lock size={28} className="text-[#E879F9]" />
                 </div>
-              ))}
-            </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a
-                href="https://whop.com/qreato/ai-leverage"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-extrabold text-xs uppercase tracking-widest hover:brightness-110 shadow-[0_0_25px_rgba(139,92,246,0.4)] transition-all cursor-pointer"
-              >
-                <span>Upgrade on Whop</span>
-                <ExternalLink size={14} />
-              </a>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-xs font-black text-[#D946EF] uppercase tracking-widest mb-4">
+                  <Sparkles size={12} />
+                  Bolt Core & Max Exclusive
+                </div>
 
-              <button
-                type="button"
-                onClick={onGoToChat}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition-all cursor-pointer"
-              >
-                Return to Workspace
-              </button>
-            </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">
+                  Available on Bolt Core or Max
+                </h2>
+
+                <p className="text-sm text-gray-400 leading-relaxed max-w-md mx-auto mb-8">
+                  The Custom Prompt Generator architects tailored, role-framed master prompts engineered specifically for Murgii&apos;s persuasion engine.
+                </p>
+
+                <div className="space-y-3 text-left max-w-md mx-auto mb-8 p-4 rounded-2xl bg-white/[0.03] border border-white/06">
+                  {[
+                    "Multi-category prompt synthesis (Email, Ads, Pages, Psych)",
+                    "Industry & offer-specific context injection",
+                    "Behavioral outcome and cognitive trigger alignment",
+                    "1-click workspace execution & direct neural generation",
+                  ].map((feature, i) => (
+                    <div key={i} className="flex items-center gap-3 text-xs text-gray-300">
+                      <CheckCircle2 size={15} className="text-[#D946EF] shrink-0" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <a
+                    href="https://whop.com/qreato/ai-leverage"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-extrabold text-xs uppercase tracking-widest hover:brightness-110 shadow-[0_0_25px_rgba(139,92,246,0.4)] transition-all cursor-pointer"
+                  >
+                    <span>Upgrade on Whop</span>
+                    <ExternalLink size={14} />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={onGoToChat}
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition-all cursor-pointer"
+                  >
+                    Return to Workspace
+                  </button>
+                </div>
+              </div>
+            </ElectricBorder>
           </motion.div>
         </div>
       </div>

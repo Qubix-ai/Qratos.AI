@@ -7,15 +7,18 @@ interface QreatoLogoProps {
 }
 
 /**
- * Qreato Brand Logo: "•//"
- * - Distinct dot on the left
- * - Followed by two thick parallel 45° rounded capsules
- * Matched precisely to the official Qreato brand mark geometry.
+ * Qreato Brand Geometric Mark: "• //"
+ * Exact geometry matching official brand asset:
+ * 1. Left: Solid circular dot (explicitly filled with currentColor)
+ * 2. Middle: First parallel angled rounded capsule (slanted ~-60°)
+ * 3. Right: Second parallel angled rounded capsule
+ * Perfectly balanced spacing: equal, clear gap between dot and first bar,
+ * and a small, even, distinct gap between the two parallel bars.
  */
 export function QreatoLogo({ 
   size = 20, 
   className = "text-white", 
-  dotClassName = "fill-current"
+  dotClassName = ""
 }: QreatoLogoProps) {
   return (
     <svg
@@ -27,35 +30,39 @@ export function QreatoLogo({
       className={`shrink-0 select-none ${className}`}
       aria-label="Qreato Logo"
     >
-      {/* Accent / Lead Dot • */}
+      {/* 1. Left Solid Circular Dot */}
       <circle
-        cx="23"
-        cy="43"
-        r="7.5"
+        cx="25.5"
+        cy="50"
+        r="5.75"
+        fill="currentColor"
         className={dotClassName}
       />
 
-      {/* First Capsule Slash / */}
+      {/* 2. First Angled Rounded Bar */}
       <line
-        x1="41"
-        y1="59"
-        x2="57"
-        y2="39"
+        x1="38.5"
+        y1="64"
+        x2="54.5"
+        y2="36"
         stroke="currentColor"
-        strokeWidth="15"
+        strokeWidth="11.5"
         strokeLinecap="round"
       />
 
-      {/* Second Capsule Slash / */}
+      {/* 3. Second Angled Rounded Bar */}
       <line
-        x1="61"
-        y1="59"
-        x2="77"
-        y2="39"
+        x1="59.5"
+        y1="64"
+        x2="75.5"
+        y2="36"
         stroke="currentColor"
-        strokeWidth="15"
+        strokeWidth="11.5"
         strokeLinecap="round"
       />
     </svg>
   );
 }
+
+export default QreatoLogo;
+

@@ -66,7 +66,15 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           email: trimmedEmail,
           password: trimmedPassword,
         });
-        if (signInErr) throw signInErr;
+        if (signInErr) {
+          const errMsg = (signInErr.message || "").toLowerCase();
+          if (errMsg.includes("invalid login credentials") || errMsg.includes("invalid claim") || errMsg.includes("invalid password")) {
+            setError("Incorrect password or email. If you haven't created an account yet, switch to Sign Up, or use 'Forgot password?' to reset.");
+            setLoading(false);
+            return;
+          }
+          throw signInErr;
+        }
         if (data.session) {
           recordUserActivity();
           onSuccess?.();
@@ -90,11 +98,38 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           password: trimmedPassword,
         });
 
+        // Handle case where account already exists
         if (signUpErr) {
+          const errMsg = (signUpErr.message || "").toLowerCase();
+          if (
+            errMsg.includes("already registered") ||
+            errMsg.includes("already exists") ||
+            errMsg.includes("user already registered")
+          ) {
+            // Attempt seamless sign-in with the provided password
+            const { data: directSignIn, error: directSignInErr } = await supabase.auth.signInWithPassword({
+              email: trimmedEmail,
+              password: trimmedPassword,
+            });
+
+            if (directSignIn?.session) {
+              recordUserActivity();
+              onSuccess?.();
+              onClose();
+              return;
+            }
+
+            // If password differed, transition seamlessly to Login mode with clear instructions
+            setIsLogin(true);
+            setError("An account with this email already exists. Please enter your password to log in.");
+            setLoading(false);
+            return;
+          }
+
           throw signUpErr;
         }
 
-        // If session returned directly, land straight in workspace
+        // If session returned directly from signup, land straight in workspace
         if (signUpData?.session) {
           recordUserActivity();
           onSuccess?.();
@@ -116,18 +151,22 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           recordUserActivity();
           onSuccess?.();
           onClose();
+          return;
         }
       }
     } catch (err: any) {
-      console.error("Supabase Auth Error:", err);
-      let msg = err.message || "Authentication failed. Please verify your credentials.";
+      let msg = err?.message || "Authentication failed. Please verify your credentials.";
       
       const lower = msg.toLowerCase();
       if (lower.includes("invalid login credentials") || lower.includes("invalid claim")) {
         msg = "Invalid email or password. Please check your credentials and try again.";
+        console.warn("Supabase Auth notice (invalid credentials):", msg);
       } else if (lower.includes("already registered") || lower.includes("already exists") || lower.includes("user already registered")) {
         msg = "An account with this email already exists. Please log in instead.";
         setIsLogin(true);
+        console.info("Supabase Auth notice (user exists):", msg);
+      } else {
+        console.warn("Supabase Auth notice:", msg);
       }
       setError(msg);
     } finally {
