@@ -7,10 +7,28 @@ interface AIProcessingTelemetryProps {
 }
 
 const ROTATING_STATUS_LINES = [
-  "Synthesizing your copy...",
-  "Engineering the hook...",
-  "Finalizing conversion angle...",
-  "Applying behavioral triggers..."
+  "Distilling…",
+  "Sharpening…",
+  "Uncovering…",
+  "Framing…",
+  "Reframing…",
+  "Tuning…",
+  "Calibrating…",
+  "Orchestrating…",
+  "Threading…",
+  "Sculpting…",
+  "Finessing…",
+  "Honing…",
+  "Composing…",
+  "Weaving…",
+  "Refining…",
+  "Elevating…",
+  "Aligning…",
+  "Unfolding…",
+  "Engineering…",
+  "Decoding…",
+  "Deconstructing…",
+  "Synthesizing…"
 ];
 
 export function AIProcessingTelemetry({ isGenerating, statusText }: AIProcessingTelemetryProps) {
@@ -23,7 +41,7 @@ export function AIProcessingTelemetry({ isGenerating, statusText }: AIProcessing
     }
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % ROTATING_STATUS_LINES.length);
-    }, 2400);
+    }, 1200);
     return () => clearInterval(interval);
   }, [isGenerating]);
 

@@ -252,6 +252,16 @@ export function ChatInterface({
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [isContextExpanded, setIsContextExpanded] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [animatedWordIndex, setAnimatedWordIndex] = useState(0);
+
+  const ANIMATED_WORDS = ["ignore", "forget", "resist"];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimatedWordIndex((prev) => (prev + 1) % ANIMATED_WORDS.length);
+    }, 2400);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (propCredits !== undefined && propCredits !== null) {
@@ -525,8 +535,7 @@ export function ChatInterface({
                 className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all border-dashed group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <QreatoLogo size={14} className={`transition-colors ${isContextExpanded ? "text-[#D946EF]" : "text-neutral-400"}`} />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 group-hover:text-white transition-colors">Persuasion Context Active</span>
+                  <QreatoLogo size={14} className={`transition-colors shrink-0 ${isContextExpanded ? "text-[#D946EF]" : "text-neutral-400"}`} />
                 </div>
                 <div className="flex items-center gap-3 overflow-hidden">
                   <div className="text-[11px] text-white/35 font-medium truncate max-w-[150px] sm:max-w-xs">
@@ -579,18 +588,32 @@ export function ChatInterface({
                   </div>
 
                   <h1 className="text-xl sm:text-2xl font-bold font-['Nohemi',sans-serif] tracking-tight text-white">
-                    What are we writing today?
+                    Let's make something that moves people
                   </h1>
                 </motion.div>
                 
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.15 }}
-                  className="text-xs sm:text-sm text-neutral-400 max-w-md mx-auto leading-normal px-2 font-normal"
+                  className="text-xs sm:text-sm text-neutral-300 max-w-md mx-auto leading-normal px-2 font-normal flex items-center justify-center gap-1.5 min-h-[26px]"
                 >
-                  Choose a mode to start generating conversion-focused copy.
-                </motion.p>
+                  <span>What are we making impossible to</span>
+                  <span className="inline-block relative">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={ANIMATED_WORDS[animatedWordIndex]}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        transition={{ duration: 0.35, ease: "easeInOut" }}
+                        className="text-[#FFBE0B] italic font-bold tracking-wide inline-block"
+                      >
+                        {ANIMATED_WORDS[animatedWordIndex]}?
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                </motion.div>
               </div>
 
               {/* COMPACT 4 MODE TILES (EMAILS, ADS, PAGES, PSYCH) */}
@@ -632,9 +655,9 @@ export function ChatInterface({
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
                         isSelected
                           ? "bg-gradient-to-br from-[#8B5CF6] to-[#D946EF] border-white/30 text-white shadow-[0_0_10px_rgba(217,70,239,0.5)]"
-                          : "bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-[#E879F9] group-hover:bg-[#8B5CF6]/25"
+                          : "bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-white group-hover:bg-[#8B5CF6]/25"
                       }`}>
-                        <item.icon size={15} />
+                        <item.icon size={15} className="text-white" />
                       </div>
                       
                       <div className="min-w-0 flex-1">
@@ -663,11 +686,11 @@ export function ChatInterface({
                   aria-expanded={suggestionsOpen}
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-[#D946EF]">
-                      <Sparkles size={13} />
+                    <div className="w-6 h-6 rounded-md bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-white">
+                      <Sparkles size={13} className="text-white" />
                     </div>
                     <span className="text-xs font-bold text-white/90 group-hover:text-white transition-colors">
-                      Suggested Starter Briefs
+                      Use ready made prompts
                     </span>
                     <span className="px-1.5 py-0.5 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/30 text-[9px] font-black uppercase text-[#E879F9] tracking-wider">
                       5 Formulas
@@ -748,7 +771,7 @@ export function ChatInterface({
                             <div className="space-y-1 flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
                                 <div className="px-1.5 py-0.5 rounded bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center gap-1">
-                                  <promptItem.icon size={10} className="text-[#D946EF]" />
+                                  <promptItem.icon size={10} className="text-white" />
                                   <span className="text-[8px] font-black uppercase tracking-wider text-[#E879F9]">
                                     {promptItem.tag}
                                   </span>
@@ -882,7 +905,7 @@ export function ChatInterface({
                   handleSend();
                 }
               }}
-              placeholder={dailyLimitReached ? "Daily limit reached — upgrade to continue" : "Input persuasion brief..."}
+              placeholder={dailyLimitReached ? "Daily limit reached — upgrade to continue" : "Describe what you want to write…"}
               disabled={isLoading || dailyLimitReached}
               autoComplete="off"
               autoCorrect="off"
@@ -898,12 +921,12 @@ export function ChatInterface({
             />
 
             <motion.button
-              whileHover={{ scale: 1.08, boxShadow: '0 8px 28px rgba(139, 92, 246, 0.55)' }}
-              whileTap={{ scale: 0.92, boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)' }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              whileHover={{ scale: 1.06, y: -1 }}
+              whileTap={{ scale: 0.94, y: 1 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 28 }}
               type="submit"
               disabled={isLoading || !inputValue.trim() || dailyLimitReached}
-              className="w-[48px] h-[48px] rounded-[14px] bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center transition-all duration-300 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_20px_rgba(139,92,246,0.4)]"
+              className="group relative w-[48px] h-[48px] rounded-[16px] bg-white/10 hover:bg-white/20 active:bg-white/15 border border-white/25 hover:border-white/50 backdrop-blur-2xl flex items-center justify-center transition-all duration-300 shrink-0 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shadow-[0_8px_32px_rgba(0,0,0,0.37),inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(0,0,0,0.25),0_0_20px_rgba(255,255,255,0.08)] overflow-hidden"
               style={{
                 pointerEvents: (isLoading || dailyLimitReached) ? 'none' : 'all',
                 position: 'relative',
@@ -913,10 +936,17 @@ export function ChatInterface({
               }}
               aria-label="Send brief"
             >
+              {/* 3D Glass Surface Curvature / Specular Reflection Sheen */}
+              <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/35 via-white/10 to-transparent rounded-t-[15px] pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/20 pointer-events-none" />
+              
+              {/* Subtle ambient interior glow */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-sm" />
+
               {isLoading ? (
-                <div className="w-[18px] h-[18px] border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="relative z-10 w-[18px] h-[18px] border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <ArrowUp size={20} className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" strokeWidth={3} />
+                <ArrowUp size={20} className="relative z-10 text-white group-hover:scale-110 transition-transform duration-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" strokeWidth={2.8} />
               )}
             </motion.button>
           </form>

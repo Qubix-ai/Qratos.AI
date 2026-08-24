@@ -393,10 +393,10 @@ export function Sidebar({
                   onTabChange("chat");
                   onClose?.();
                 }}
-                className="w-full bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] rounded-xl p-3 flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(139,92,246,0.35)] group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(217,70,239,0.45)] cursor-pointer"
+                className="w-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-xl rounded-xl p-3 flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(255,255,255,0.06),0_0_15px_rgba(255,255,255,0.04)] group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(255,255,255,0.12)] cursor-pointer"
               >
                 <Plus size={16} className="text-white group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
-                <span className="text-xs font-bold text-white uppercase tracking-wider">New Chat</span>
+                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">New Chat</span>
               </button>
             </div>
 

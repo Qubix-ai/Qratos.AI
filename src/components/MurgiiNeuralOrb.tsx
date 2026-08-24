@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { User } from "lucide-react";
 import { QreatoLogo } from "./QreatoLogo";
+import Strands from "./Strands";
 
 interface MurgiiNeuralOrbProps {
   size?: "avatar" | "xs" | "sm" | "md" | "lg" | "hero" | "splash";
@@ -153,7 +154,7 @@ export function MurgiiNeuralOrb({
             </>
           )}
 
-          {/* 5. Central Quantum Core Orb with Qreato Geometric Logo Mark */}
+          {/* 5. Central Quantum Core Orb: Glass ball with glowing Strands effect and Qreato logo */}
           <motion.div
             animate={{
               scale: isHovered ? [1.05, 1.1, 1.05] : [1, 1.04, 1],
@@ -163,28 +164,41 @@ export function MurgiiNeuralOrb({
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="relative rounded-full shadow-[0_0_35px_rgba(168,85,247,0.6)] flex items-center justify-center overflow-hidden"
+            className="relative rounded-full shadow-[0_0_35px_rgba(168,85,247,0.6)] flex items-center justify-center overflow-hidden aspect-square"
             style={{
               width: isCompact ? "75%" : "58%",
               height: isCompact ? "75%" : "58%",
-              background: "radial-gradient(circle at 35% 30%, #A855F7 0%, #7C3AED 35%, #4C1D95 70%, #0F0B1E 100%)",
+              background: "#080612",
               border: "1.5px solid rgba(255, 255, 255, 0.4)",
             }}
           >
-            {/* Specular High-Gloss Reflection */}
-            <div 
-              className="absolute top-1 left-2 w-1/2 h-1/3 rounded-full opacity-60 pointer-events-none z-20"
-              style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 100%)",
-                transform: "rotate(-25deg)",
-              }}
-            />
+            {/* Glowing Glass Strands WebGL Canvas Effect - Edge to Edge */}
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none">
+              <Strands
+                colors={["#F97316", "#A855F7", "#c1d6d9"]}
+                count={4}
+                speed={0.4}
+                amplitude={1.2}
+                waviness={1.4}
+                thickness={1.2}
+                glow={1.75}
+                taper={2.2}
+                spread={2.1}
+                intensity={0.65}
+                saturation={2.2}
+                opacity={1}
+                scale={1.2}
+                glass={true}
+                refraction={0.6}
+                dispersion={4}
+                glassSize={1.0}
+                hueShift={0.72}
+                className="w-full h-full"
+              />
+            </div>
 
-            {/* Subtle Inner Glow */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#D946EF]/20 via-transparent to-[#8B5CF6]/30 pointer-events-none" />
-
-            {/* Centered Qreato Geometric Logo Mark */}
-            <div className="relative z-10 flex items-center justify-center pointer-events-none">
+            {/* Centered Qreato Geometric Logo Mark in Black over Strands */}
+            <div className="relative z-30 flex items-center justify-center pointer-events-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
               <QreatoLogo
                 size={
                   size === "avatar" ? 14 :
@@ -195,6 +209,7 @@ export function MurgiiNeuralOrb({
                   size === "hero" ? 120 : 64
                 }
                 className="text-black"
+                dotClassName="text-black fill-black"
               />
             </div>
           </motion.div>

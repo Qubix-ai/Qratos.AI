@@ -45,10 +45,10 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    // Splash Screen Timer (2s)
+    // Splash Screen Timer (3s)
     const splashTimer = setTimeout(() => {
       if (isMounted) setShowSplash(false);
-    }, 2000);
+    }, 3000);
 
     // Initial Supabase Session Check
     supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -131,8 +131,7 @@ export default function App() {
             if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
-              if (user) setActiveTab("prompt-builder");
-              else handleStartWriting("login");
+              setActiveTab("prompt-builder");
             } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
               if (user) setActiveTab("chat");
               else handleStartWriting("login");
@@ -158,8 +157,8 @@ export default function App() {
     );
   }
 
-  // If user is not logged in and tries to view workspace, route back to landing / open login modal
-  if (!user && activeTab !== "landing") {
+  // If user is not logged in and tries to view private workspace sections, route back to landing / open login modal
+  if (!user && (activeTab === "chat" || activeTab === "account" || activeTab === "memory")) {
     return (
       <div className="h-screen bg-[#07060B] overflow-y-auto overflow-x-hidden selection:bg-[#8B5CF6]/40 relative flex items-center justify-center">
         <AmbientBackground />
@@ -174,7 +173,7 @@ export default function App() {
             if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
-              handleStartWriting("login");
+              setActiveTab("prompt-builder");
             } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
               handleStartWriting("login");
             } else if (tab === "account") {
@@ -319,11 +318,13 @@ export default function App() {
               >
                 <PromptBuilder
                   user={user}
+                  userData={userPlanData}
                   onSendToWorkspace={(promptText, mode) => {
                     setPendingPrompt({ text: promptText, mode, autoSubmit: true });
                     setActiveTab("chat");
                   }}
-                  onGoToChat={() => setActiveTab("chat")}
+                  onGoToChat={() => user ? setActiveTab("chat") : setActiveTab("landing")}
+                  onGoToPricing={() => setActiveTab("pricing")}
                   onMenuToggle={() => setSidebarOpen(true)}
                 />
               </motion.div>

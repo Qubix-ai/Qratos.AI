@@ -8,6 +8,7 @@ import {
   CreditCard, 
   ExternalLink,
   ChevronDown,
+  ChevronRight,
   LayoutDashboard,
   Wand2,
   Settings,
@@ -120,11 +121,11 @@ export function TopNav({
           type="button"
           onClick={() => onTabChange("pricing")}
           title="Daily credits remaining. Click to view pricing tiers."
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#8B5CF6]/40 shadow-[0_0_15px_rgba(139,92,246,0.25)] bg-gradient-to-r from-[#8B5CF6]/15 via-[#A855F7]/10 to-[#D946EF]/15 hover:border-[#D946EF]/60 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.08)] bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all cursor-pointer text-white"
         >
-          <Coins size={13} className="text-[#E879F9] animate-pulse" />
-          <span className="text-[11px] sm:text-xs font-black text-[#E879F9] tracking-wider uppercase font-mono">
-            {displayCredits} CREDITS
+          <Coins size={12} className="text-white" />
+          <span className="text-[11px] font-bold text-white tracking-wider font-mono">
+            {displayCredits}
           </span>
         </button>
 
@@ -201,8 +202,8 @@ export function TopNav({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left group"
                   >
-                    <div className="w-6 h-6 rounded-lg bg-[#8B5CF6]/15 flex items-center justify-center text-[#E879F9] group-hover:bg-[#8B5CF6]/25">
-                      <CreditCard size={13} />
+                    <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white group-hover:bg-white/15">
+                      <CreditCard size={13} className="text-white" />
                     </div>
                     <span>Pricing & Plans</span>
                   </button>
@@ -216,8 +217,8 @@ export function TopNav({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left group"
                   >
-                    <div className="w-6 h-6 rounded-lg bg-[#8B5CF6]/15 flex items-center justify-center text-[#E879F9] group-hover:bg-[#8B5CF6]/25">
-                      <UserIcon size={13} />
+                    <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white group-hover:bg-white/15">
+                      <UserIcon size={13} className="text-white" />
                     </div>
                     <span>Account Settings</span>
                   </button>
@@ -231,8 +232,8 @@ export function TopNav({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left group"
                   >
-                    <div className="w-6 h-6 rounded-lg bg-[#D946EF]/15 flex items-center justify-center text-[#D946EF] group-hover:bg-[#D946EF]/25">
-                      <SlidersHorizontal size={13} />
+                    <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white group-hover:bg-white/15">
+                      <SlidersHorizontal size={13} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block truncate">Memory & Personalization</span>
@@ -249,7 +250,7 @@ export function TopNav({
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left group"
                   >
                     <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white group-hover:bg-white/15">
-                      <ExternalLink size={13} />
+                      <ExternalLink size={13} className="text-white" />
                     </div>
                     <span>Landing Page</span>
                   </button>
@@ -323,7 +324,7 @@ export function TopNav({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
                   >
-                    <UserIcon size={14} className="text-[#8B5CF6]" />
+                    <UserIcon size={14} className="text-white" />
                     <span>My Profile & Settings</span>
                   </button>
 
@@ -335,7 +336,7 @@ export function TopNav({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
                   >
-                    <SlidersHorizontal size={14} className="text-[#D946EF]" />
+                    <SlidersHorizontal size={14} className="text-white" />
                     <span>Memory & Personalization</span>
                   </button>
 
@@ -347,7 +348,7 @@ export function TopNav({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
                   >
-                    <CreditCard size={14} className="text-[#D946EF]" />
+                    <CreditCard size={14} className="text-white" />
                     <span>Pricing & Plans</span>
                   </button>
 
@@ -359,22 +360,24 @@ export function TopNav({
                     }}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
                   >
-                    <LayoutDashboard size={14} className="text-[#C084FC]" />
+                    <LayoutDashboard size={14} className="text-white" />
                     <span>Landing Page</span>
                   </button>
 
-                  <a
-                    href="https://whop.com/qreato/ai-leverage"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#E879F9] hover:bg-[#8B5CF6]/15 transition-colors cursor-pointer"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAccountMenuOpen(false);
+                      onTabChange("pricing");
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#E879F9] hover:bg-[#8B5CF6]/15 transition-colors cursor-pointer text-left"
                   >
                     <span className="flex items-center gap-2">
                       <Sparkles size={13} />
                       <span>Upgrade Plan</span>
                     </span>
-                    <ExternalLink size={12} />
-                  </a>
+                    <ChevronRight size={12} className="text-[#E879F9]" />
+                  </button>
                 </div>
 
                 <div className="pt-1 mt-1 border-t border-white/08">
