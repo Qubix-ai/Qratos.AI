@@ -30,6 +30,12 @@ import {
   MurgiiMode, 
   supabase 
 } from "../lib/supabase";
+import { 
+  saveSession, 
+  getSessionById, 
+  generateTitleFromMessage, 
+  ChatSession 
+} from "../lib/chatHistory";
 
 // SECTION THREE — 3D CARD SYSTEM WITH MOUSE TRACKING & FROSTED GLASS
 const Card3D = ({ children, delay = 0, isSelected = false, onClick }: { children: React.ReactNode, delay?: number, isSelected?: boolean, onClick?: (e: React.MouseEvent<HTMLDivElement>) => void }) => {
@@ -256,6 +262,24 @@ export function ChatInterface({
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const currentSessionIdRef = useRef<string | undefined>(activeSessionId);
+  const userId = user?.id || user?.uid || "";
+
+  // Synchronize active session ID and load saved chat messages
+  useEffect(() => {
+    currentSessionIdRef.current = activeSessionId;
+    if (activeSessionId && userId) {
+      getSessionById(userId, activeSessionId).then((session) => {
+        if (session && Array.isArray(session.messages)) {
+          setMessages(session.messages);
+        } else {
+          setMessages([]);
+        }
+      });
+    } else if (!activeSessionId) {
+      setMessages([]);
+    }
+  }, [activeSessionId, userId]);
 
   // Close account menu on click outside
   useEffect(() => {
@@ -314,6 +338,14 @@ export function ChatInterface({
     const targetMode = modeToUse || detectMode(text, selectedMode);
     setSelectedMode(targetMode);
 
+    // Determine target session ID or generate new session
+    let targetSessionId = currentSessionIdRef.current;
+    if (!targetSessionId) {
+      targetSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      currentSessionIdRef.current = targetSessionId;
+      onSessionChange?.(targetSessionId);
+    }
+
     // User message
     const userMessage: Message = {
       role: 'user',
@@ -321,9 +353,25 @@ export function ChatInterface({
       timestamp: new Date().toISOString()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedWithUser = [...messages, userMessage];
+    setMessages(updatedWithUser);
     setInputValue('');
     setIsLoading(true);
+
+    // Save intermediate session with user message
+    if (userId) {
+      const existing = await getSessionById(userId, targetSessionId);
+      const title = existing?.title || generateTitleFromMessage(text);
+      await saveSession(userId, {
+        id: targetSessionId,
+        userId,
+        title,
+        isPinned: existing?.isPinned || false,
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        messages: updatedWithUser,
+      });
+    }
 
     try {
       // Call the secure Supabase Edge Function
@@ -342,10 +390,26 @@ export function ChatInterface({
         isNew: true
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      const finalMessages = [...updatedWithUser, aiMessage];
+      setMessages(finalMessages);
+
+      if (userId && targetSessionId) {
+        const existing = await getSessionById(userId, targetSessionId);
+        const title = existing?.title || generateTitleFromMessage(text);
+        await saveSession(userId, {
+          id: targetSessionId,
+          userId,
+          title,
+          isPinned: existing?.isPinned || false,
+          createdAt: existing?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          messages: finalMessages,
+        });
+      }
     } catch (err: any) {
       console.error("Murgii Generation Error:", err);
       
+      let finalMessages = updatedWithUser;
       if (err instanceof DailyLimitError || err?.name === "DailyLimitError") {
         setDailyLimitReached(true);
         setDailyLimitMessage(err.message);
@@ -360,14 +424,30 @@ export function ChatInterface({
           timestamp: new Date().toISOString(),
           isDailyLimit: true
         };
-        setMessages(prev => [...prev, limitNotice]);
+        finalMessages = [...updatedWithUser, limitNotice];
+        setMessages(finalMessages);
       } else {
         const safeErrorMessage: Message = {
           role: 'assistant',
           content: "Something went wrong generating this — please try again in a moment.",
           timestamp: new Date().toISOString()
         };
-        setMessages(prev => [...prev, safeErrorMessage]);
+        finalMessages = [...updatedWithUser, safeErrorMessage];
+        setMessages(finalMessages);
+      }
+
+      if (userId && targetSessionId) {
+        const existing = await getSessionById(userId, targetSessionId);
+        const title = existing?.title || generateTitleFromMessage(text);
+        await saveSession(userId, {
+          id: targetSessionId,
+          userId,
+          title,
+          isPinned: existing?.isPinned || false,
+          createdAt: existing?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          messages: finalMessages,
+        });
       }
     } finally {
       setIsLoading(false);

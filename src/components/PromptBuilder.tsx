@@ -11,7 +11,6 @@ import {
   FileText, 
   Zap, 
   RefreshCw, 
-  Menu, 
   Sliders, 
   CheckCircle2,
   Wand2,
@@ -21,7 +20,6 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { MurgiiMode } from "../lib/supabase";
 import { FloatingIridescentBlobs } from "./FloatingIridescentBlobs";
-import { ElectricBorder } from "./ElectricBorder";
 
 interface PromptBuilderProps {
   user: any;
@@ -202,25 +200,16 @@ Develop a deep behavioral persuasion framework and psychological hook stack. Str
       <div className="flex-1 flex flex-col relative overflow-hidden font-sans h-full min-h-0 bg-[#07060B] text-white">
         <FloatingIridescentBlobs />
 
-        {/* Top Header */}
-        <div className="p-4 sm:p-6 border-b border-white/08 flex items-center justify-between relative z-10 backdrop-blur-xl bg-[#0B0914]/80">
+        {/* Section Header with Clear Vertical Spacing from App TopNav */}
+        <div className="mt-6 sm:mt-8 mx-4 sm:mx-6 mb-2 p-4 sm:px-6 sm:py-4 rounded-2xl border border-white/08 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10 backdrop-blur-xl bg-[#0B0914]/80 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
           <div className="flex items-center gap-3">
-            {onMenuToggle && (
-              <button
-                type="button"
-                onClick={onMenuToggle}
-                className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white"
-              >
-                <Menu size={18} />
-              </button>
-            )}
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#8B5CF6]/30 to-[#D946EF]/30 border border-[#8B5CF6]/40 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#8B5CF6]/30 to-[#D946EF]/30 border border-[#8B5CF6]/40 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.3)] shrink-0">
               <Wand2 size={20} className="text-[#D946EF]" />
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
                 Custom Prompt Builder
-                <span className="px-2 py-0.5 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[10px] font-extrabold text-[#C084FC] uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[9px] font-extrabold text-[#C084FC] uppercase tracking-wider">
                   Core & Max
                 </span>
               </h1>
@@ -231,85 +220,76 @@ Develop a deep behavioral persuasion framework and psychological hook stack. Str
           <button
             type="button"
             onClick={onGoToChat}
-            className="text-xs font-semibold text-gray-400 hover:text-white px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 transition-colors"
+            className="text-xs font-semibold text-gray-300 hover:text-white px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors self-start sm:self-auto cursor-pointer"
           >
             Go to Workspace
           </button>
         </div>
 
         {/* Locked Hero Container */}
-        <div className="flex-1 overflow-y-auto flex items-center justify-center p-6 relative z-10">
+        <div className="flex-1 overflow-y-auto flex items-center justify-center p-4 sm:p-6 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            initial={{ opacity: 0, y: 15, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="max-w-xl w-full"
+            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+            className="max-w-[480px] w-full"
           >
-            <ElectricBorder
-              color="#E879F9"
-              speed={0.8}
-              chaos={0.12}
-              thickness={2}
-              borderRadius={24}
-              className="w-full"
-            >
-              <div className="p-8 sm:p-10 rounded-3xl bg-[#0F0B1E]/95 border border-[#8B5CF6]/30 backdrop-blur-2xl shadow-[0_10px_50px_rgba(139,92,246,0.25)] text-center relative overflow-hidden">
-                {/* Top iridescent glow */}
-                <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#D946EF] to-transparent" />
-                <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#8B5CF6]/25 rounded-full blur-[60px] pointer-events-none" />
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#0F0B1E]/95 to-[#0A0714]/95 border border-[rgba(168,85,247,0.4)] backdrop-blur-2xl shadow-[0_0_24px_rgba(168,85,247,0.25),0_20px_50px_rgba(0,0,0,0.6)] text-center relative overflow-hidden">
+              {/* Top iridescent shimmer */}
+              <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#D946EF] to-transparent" />
+              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-40 bg-[#8B5CF6]/20 rounded-full blur-[50px] pointer-events-none" />
 
-                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-tr from-[#8B5CF6]/20 to-[#D946EF]/20 border border-[#8B5CF6]/50 flex items-center justify-center shadow-[0_0_30px_rgba(217,70,239,0.3)]">
-                  <Lock size={28} className="text-[#E879F9]" />
-                </div>
-
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-xs font-black text-[#D946EF] uppercase tracking-widest mb-4">
-                  <Sparkles size={12} />
-                  Bolt Core & Max Exclusive
-                </div>
-
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-3">
-                  Available on Bolt Core or Max
-                </h2>
-
-                <p className="text-sm text-gray-400 leading-relaxed max-w-md mx-auto mb-8">
-                  The Custom Prompt Generator architects tailored, role-framed master prompts engineered specifically for Murgii&apos;s persuasion engine.
-                </p>
-
-                <div className="space-y-3 text-left max-w-md mx-auto mb-8 p-4 rounded-2xl bg-white/[0.03] border border-white/06">
-                  {[
-                    "Multi-category prompt synthesis (Email, Ads, Pages, Psych)",
-                    "Industry & offer-specific context injection",
-                    "Behavioral outcome and cognitive trigger alignment",
-                    "1-click workspace execution & direct neural generation",
-                  ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3 text-xs text-gray-300">
-                      <CheckCircle2 size={15} className="text-[#D946EF] shrink-0" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <a
-                    href="https://whop.com/qreato/ai-leverage"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-extrabold text-xs uppercase tracking-widest hover:brightness-110 shadow-[0_0_25px_rgba(139,92,246,0.4)] transition-all cursor-pointer"
-                  >
-                    <span>Upgrade on Whop</span>
-                    <ExternalLink size={14} />
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={onGoToChat}
-                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition-all cursor-pointer"
-                  >
-                    Return to Workspace
-                  </button>
-                </div>
+              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-tr from-[#8B5CF6]/20 to-[#D946EF]/20 border border-[#8B5CF6]/50 flex items-center justify-center shadow-[0_0_24px_rgba(217,70,239,0.3)]">
+                <Lock size={22} className="text-[#E879F9]" />
               </div>
-            </ElectricBorder>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[10px] font-black text-[#D946EF] uppercase tracking-widest mb-3">
+                <Sparkles size={11} />
+                Bolt Core & Max Exclusive
+              </div>
+
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight mb-2">
+                Available on Bolt Core or Max
+              </h2>
+
+              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-sm mx-auto mb-5">
+                The Custom Prompt Generator architects tailored, role-framed master prompts engineered specifically for Murgii&apos;s persuasion engine.
+              </p>
+
+              <div className="space-y-2.5 text-left max-w-sm mx-auto mb-6 p-3.5 rounded-xl bg-white/[0.03] border border-white/06">
+                {[
+                  "Multi-category prompt synthesis (Email, Ads, Pages, Psych)",
+                  "Industry & offer-specific context injection",
+                  "Behavioral outcome and cognitive trigger alignment",
+                  "1-click workspace execution & direct neural generation",
+                ].map((feature, i) => (
+                  <div key={i} className="flex items-center gap-2.5 text-xs text-gray-300">
+                    <CheckCircle2 size={14} className="text-[#D946EF] shrink-0" />
+                    <span className="leading-snug">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                <a
+                  href="https://whop.com/qreato/ai-leverage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-extrabold text-xs uppercase tracking-widest hover:brightness-110 shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-all cursor-pointer"
+                >
+                  <span>Upgrade on Whop</span>
+                  <ExternalLink size={13} />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={onGoToChat}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition-all cursor-pointer"
+                >
+                  Return to Workspace
+                </button>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -322,17 +302,8 @@ Develop a deep behavioral persuasion framework and psychological hook stack. Str
       <FloatingIridescentBlobs />
 
       {/* Top Navigation Bar */}
-      <div className="p-4 sm:p-5 border-b border-white/08 flex items-center justify-between relative z-10 backdrop-blur-xl bg-[#0B0914]/85">
+      <div className="mt-6 sm:mt-8 mx-4 sm:mx-6 mb-2 p-4 sm:px-6 sm:py-4 rounded-2xl border border-white/08 flex items-center justify-between relative z-10 backdrop-blur-xl bg-[#0B0914]/85 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
         <div className="flex items-center gap-3">
-          {onMenuToggle && (
-            <button
-              type="button"
-              onClick={onMenuToggle}
-              className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white"
-            >
-              <Menu size={18} />
-            </button>
-          )}
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#8B5CF6]/30 to-[#D946EF]/30 border border-[#8B5CF6]/40 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.3)]">
             <Wand2 size={20} className="text-[#D946EF]" />
           </div>

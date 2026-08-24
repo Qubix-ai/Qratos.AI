@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
+import { User } from "lucide-react";
 import { QreatoLogo } from "./QreatoLogo";
 
 interface MurgiiNeuralOrbProps {
@@ -104,28 +105,50 @@ export function MurgiiNeuralOrb({
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-2 rounded-full border border-[#8B5CF6]/35 border-dashed"
+                className="absolute inset-2 rounded-full border border-[#8B5CF6]/35 border-dashed pointer-events-none"
                 style={{
                   transformStyle: "preserve-3d",
                   transform: "rotateX(62deg) rotateY(18deg)",
                 }}
               >
-                {/* Orbital Satellite Node */}
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#E879F9] shadow-[0_0_10px_#E879F9]" />
+                {/* Orbital Glassmorphic Revenue Badge ($) - Counter-rotated to stay upright */}
+                <motion.div 
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center border border-white/20 shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                  }}
+                >
+                  <span className="text-[10px] font-bold text-white/90 leading-none select-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">$</span>
+                </motion.div>
               </motion.div>
 
               {/* 4. Gyroscopic Ring 2 (-35° Tilt) */}
               <motion.div
                 animate={{ rotate: -360 }}
                 transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-4 rounded-full border border-[#D946EF]/30"
+                className="absolute inset-4 rounded-full border border-[#D946EF]/30 pointer-events-none"
                 style={{
                   transformStyle: "preserve-3d",
                   transform: "rotateX(42deg) rotateY(-38deg)",
                 }}
               >
-                {/* Secondary Satellite Node */}
-                <div className="absolute -bottom-1 left-1/3 w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_8px_#38BDF8]" />
+                {/* Orbital Glassmorphic Customers Served Badge (User) - Counter-rotated to stay upright */}
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+                  className="absolute -bottom-3 left-1/3 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center border border-white/20 shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                  }}
+                >
+                  <User size={11} className="text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]" />
+                </motion.div>
               </motion.div>
             </>
           )}

@@ -16,7 +16,6 @@ import {
   Bot
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { QreatoLogo } from "./QreatoLogo";
 
 interface TopNavProps {
   user: any;
@@ -61,7 +60,7 @@ export function TopNav({
 
   return (
     <header className="h-16 border-b border-white/[0.08] bg-[#07050E]/85 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between z-30 sticky top-0 shrink-0">
-      {/* Left: Brand Logo & Wordmark */}
+      {/* Left: Mobile Sidebar Trigger */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -70,17 +69,6 @@ export function TopNav({
           aria-label="Open sidebar menu"
         >
           <Menu size={18} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onTabChange("chat")}
-          className="flex items-center group cursor-pointer"
-          aria-label="Workspace home"
-        >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center shadow-[0_0_18px_rgba(139,92,246,0.5)] group-hover:scale-105 transition-transform">
-            <QreatoLogo size={18} className="text-white" />
-          </div>
         </button>
       </div>
 

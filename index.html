@@ -7,7 +7,56 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&family=Roboto:wght@400;500;700;900&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/fonts/Nohemi-Bold.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="/fonts/Nohemi-ExtraBold.ttf" as="font" type="font/ttf" crossorigin>
+    <style>
+      @font-face {
+        font-family: 'Nohemi';
+        src: url('/fonts/Nohemi-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Nohemi';
+        src: url('/fonts/Nohemi-ExtraBold.ttf') format('truetype');
+        font-weight: 800;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Nohemi';
+        src: url('/fonts/Nohemi-Black.ttf') format('truetype');
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Nohemi';
+        src: url('/fonts/Nohemi-SemiBold.ttf') format('truetype');
+        font-weight: 600;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Nohemi';
+        src: url('/fonts/Nohemi-Medium.ttf') format('truetype');
+        font-weight: 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Nohemi';
+        src: url('/fonts/Nohemi-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      .font-nohemi, .font-display {
+        font-family: 'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
