@@ -104,6 +104,7 @@ export const TrueFocus: React.FC<TrueFocusProps> = ({
             }}
             className={`focus-word ${manualMode ? 'manual' : ''} ${isActive && !manualMode ? 'active' : ''} ${wordClassName}`}
             style={{
+              fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
               filter: manualMode
                 ? isActive
                   ? 'blur(0px)'

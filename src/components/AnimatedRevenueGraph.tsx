@@ -261,7 +261,7 @@ export function AnimatedRevenueGraph() {
         </div>
         <div className="flex items-center gap-4">
           <span>LATENCY: 14ms</span>
-          <span className="text-[#D946EF] font-bold">500M+ TELEMETRY VERIFIED</span>
+          <span className="text-white font-bold font-mono">ENTERPRISE TELEMETRY VERIFIED</span>
         </div>
       </div>
     </div>

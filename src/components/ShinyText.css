@@ -1,3 +1,5 @@
 .shiny-text {
   display: inline-block;
+  font-family: 'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-weight: 700;
 }

@@ -1,69 +1,97 @@
-import { motion, useSpring, useTransform, AnimatePresence } from "motion/react";
-import { 
-  Check, 
-  ArrowRight, 
-  Target, 
-  Sparkles, 
-  ShieldCheck, 
-  Mail, 
-  Globe, 
-  Zap, 
-  BarChart3, 
-  Activity, 
-  Layers, 
-  Network, 
-  Instagram, 
-  Facebook, 
-  Twitter,
-  Menu,
-  X,
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useSpring, useTransform } from "motion/react";
+import {
+  Sparkles,
+  ArrowRight,
+  Zap,
+  Mail,
+  Target,
+  Globe,
+  Layers,
   Wand2,
-  SlidersHorizontal,
+  Check,
+  X,
   Lock,
-  ExternalLink,
-  Sliders,
-  CheckCircle2,
-  RefreshCw,
-  ChevronRight,
+  Compass,
   FileText,
-  User,
+  Sliders,
+  SlidersHorizontal,
+  Send,
+  Bookmark,
+  ChevronRight,
+  Database,
+  Menu,
   CreditCard,
-  LayoutDashboard,
-  Bot,
-  Copy
+  User as UserIcon,
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
-import { AuthModal } from "./AuthModal";
-import { PremiumBackground3D } from "./PremiumBackground3D";
-import { Murgii3DChicken } from "./Murgii3DChicken";
-import { MagneticButton } from "./MagneticButton";
-import { FloatingRevenueObject3D } from "./FloatingRevenueObject3D";
-import { AnimatedRevenueGraph } from "./AnimatedRevenueGraph";
 import { QreatoLogo } from "./QreatoLogo";
-import { MoltenMetal } from "./MoltenMetal";
+import { AuthModal } from "./AuthModal";
 import { OutcomeNetworkDiagram } from "./OutcomeNetworkDiagram";
-import ShinyText from "./ShinyText";
-import TrueFocus from "./TrueFocus";
+import { Murgii3DChicken } from "./Murgii3DChicken";
+import { TrueFocus } from "./TrueFocus";
+import { ShinyText } from "./ShinyText";
+import {
+  ModesCycleVisual,
+  PromptCompilerVisual,
+  TierExpansionVisual,
+  BoltEcosystemVisual,
+  LinearPipelineVisual
+} from "./FeatureVisuals";
 
 interface LandingPageProps {
   user?: any;
   userData?: any;
-  onStart?: () => void;
+  onStart: () => void;
   onLogin?: () => void;
-  onNavigate?: (tab: string) => void;
+  onOpenBolt?: () => void;
+  onNavigate?: (view: string) => void;
+  userTier?: "free" | "core" | "max";
 }
 
-export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: LandingPageProps) {
+export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNavigate, userTier }: LandingPageProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [activeDemoMode, setActiveDemoMode] = useState<"email" | "ads" | "landing" | "psych">("email");
   const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
+  const [quickNavOpen, setQuickNavOpen] = useState(false);
+  const quickNavRef = useRef<HTMLDivElement>(null);
+  
+  // Prompt builder interactive demo mode
+  const [activeDemoMode, setActiveDemoMode] = useState<"email" | "ads" | "landing" | "psych">("email");
+
+  const effectiveTier = userTier || (userData?.tier as "free" | "core" | "max") || "free";
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (quickNavRef.current && !quickNavRef.current.contains(e.target as Node)) {
+        setQuickNavOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setQuickNavOpen(false);
+      }
+    };
+    if (quickNavOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [quickNavOpen]);
 
   const handleLoginClick = () => {
-    if (user && onStart) {
-      onStart();
-    } else if (onStart) {
+    if (onLogin) {
+      onLogin();
+    } else {
+      setAuthMode("login");
+      setAuthModalOpen(true);
+    }
+  };
+
+  const handleSignupClick = () => {
+    if (onStart) {
       onStart();
     } else {
       setAuthMode("signup");
@@ -72,311 +100,398 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
   };
 
   const handleCraftPromptClick = () => {
-    if (onNavigate) {
-      onNavigate("prompt-builder");
-    } else if (onStart) {
-      onStart();
-    }
-  };
-
-  const handleNavigate = (tab: string) => {
-    setMenuOpen(false);
-    if (tab === "prompt-builder") {
-      handleCraftPromptClick();
-    } else if (onNavigate) {
-      onNavigate(tab);
+    if (effectiveTier === "free" && !user) {
+      handleSignupClick();
+    } else if (effectiveTier === "free") {
+      setInfoModal({
+        title: "Prompt Builder (Core & Max Tier)",
+        content: "Prompt Builder is unlocked on Bolt Core ($29/mo) and Max ($97/mo). It transforms guided questions into structured, role-framed master prompts engineered specifically for Murgii's direct-response engine."
+      });
     } else {
-      handleLoginClick();
+      if (onNavigate) {
+        onNavigate("prompt-builder");
+      } else {
+        onStart();
+      }
     }
   };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white overflow-x-hidden noise-bg selection:bg-[#8B5CF6]/30 relative font-sans">
-      {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 sm:h-20 px-4 sm:px-8 flex items-center justify-between border-b border-white/[0.08] bg-black/40 backdrop-blur-xl transition-all duration-300">
-        {/* Left: Brand Title and Subtitle without icon */}
-        <div 
-          className="flex items-center cursor-pointer group"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          <div className="flex flex-col">
-            <span 
-              className="font-nohemi font-bold text-sm sm:text-base tracking-[0.1em] text-white uppercase leading-none"
-              style={{ fontFamily: "'Nohemi', sans-serif" }}
+    <div className="min-h-screen bg-[#07060B] text-white selection:bg-[#8B5CF6]/40 selection:text-white relative overflow-x-hidden font-sans">
+      {/* Background Ambience / Glows */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.18)_0%,transparent_70%)] blur-[90px]" />
+        <div className="absolute top-[28%] -left-48 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(217,70,239,0.08)_0%,transparent_70%)] blur-[100px]" />
+        <div className="absolute top-[65%] -right-48 w-[700px] h-[700px] bg-[radial-gradient(circle,rgba(139,92,246,0.08)_0%,transparent_70%)] blur-[120px]" />
+      </div>
+
+      {/* Top Floating Glassmorphic Navigation Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 transition-all duration-300">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-6 py-3 rounded-full bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative">
+          {/* Brand Logo & Name */}
+          <div 
+            onClick={onStart}
+            className="flex items-center gap-3 cursor-pointer group select-none"
+          >
+            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.35)] group-hover:scale-105 transition-transform shrink-0">
+              <QreatoLogo size={20} className="text-black" />
+            </div>
+            <div 
+              className="text-white text-xl font-bold tracking-tight font-nohemi flex items-center gap-1"
+              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              MURGII AI
-            </span>
-            <span className="text-[9px] font-mono tracking-[0.2em] text-white/70 uppercase leading-none mt-1">
-              PERSUASION ENGINE
-            </span>
+              <span className="font-extrabold text-white">murgii</span>
+              <span className="font-extrabold text-white">AI</span>
+            </div>
+          </div>
+
+          {/* Center Navigation Links */}
+          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-gray-300">
+            <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
+            <a href="#features" className="hover:text-white transition-colors">Capabilities</a>
+            <a href="#prompt-builder" className="hover:text-white transition-colors">Prompt Builder</a>
+            <a href="#workflow" className="hover:text-white transition-colors">Workflow</a>
+          </nav>
+
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={handleLoginClick}
+              className="text-xs font-bold text-gray-300 hover:text-white px-3 py-2 transition-colors cursor-pointer"
+            >
+              Log in
+            </button>
+            <button
+              type="button"
+              onClick={handleSignupClick}
+              className="hidden sm:inline-flex text-xs font-bold text-black bg-white hover:bg-gray-100 px-4 py-2 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 cursor-pointer"
+            >
+              Start Free
+            </button>
+
+            {/* Quick Navigation Hamburger Toggle */}
+            <button
+              type="button"
+              onClick={() => setQuickNavOpen(!quickNavOpen)}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                quickNavOpen
+                  ? "bg-white/20 border border-white/40 text-white shadow-[0_0_15px_rgba(255,255,255,0.25)]"
+                  : "bg-white/5 border border-white/10 text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/20"
+              }`}
+              aria-label="Toggle Quick Navigation"
+              aria-expanded={quickNavOpen}
+            >
+              {quickNavOpen ? <X size={17} /> : <Menu size={17} />}
+            </button>
           </div>
         </div>
 
-        {/* Center: Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-          <button
-            type="button"
-            onClick={() => onNavigate ? onNavigate("pricing") : handleLoginClick()}
-            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
-          >
-            Pricing
-          </button>
-          <button
-            type="button"
-            onClick={handleCraftPromptClick}
-            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
-          >
-            Prompt Builder
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigate ? onNavigate("chat") : handleLoginClick()}
-            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
-          >
-            AI Engine
-          </button>
-          <a
-            href="#how-it-works"
-            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
-          >
-            How It Works
-          </a>
-          <button
-            type="button"
-            onClick={() => onNavigate ? onNavigate("account") : handleLoginClick()}
-            className="text-xs lg:text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
-          >
-            Account
-          </button>
-        </nav>
+        {/* Quick Navigation Floating Glassmorphic Panel */}
+        <AnimatePresence>
+          {quickNavOpen && (
+            <>
+              {/* Subtle backdrop overlay for outside click dismiss */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setQuickNavOpen(false)}
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+              />
 
-        {/* Right: Hamburger Menu Icon Only */}
-        <div className="flex items-center">
-          {/* 3-Line Hamburger Menu Icon Button */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white transition-all cursor-pointer flex items-center justify-center"
-            title="Navigation Shortcuts"
-            aria-label="Toggle navigation menu"
-          >
-            {menuOpen ? <X size={18} className="text-[#E879F9]" /> : <Menu size={18} />}
-          </button>
-        </div>
+              {/* Floating Glassmorphic Panel Container */}
+              <motion.div
+                ref={quickNavRef}
+                initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                className="fixed top-20 right-4 sm:right-6 lg:right-10 w-[calc(100vw-2rem)] sm:w-[440px] z-50 rounded-3xl p-4 sm:p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.06)]"
+                style={{
+                  background: "rgba(20, 20, 25, 0.7)",
+                  backdropFilter: "blur(24px) saturate(1.4)",
+                  WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                }}
+              >
+                {/* Panel Header */}
+                <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/10 px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/70 shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
+                    <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400 font-semibold">
+                      QUICK NAVIGATION
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setQuickNavOpen(false)}
+                    className="p-1 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    aria-label="Close navigation panel"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+
+                {/* 6 Navigation Item Rows */}
+                <div className="space-y-1">
+                  {/* Row 1: Workspace */}
+                  <div
+                    onClick={() => {
+                      setQuickNavOpen(false);
+                      if (onNavigate) {
+                        onNavigate("chat");
+                      } else if (user) {
+                        onStart();
+                      } else {
+                        handleLoginClick();
+                      }
+                    }}
+                    className="group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all duration-200 hover:bg-white/[0.04] active:bg-white/[0.06] cursor-pointer border border-transparent hover:border-white/5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-[1.03] group-hover:bg-white/[0.15] group-hover:border-white/30 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shrink-0"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(8px)",
+                          WebkitBackdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255, 255, 255, 0.15)",
+                        }}
+                      >
+                        <Sparkles size={16} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-xs sm:text-sm font-bold text-white group-hover:text-white transition-colors">
+                          Workspace
+                        </span>
+                        <span className="block text-[11px] text-neutral-400 group-hover:text-neutral-300 transition-colors truncate">
+                          Interactive AI Persuasion Engine
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-mono font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        LIVE
+                      </span>
+                      <ChevronRight size={14} className="text-neutral-500 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Prompt Builder */}
+                  <div
+                    onClick={() => {
+                      setQuickNavOpen(false);
+                      handleCraftPromptClick();
+                    }}
+                    className="group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all duration-200 hover:bg-white/[0.04] active:bg-white/[0.06] cursor-pointer border border-transparent hover:border-white/5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-[1.03] group-hover:bg-white/[0.15] group-hover:border-white/30 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shrink-0"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(8px)",
+                          WebkitBackdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255, 255, 255, 0.15)",
+                        }}
+                      >
+                        <Wand2 size={16} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-xs sm:text-sm font-bold text-white group-hover:text-white transition-colors">
+                          Prompt Builder
+                        </span>
+                        <span className="block text-[11px] text-neutral-400 group-hover:text-neutral-300 transition-colors truncate">
+                          Role-framed master prompt compiler
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-[#2E1848] text-purple-200 border border-purple-500/30 text-[9px] font-mono font-bold tracking-wider">
+                        CORE / MAX
+                      </span>
+                      <ChevronRight size={14} className="text-neutral-500 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Pricing & Plans */}
+                  <div
+                    onClick={() => {
+                      setQuickNavOpen(false);
+                      if (onNavigate) onNavigate("pricing");
+                      else handleSignupClick();
+                    }}
+                    className="group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all duration-200 hover:bg-white/[0.04] active:bg-white/[0.06] cursor-pointer border border-transparent hover:border-white/5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-[1.03] group-hover:bg-white/[0.15] group-hover:border-white/30 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shrink-0"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(8px)",
+                          WebkitBackdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255, 255, 255, 0.15)",
+                        }}
+                      >
+                        <CreditCard size={16} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-xs sm:text-sm font-bold text-white group-hover:text-white transition-colors">
+                          Pricing & Plans
+                        </span>
+                        <span className="block text-[11px] text-neutral-400 group-hover:text-neutral-300 transition-colors truncate">
+                          Daily credit quotas & tier features
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <ChevronRight size={14} className="text-neutral-500 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+
+                  {/* Row 4: Account & Profile Settings */}
+                  <div
+                    onClick={() => {
+                      setQuickNavOpen(false);
+                      if (onNavigate) onNavigate("account");
+                      else handleLoginClick();
+                    }}
+                    className="group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all duration-200 hover:bg-white/[0.04] active:bg-white/[0.06] cursor-pointer border border-transparent hover:border-white/5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-[1.03] group-hover:bg-white/[0.15] group-hover:border-white/30 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shrink-0"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(8px)",
+                          WebkitBackdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255, 255, 255, 0.15)",
+                        }}
+                      >
+                        <UserIcon size={16} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-xs sm:text-sm font-bold text-white group-hover:text-white transition-colors">
+                          Account & Profile Settings
+                        </span>
+                        <span className="block text-[11px] text-neutral-400 group-hover:text-neutral-300 transition-colors truncate">
+                          Manage subscription & security
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <ChevronRight size={14} className="text-neutral-500 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+
+                  {/* Row 5: Memory & Personalization */}
+                  <div
+                    onClick={() => {
+                      setQuickNavOpen(false);
+                      if (onNavigate) onNavigate("memory");
+                      else handleLoginClick();
+                    }}
+                    className="group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all duration-200 hover:bg-white/[0.04] active:bg-white/[0.06] cursor-pointer border border-transparent hover:border-white/5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-[1.03] group-hover:bg-white/[0.15] group-hover:border-white/30 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shrink-0"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(8px)",
+                          WebkitBackdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255, 255, 255, 0.15)",
+                        }}
+                      >
+                        <SlidersHorizontal size={16} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-xs sm:text-sm font-bold text-white group-hover:text-white transition-colors">
+                          Memory & Personalization
+                        </span>
+                        <span className="block text-[11px] text-neutral-400 group-hover:text-neutral-300 transition-colors truncate">
+                          Brand voice & persistent context
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <ChevronRight size={14} className="text-neutral-500 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+
+                  {/* Row 6: How It Works */}
+                  <div
+                    onClick={() => {
+                      setQuickNavOpen(false);
+                      const el = document.getElementById("how-it-works");
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className="group relative flex items-center justify-between p-2.5 sm:p-3 rounded-2xl transition-all duration-200 hover:bg-white/[0.04] active:bg-white/[0.06] cursor-pointer border border-transparent hover:border-white/5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-[1.03] group-hover:bg-white/[0.15] group-hover:border-white/30 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shrink-0"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(8px)",
+                          WebkitBackdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255, 255, 255, 0.15)",
+                        }}
+                      >
+                        <Compass size={16} className="text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-xs sm:text-sm font-bold text-white group-hover:text-white transition-colors">
+                          How It Works
+                        </span>
+                        <span className="block text-[11px] text-neutral-400 group-hover:text-neutral-300 transition-colors truncate">
+                          See how Murgii generates converting copy
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <ChevronRight size={14} className="text-neutral-500 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Button: OPEN WORKSPACE */}
+                <div className="pt-3 mt-2 border-t border-white/10">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setQuickNavOpen(false);
+                      if (onNavigate) {
+                        onNavigate("chat");
+                      } else {
+                        onStart();
+                      }
+                    }}
+                    className="w-full py-3.5 px-5 rounded-2xl flex items-center justify-center gap-2 text-xs sm:text-sm font-extrabold text-neutral-900 transition-all duration-150 cursor-pointer shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:shadow-[0_0_32px_rgba(255,255,255,0.4)]"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.95)",
+                      border: "1px solid rgba(255, 255, 255, 0.4)",
+                      backdropFilter: "blur(12px)",
+                    }}
+                  >
+                    <span>Open Workspace</span>
+                    <ArrowRight size={15} className="text-neutral-900" />
+                  </motion.button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </header>
 
-      {/* Hamburger Dropdown / Slide-out Menu Overlay */}
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMenuOpen(false)}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, y: -12, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.97 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="fixed top-20 right-4 sm:right-8 z-50 w-[92vw] max-w-sm rounded-3xl bg-[#0C091A]/95 border border-[#8B5CF6]/30 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(139,92,246,0.25)] backdrop-blur-2xl p-4 overflow-hidden"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.08]">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-[#D946EF] animate-pulse" />
-                  <span className="text-[10px] font-mono tracking-[0.2em] text-white/60 uppercase">
-                    QUICK NAVIGATION
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              {/* Shortcuts List */}
-              <div className="py-3 space-y-1.5">
-                {/* 1. Workspace */}
-                <button
-                  type="button"
-                  onClick={() => handleNavigate("chat")}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#8B5CF6]/40 transition-all text-left group cursor-pointer"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-[#E879F9] group-hover:scale-105 transition-transform shrink-0">
-                    <Bot size={17} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Workspace</span>
-                      <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">LIVE</span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Interactive AI Persuasion Engine</p>
-                  </div>
-                </button>
-
-                {/* 2. Prompt Builder */}
-                <button
-                  type="button"
-                  onClick={() => handleNavigate("prompt-builder")}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#D946EF]/40 transition-all text-left group cursor-pointer"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-[#D946EF]/15 border border-[#D946EF]/30 flex items-center justify-center text-[#D946EF] group-hover:scale-105 transition-transform shrink-0">
-                    <Wand2 size={17} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Prompt Builder</span>
-                      <span className="text-[9px] font-mono text-[#D946EF] bg-[#D946EF]/10 px-1.5 py-0.5 rounded border border-[#D946EF]/20">CORE/MAX</span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Custom Prompt Architecture Engine</p>
-                  </div>
-                </button>
-
-                {/* 3. Pricing */}
-                <button
-                  type="button"
-                  onClick={() => handleNavigate("pricing")}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#8B5CF6]/40 transition-all text-left group cursor-pointer"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-[#E879F9] group-hover:scale-105 transition-transform shrink-0">
-                    <CreditCard size={17} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Pricing & Plans</span>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Tiered intelligence & access</p>
-                  </div>
-                </button>
-
-                {/* 4. Account & Profile Settings */}
-                <button
-                  type="button"
-                  onClick={() => handleNavigate("account")}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#8B5CF6]/40 transition-all text-left group cursor-pointer"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/80 group-hover:scale-105 transition-transform shrink-0">
-                    <User size={17} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Account & Profile Settings</span>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Subscription & Operator Settings</p>
-                  </div>
-                </button>
-
-                {/* 5. Memory & Personalization */}
-                <button
-                  type="button"
-                  onClick={() => handleNavigate("memory")}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-[#D946EF]/40 transition-all text-left group cursor-pointer"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-[#D946EF]/15 border border-[#D946EF]/30 flex items-center justify-center text-[#E879F9] group-hover:scale-105 transition-transform shrink-0">
-                    <SlidersHorizontal size={17} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold text-white group-hover:text-[#E879F9] transition-colors">Memory & Personalization</span>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">Brand voice & persistent context</p>
-                  </div>
-                </button>
-
-                {/* 6. How It Works */}
-                <a
-                  href="#how-it-works"
-                  onClick={() => setMenuOpen(false)}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/20 transition-all text-left group cursor-pointer"
-                >
-                  <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/70 group-hover:scale-105 transition-transform shrink-0">
-                    <Sparkles size={17} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold text-white group-hover:text-white transition-colors">How It Works</span>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">$500M Persuasion Architecture</p>
-                  </div>
-                </a>
-              </div>
-
-              {/* Footer Action */}
-              <div className="pt-3 border-t border-white/[0.08]">
-                <button
-                  type="button"
-                  onClick={handleLoginClick}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <span>{user ? "Open Workspace" : "Get Started Free"}</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Premium Subtle Grid Overlay */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-[1] opacity-[0.04]"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, rgba(139, 92, 246, 0.12) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(217, 70, 239, 0.12) 1px, transparent 1px)
-          `,
-          backgroundSize: "48px 48px"
-        }}
-      />
-
-      {/* Premium 3D Ambient Background & Moving Glassmorphic UI elements */}
-      <PremiumBackground3D />
-
-      {/* Interactive Cursor Spotlight */}
-      <div
-        className="fixed inset-0 pointer-events-none z-10 hidden lg:block"
-        style={{
-          background: `radial-gradient(600px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), rgba(139,92,246,0.05), transparent 80%)`
-        }}
-      />
-
       {/* Hero Section */}
-      <section className="relative pt-36 pb-32 px-4 overflow-hidden">
-        {/* MoltenMetal WebGL2 Fragment Shader Caustic Background */}
-        <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden [mask-image:radial-gradient(ellipse_95%_85%_at_50%_45%,black_55%,transparent_100%)] z-0">
-          <MoltenMetal
-            color1="#2e0854"
-            color2="#c026d3"
-            color3="#ffffff"
-            speed={0.28}
-            scale={3.8}
-            detail={4}
-            glow={1.2}
-            coreSize={0.12}
-            swirl={1.1}
-            fold={-0.22}
-            blackPoint={0.05}
-            brightness={0.85}
-            colorMode="molten"
-            grain={true}
-            grainIntensity={0.03}
-            mouseInteraction={true}
-            mouseStrength={0.2}
-            opacity={0.4}
-          />
-        </div>
-
-        {/* Semi-transparent dark overlay for high text legibility */}
-        <div className="absolute inset-0 bg-black/45 pointer-events-none z-[1]" />
-
+      <section className="relative pt-36 sm:pt-44 pb-24 sm:pb-32 px-4 overflow-hidden">
         {/* Subtle Dark Vignette Overlay for High Contrast Text Legibility */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#050508]/40 via-transparent to-[#050508]/90 pointer-events-none z-[1]" />
 
@@ -399,14 +514,14 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
             <Murgii3DChicken size="lg" interactive={true} showPedestal={true} showHologram={true} />
           </motion.div>
           
-          {/* Main Hero Headline in Premium Luxury Serif with ShinyText Gold Shimmer Effect */}
+          {/* Main Hero Headline in Nohemi Bold with Gold Shimmer Wave Effect */}
           <div className="w-full max-w-6xl mx-auto mb-8 px-4">
             <motion.h1
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[5.75rem] 2xl:text-[6.5rem] font-serif font-black tracking-[-0.02em] leading-[1.05] text-white [text-shadow:0_4px_35px_rgba(0,0,0,0.9)] select-none text-center"
-              style={{ fontFamily: "'Playfair Display', 'Cinzel', 'DM Serif Display', 'Cormorant Garamond', Georgia, serif" }}
+              className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[5.75rem] 2xl:text-[6.5rem] font-bold font-nohemi tracking-[-0.02em] leading-[1.05] text-white [text-shadow:0_4px_35px_rgba(0,0,0,0.9)] select-none text-center"
+              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
               <span className="block whitespace-nowrap">
                 <ShinyText
@@ -420,6 +535,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                   yoyo={false}
                   pauseOnHover={false}
                   disabled={false}
+                  className="font-nohemi font-bold"
                 />
               </span>
               <span className="block whitespace-nowrap">
@@ -434,6 +550,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                   yoyo={false}
                   pauseOnHover={false}
                   disabled={false}
+                  className="font-nohemi font-bold"
                 />
               </span>
             </motion.h1>
@@ -449,13 +566,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
           >
             The AI copywriting engine that turns any brief into hooks, emails, and sales pages that convert — built for founders and creators who need results, not busywork.
           </motion.p>
-          
-          {/* Glassmorphic Primary CTA with Strong Contrast */}
+
+          {/* Primary Call to Action Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 1 }}
-            className="flex items-center justify-center px-4 w-full sm:w-fit mx-auto relative z-20"
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4"
           >
             <motion.button
               whileHover={{ scale: 1.03, backgroundColor: "rgba(255, 255, 255, 0.18)" }}
@@ -498,7 +615,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-5 text-white font-nohemi"
-              style={{ fontFamily: "'Nohemi', sans-serif" }}
+              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
               Built for every outcome <br className="hidden sm:block" />
               <span>that <span className="text-[#FFBE0B]">matters</span></span>
@@ -517,7 +634,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
             <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent shadow-[0_0_15px_rgba(139,92,246,0.6)] mt-8" />
           </div>
 
-          {/* Animated Hub and Spoke Network Diagram */}
+          {/* Animated Hub and Spoke Network Diagram with White Glassmorphic Badges */}
           <div className="flex justify-center items-center">
             <OutcomeNetworkDiagram />
           </div>
@@ -525,7 +642,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
       </section>
 
       {/* How Murgii AI Engineers Conversion Section */}
-      <section id="how-it-works" className="py-44 px-4 relative overflow-hidden">
+      <section id="how-it-works" className="py-36 sm:py-44 px-4 relative overflow-hidden">
         {/* Cinematic Background Elements */}
         <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/8 rounded-full blur-[180px] pointer-events-none" />
@@ -534,13 +651,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
           {/* Section Header */}
           <div className="text-center mb-28 relative">
             <h2 
-              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-serif font-black mb-8 tracking-tight leading-[1.12] text-white select-none text-center"
-              style={{ fontFamily: "'Playfair Display', 'Cinzel', 'DM Serif Display', Georgia, serif" }}
+              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 tracking-tight leading-[1.12] text-white select-none text-center font-nohemi"
+              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              <span className="block text-white">
+              <span className="block text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
                 How Murgii AI
               </span>
-              <span className="block mt-2 sm:mt-3">
+              <span className="block mt-2 sm:mt-3 font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
                 <TrueFocus 
                   sentence="Engineers Conversion"
                   manualMode={false}
@@ -549,8 +666,8 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                   glowColor="rgba(234, 179, 8, 0.6)"
                   animationDuration={0.5}
                   pauseBetweenAnimations={0.5}
-                  className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
-                  wordClassName="font-serif font-black text-white"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-nohemi"
+                  wordClassName="font-nohemi font-bold text-white"
                 />
               </span>
             </h2>
@@ -560,347 +677,71 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
             </p>
           </div>
 
-          <div className="space-y-44">
-            {/* BLOCK 1: Psychology */}
+          <div id="features" className="space-y-36 sm:space-y-44">
+            {/* BLOCK 1: 4 Core Modes & Persistent Brand Memory */}
             <FeatureBlock 
               index={1}
-              title="AI Trained on Elite Conversion Psychology"
-              description="Murgii AI is engineered using direct response frameworks, behavioral economics, buyer psychology & high-performing persuasion systems optimized for real-world conversion outcomes."
-              trustLine="Built for modern digital markets and high-intent customer acquisition."
+              title="4 Dedicated Modes Powered by Persistent Memory"
+              description="Stop re-explaining your product to generic AI every morning. Set your business niche, target audience, and brand voice once in Memory & Personalization — then generate high-converting Email sequences, punchy Ad hooks, full Sales Pages, and deep Behavioral Psychology assets that instantly sound like you."
+              trustLine="Memory & Personalization applies automatically across all 4 modes on every generation."
               points={[
-                "Understands buying psychology",
-                "Generates emotionally persuasive copy",
-                "Adapts to customer awareness levels",
-                "Creates conversion-focused messaging",
-                "Engineered for revenue outcomes"
+                "Emails Mode: Multi-email onboarding, launch, & abandoned cart sequences",
+                "Ads Mode: Pattern-interrupt hooks, scroll-stoppers, & direct angles",
+                "Pages Mode: High-converting landing pages, VSLs, & sales copy",
+                "Psych Mode: Cialdini triggers, loss-aversion frames, & objection crushers",
+                "Zero Context Switching: Your name, tone, and offer stay locked forever"
               ]}
-              visual={
-                <div className="relative w-full h-full flex items-center justify-center perspective-[2000px] group/vis">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.2),transparent_70%)]" />
-                  
-                  {/* Floating 3D Orbital System */}
-                  {[...Array(3)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      animate={{ 
-                        rotateX: [45, 60, 45],
-                        rotateY: [0, 360],
-                        scale: [1, 1.05, 1]
-                      }}
-                      transition={{ 
-                        duration: 20 + i * 5, 
-                        repeat: Infinity, 
-                        ease: "linear" 
-                      }}
-                      style={{ 
-                        transformStyle: "preserve-3d",
-                        width: 250 + i * 100,
-                        height: 250 + i * 100
-                      }}
-                      className="absolute border border-[#8B5CF6]/15 rounded-full blur-[0.5px] will-change-transform"
-                    />
-                  ))}
- 
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-                    className="relative w-72 h-72 border border-[#8B5CF6]/15 rounded-full flex items-center justify-center will-change-transform"
-                  >
-                    {[...Array(12)].map((_, i) => (
-                      <div key={i} className="absolute inset-0 flex items-center justify-center" style={{ transform: `rotate(${i * 30}deg)` }}>
-                         <motion.div 
-                           animate={{ 
-                             opacity: [0.1, 0.6, 0.1],
-                             scale: [1, 1.3, 1]
-                           }}
-                           transition={{ duration: 3, delay: i * 0.2, repeat: Infinity }}
-                           className="w-1 h-2 bg-gradient-to-t from-[#D946EF] to-transparent rounded-full translate-y-[-140px] will-change-[opacity,transform]" 
-                         />
-                      </div>
-                    ))}
-                    
-                    {/* Central Core with Deep Glassmorphism */}
-                    <motion.div 
-                      animate={{ scale: [0.98, 1.02, 0.98] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="w-48 h-48 bg-black/60 backdrop-blur-3xl border-2 border-[#8B5CF6]/40 rounded-full flex items-center justify-center shadow-[0_0_100px_-20px_rgba(139,92,246,0.5),inset_0_0_40px_rgba(217,70,239,0.15)] relative group/core overflow-hidden"
-                      style={{ transform: "translateZ(100px)" }}
-                    >
-                       <div className="absolute inset-0 bg-gradient-to-tr from-[#8B5CF6]/25 via-transparent to-[#D946EF]/20 opacity-50" />
-                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent)]" />
-                       
-                       <Network size={72} className="text-[#E879F9] relative z-10 drop-shadow-[0_0_20px_rgba(217,70,239,0.7)]" />
-                       
-                       <motion.div 
-                         animate={{ rotate: 360 }}
-                         transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                         className="absolute inset-2 border-t-2 border-[#D946EF] rounded-full opacity-30"
-                       />
-                    </motion.div>
-                  </motion.div>
- 
-                  {/* Floating Psychology Particles */}
-                  {[...Array(8)].map((_, i) => (
-                    <motion.div
-                      key={`part-${i}`}
-                      animate={{
-                        opacity: [0.3, 0.8, 0.3],
-                        scale: [1, 1.2, 1]
-                      }}
-                      transition={{
-                        duration: 8 + i,
-                        repeat: Infinity,
-                        delay: i * 0.5
-                      }}
-                      className="absolute w-2 h-2 bg-[#D946EF] rounded-full blur-[2px]"
-                      style={{
-                        top: `${20 + Math.random() * 60}%`,
-                        left: `${20 + Math.random() * 60}%`,
-                        transform: "translateZ(150px)"
-                      }}
-                    />
-                  ))}
-                </div>
-              }
+              visual={<ModesCycleVisual />}
             />
 
-            {/* BLOCK 2: Systems */}
+            {/* BLOCK 2: Guided Prompt Builder Advantage */}
             <FeatureBlock 
               index={2}
               reversed
-              title="Generate Complete Revenue Systems"
-              description="Murgii AI creates interconnected conversion systems including funnels, launch assets, landing pages, email sequences, VSLs, positioning frameworks & revenue-focused campaign structures."
+              title="Guided Prompt Architecture That Beats Generic AI"
+              description="One-line prompts produce shallow, robotic fluff you have to rewrite from scratch. Murgii's Prompt Builder (unlocked on Core & Max) compiles guided inputs — niche, conversion vector, tone, and offer mechanics — into role-framed master prompts so your generation hits peak persuasion on draft one."
+              trustLine="Replaces hours of prompt tweaking with a 60-second guided architecture."
               points={[
-                "Launch campaign generation",
-                "Funnel architecture",
-                "Landing page systems",
-                "Email conversion flows",
-                "Offer positioning intelligence",
-                "Strategic CTA optimization"
+                "Role-Framed Master Prompts: Pre-loaded with direct response methodology",
+                "Targeted Conversion Vectors: Aligned to specific buying temperatures",
+                "Reusable Master Blueprints: Store high-performing prompt frameworks",
+                "1-Click Workspace Sync: Send engineered prompts straight into generation",
+                "Available on Core & Max: Stop settling for generic chatbot answers"
               ]}
-              visual={
-                <div className="relative w-full h-full flex items-center justify-center p-6 sm:p-8 md:p-12 perspective-[1500px]">
-                   <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full max-w-[320px] xs:max-w-[380px] sm:max-w-[440px] md:max-w-[500px] lg:max-w-[460px] xl:max-w-[540px] rotate-[6deg] skew-x-[-6deg] scale-95 sm:scale-100 lg:scale-[1.05] xl:scale-110 group-hover:rotate-0 group-hover:skew-x-0 transition-all duration-700 ease-[0.16,1,0.3,1]">
-                      {[
-                        { icon: Layers, label: "CONVERSION ARCHITECTURE", desc: "Multi-layered logic" },
-                        { icon: Zap, label: "DECISION TRIGGERS", desc: "Behavioral hooks" },
-                        { icon: BarChart3, label: "REVENUE FLOWS", desc: "Monetization systems" },
-                        { icon: Mail, label: "COMMUNICATION NODE", desc: "Email conversion" }
-                      ].map((item, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, translateZ: -100 }}
-                          whileInView={{ opacity: 1, translateZ: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ 
-                            delay: i * 0.1, 
-                            duration: 1.2, 
-                            ease: [0.16, 1, 0.3, 1] 
-                          }}
-                          style={{ transformStyle: "preserve-3d" }}
-                          className="group/card relative w-full aspect-square md:aspect-auto md:h-44 xl:h-48 bg-white/[0.03] border border-white/10 rounded-[24px] sm:rounded-[32px] backdrop-blur-3xl p-4 sm:p-5 xl:p-6 flex flex-col justify-between overflow-hidden shadow-[10px_10px_35px_-10px_rgba(0,0,0,0.5)] md:shadow-[20px_20px_60px_-15px_rgba(0,0,0,0.5)] hover:border-[#8B5CF6]/50 hover:bg-white/[0.06] transition-all duration-500 hover:shadow-[0_20px_50px_rgba(139,92,246,0.2)]"
-                        >
-                           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-30 group-hover/card:opacity-50 transition-opacity" />
-                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#8B5CF6,transparent_80%)] opacity-0 group-hover/card:opacity-15 transition-opacity" />
-                           
-                           <div className="w-9 h-9 sm:w-11 sm:h-11 xl:w-12 xl:h-12 rounded-xl sm:rounded-2xl bg-[#8B5CF6]/15 flex items-center justify-center border border-[#8B5CF6]/30 group-hover/card:scale-110 group-hover/card:bg-[#8B5CF6]/25 transition-all duration-500">
-                             <item.icon className="w-4.5 h-4.5 sm:w-5 sm:h-5 xl:w-6 xl:h-6 text-[#E879F9]" />
-                           </div>
-                           <div className="space-y-1 sm:space-y-2">
-                              <span className="block text-[7.5px] sm:text-[9px] font-sans text-gray-400 tracking-[0.15em] sm:tracking-[0.2em] font-black uppercase">{item.label}</span>
-                              <span className="block text-[11px] sm:text-[13px] text-gray-200 font-medium leading-tight">{item.desc}</span>
-                           </div>
-
-                           <motion.div 
-                             animate={{ left: ["-100%", "200%"] }}
-                             transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
-                             className="absolute top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6]/40 to-transparent"
-                           />
-                        </motion.div>
-                      ))}
-                   </div>
-
-                   <div className="absolute inset-0 pointer-events-none">
-                     {[...Array(6)].map((_, i) => (
-                       <motion.div
-                         key={i}
-                         animate={{ 
-                           opacity: [0.1, 0.3, 0.1]
-                         }}
-                         transition={{ duration: 5 + i, repeat: Infinity }}
-                         className="absolute w-1 h-1 bg-white/20 rounded-full"
-                         style={{
-                           top: `${(i * 15) + 10}%`,
-                           left: `${(i * 12) + 10}%`
-                         }}
-                       />
-                     ))}
-                   </div>
-                </div>
-              }
+              visual={<PromptCompilerVisual />}
             />
 
-            {/* BLOCK 3: Intelligence */}
+            {/* BLOCK 3: Tiered Daily Credits Engineered for Scaling */}
             <FeatureBlock 
               index={3}
-              title="Real-Time Persuasion Intelligence"
-              description="Murgii AI dynamically adapts messaging tone, emotional depth, positioning strategy, and persuasive structure based on audience behavior, platform context, and conversion objectives."
+              title="Daily Credit Engine Built for Sustainable Volume"
+              description="Start with 20 daily credits on Basic to test all 4 modes with zero risk. When client deadlines and launch schedules hit, scale to Core ($29/mo) for 40 daily credits + full Prompt Builder access, or command Max ($97/mo) with 100 daily credits, AI Blueprint Assist, and priority generation bandwidth."
+              trustLine="Credits refresh every 24 hours so you never face unexpected overage bills."
               points={[
-                "Emotional tone adaptation",
-                "Audience-aware copywriting",
-                "Premium brand positioning",
-                "Creator-focused storytelling",
-                "Platform-native optimization"
+                "Basic (Free): 20 credits/day across all 4 modes to write daily assets",
+                "Core ($29/mo): 40 credits/day + unlocked Prompt Builder & Core roadmap",
+                "Max ($97/mo): 100 credits/day + Business Blueprint Studio & Qreato Engine",
+                "No Token Traps: Predictable daily quotas built for agency & founder volume",
+                "Instant Tier Switching: Upgrade in seconds as your publishing demands scale"
               ]}
-              visual={
-                <div className="relative w-full h-full flex flex-col items-center justify-center gap-8 md:gap-16 p-6 md:p-16 overflow-hidden perspective-[1500px]">
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_70%)]" />
-                   
-                   {/* Advanced 3D Waveform */}
-                   <div className="relative w-full h-32 flex items-center justify-center gap-1.5 md:gap-2 contain-layout">
-                     {[...Array(16)].map((_, i) => (
-                       <motion.div
-                         key={i}
-                         animate={{ 
-                           height: [15, 60 + (i % 5) * 10, 15],
-                           opacity: [0.3, 1, 0.3],
-                         }}
-                         transition={{ 
-                           duration: 10 + (i * 0.5), 
-                           repeat: Infinity, 
-                           ease: "easeInOut"
-                         }}
-                         style={{ transform: "translateZ(50px)" }}
-                         className="w-2 md:w-3 bg-gradient-to-t from-[#8B5CF6] to-[#D946EF] rounded-full shadow-[0_0_20px_rgba(139,92,246,0.4)] will-change-[height,opacity]"
-                       />
-                     ))}
-                   </div>
- 
-                   {/* Premium Status Modules */}
-                   <div className="grid grid-cols-2 gap-4 md:gap-6 w-full">
-                      {[
-                        { label: "EMOTIONAL CALIBRATION", value: "98.4%", icon: Target, status: "PEAK" },
-                        { label: "PERSUASION DEPTH", value: "ELITE", icon: Sparkles, status: "ACTIVE" },
-                        { label: "AUDIENCE AWARENESS", value: "ACTIVE", icon: Activity, status: "SYNCED" },
-                        { label: "CONVERSION OPTIM", value: "SYNCED", icon: Zap, status: "OPTIMIZED" }
-                      ].map((item, i) => (
-                        <motion.div 
-                          key={i}
-                          whileHover={{ translateZ: 50, scale: 1.05 }}
-                          className="relative p-5 rounded-3xl bg-white/[0.02] border border-white/10 flex flex-col gap-3 backdrop-blur-3xl transition-all duration-500 hover:bg-white/[0.06] hover:border-[#8B5CF6]/40 group will-change-transform shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)]"
-                        >
-                           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30 rounded-3xl" />
-                           <div className="flex items-center justify-between relative z-10">
-                             <div className="flex flex-col gap-1">
-                               <span className="text-[8px] font-sans text-gray-400 tracking-[0.2em] font-black uppercase">{item.label}</span>
-                               <div className="flex items-center gap-2">
-                                 <div className="w-1 h-1 rounded-full bg-[#D946EF] animate-pulse" />
-                                 <span className="text-[7px] text-white/40 font-bold tracking-widest">{item.status}</span>
-                               </div>
-                             </div>
-                             <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-[#8B5CF6]/15 group-hover:border-[#8B5CF6]/40 transition-all">
-                               <item.icon size={14} className="text-[#E879F9]" />
-                             </div>
-                           </div>
-                           <span className="text-xl md:text-2xl font-sans text-white font-bold tracking-tighter relative z-10">{item.value}</span>
-                        </motion.div>
-                      ))}
-                   </div>
-                </div>
-              }
+              visual={<TierExpansionVisual />}
             />
 
-            {/* BLOCK 4: Growth */}
+            {/* BLOCK 4: Full Bolt Max Ecosystem & Business Blueprint Studio */}
             <FeatureBlock 
               index={4}
               reversed
-              title="Built for High-Stakes Growth"
-              description="Designed for founders, creators, agencies, and brands that depend on strategic communication to increase trust, attention, conversions, and scalable revenue growth."
+              title="Complete Revenue Infrastructure with Bolt & Blueprint Studio"
+              description="Copy is only one half of the growth equation. Max tier pairs Murgii's 100 daily credits with Bolt Max's 6-category execution roadmap, Business Blueprint Studio, and AI Blueprint Assist — connecting your sales copy directly to product offers, audience growth, and full-funnel monetization."
+              trustLine="The complete unified operating system for high-performing modern operators."
               points={[
-                "Engineered for scaling brands",
-                "Optimized for high-converting campaigns",
-                "Strategic storytelling systems",
-                "Premium communication frameworks",
-                "Elite AI writing infrastructure"
+                "Bolt Core & Max Integration: 6-category structured execution roadmap",
+                "Business Blueprint Studio: Map entire offer architectures before writing",
+                "AI Blueprint Assist: Automatic structure recommendations for campaigns",
+                "Qreato AI Engine: Dedicated enterprise-grade model routing",
+                "All-In-One Leverage: From raw concept to deployed revenue system"
               ]}
-              visual={
-                <div className="relative w-full h-full p-8 md:p-20 flex flex-col gap-10 md:gap-16 bg-[#08070E]/80 backdrop-blur-3xl overflow-hidden perspective-[2000px] group/growth">
-                   {/* Animated Background Flow */}
-                   <div className="absolute inset-0 opacity-20">
-                      <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:2rem_2rem]" />
-                      <motion.div 
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8B5CF6]/10 to-transparent skew-x-[-45deg]"
-                      />
-                   </div>
-
-                   <div className="flex items-center justify-between relative z-10" style={{ transform: "translateZ(60px)" }}>
-                     <div className="flex flex-col gap-1">
-                        <span className="text-[10px] md:text-[12px] font-sans text-[#E879F9] tracking-[0.4em] font-black uppercase drop-shadow-sm">REVENUE ARCHITECTURE</span>
-                        <span className="text-2xl md:text-4xl font-bold text-white tracking-tighter italic">Frontier Scaling Engine</span>
-                     </div>
-                     <motion.div 
-                       animate={{ 
-                         rotate: [0, 10, -10, 0],
-                         scale: [1, 1.1, 1]
-                       }}
-                       transition={{ duration: 5, repeat: Infinity }}
-                       className="w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-gradient-to-br from-[#8B5CF6] via-[#A855F7] to-[#D946EF] flex items-center justify-center border border-white/20 shadow-[0_0_50px_rgba(139,92,246,0.5)]"
-                     >
-                        <Activity size={36} className="text-white" />
-                     </motion.div>
-                   </div>
-                   
-                   <div className="flex-1 w-full flex items-end justify-between gap-3 md:gap-6 pb-6 relative z-10" style={{ transformStyle: "preserve-3d" }}>
-                      {[50, 75, 60, 110, 85, 120, 160].map((h, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ height: 0, translateZ: 0 }}
-                          whileInView={{ height: `${(h / 160) * 100}%` }}
-                          whileHover={{ translateZ: 60, scaleX: 1.1, filter: "brightness(1.5)" }}
-                          transition={{ 
-                            duration: 2, 
-                            delay: i * 0.1, 
-                            ease: [0.16, 1, 0.3, 1] 
-                          }}
-                          className="relative flex-1 group/bar will-change-[height,transform] cursor-pointer"
-                        >
-                           {/* 3D Glass Pillar Effect */}
-                           <div className="absolute inset-0 bg-gradient-to-t from-[#8B5CF6] via-[#C084FC]/70 to-[#D946EF]/50 rounded-t-2xl shadow-[0_0_40px_rgba(139,92,246,0.3)] border-t border-x border-white/30" />
-                           <div className="absolute inset-[1px] bg-white/10 rounded-t-2xl backdrop-blur-sm opacity-50" />
-                           
-                           {/* Top Glow Cap */}
-                           <div className="absolute inset-x-0 top-0 h-2 bg-white rounded-full blur-[3px] opacity-70 translate-y-[-1px]" />
-                           
-                           {/* Internal Energy Line */}
-                           <motion.div 
-                             animate={{ top: ["100%", "0%"], opacity: [0, 1, 0] }}
-                             transition={{ duration: 2, delay: i * 0.2, repeat: Infinity }}
-                             className="absolute inset-x-2 w-px bg-white mx-auto blur-[1px]"
-                           />
-
-                           {/* Floating Tooltip */}
-                           <motion.div 
-                             initial={{ opacity: 0, y: 0 }}
-                             whileHover={{ opacity: 1, y: -45 }}
-                             className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none bg-white py-1 px-3 rounded-lg shadow-xl"
-                           >
-                             <span className="text-[10px] font-black text-black tracking-tight">+{(h * 1.8).toFixed(1)}%</span>
-                             <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-white rotate-45" />
-                           </motion.div>
-                        </motion.div>
-                      ))}
-                   </div>
- 
-                   <div className="flex justify-between text-[10px] font-sans text-gray-500 border-t border-white/10 pt-6 tracking-[0.4em] font-black uppercase relative z-10">
-                      {[ "JAN", "MAR", "MAY", "JUL", "SEP", "NOV", "DEC"].map(m => <span key={m} className="hover:text-[#D946EF] transition-colors cursor-default">{m}</span>)}
-                   </div>
-                   
-                   {/* Cinematic Surface Glow */}
-                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[120%] h-32 bg-[radial-gradient(ellipse_at_bottom,rgba(139,92,246,0.25),transparent_70%)] pointer-events-none" />
-                </div>
-              }
+              visual={<BoltEcosystemVisual />}
             />
           </div>
         </div>
@@ -909,59 +750,70 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
       {/* PROMPT BUILDER ARCHITECTURE SECTION */}
       <section id="prompt-builder" className="py-32 px-4 relative overflow-hidden">
         {/* Ambient Glows */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(139,92,246,0.14)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(139,92,246,0.12)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
         <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#D946EF]/8 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          {/* Section Header */}
+          {/* Section Header (Redundant badge removed for clean, frictionless entry) */}
           <div className="text-center mb-16 px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[10px] font-black text-[#E879F9] uppercase tracking-[0.25em] mb-6 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.25)]"
-            >
-              <Wand2 size={12} className="animate-pulse text-[#D946EF]" />
-              CUSTOM PROMPT GENERATOR
-            </motion.div>
             <h2 
-              className="text-4xl md:text-8xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent italic leading-[0.95] font-nohemi"
-              style={{ fontFamily: "'Nohemi', sans-serif" }}
+              className="text-4xl md:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent leading-[1.05] font-nohemi"
+              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
               Build Custom Prompts, <br className="hidden md:block" /> Engineered for You
             </h2>
             <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent mx-auto mb-8 shadow-[0_0_20px_#8B5CF6]" />
-            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Answer a few guided questions about your niche, offer, and goal — Prompt Builder assembles a tailored, role-framed master prompt engineered specifically for Murgii&apos;s persuasion engine, so every generation starts from context that&apos;s actually yours.
+            <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Generic one-line prompting forces you into tedious re-prompting loops. Murgii&apos;s Prompt Builder assembles tailored, role-framed master prompts from guided questions — giving you structured persuasion on draft one.
             </p>
           </div>
 
-          {/* Interactive Supporting Visual: Prompt Builder UI Mockup & Synthesis Engine */}
-          <div className="max-w-6xl mx-auto rounded-[36px] bg-[#0A0716]/90 border border-[#8B5CF6]/30 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(139,92,246,0.2)] backdrop-blur-2xl p-6 sm:p-10 relative overflow-hidden">
-            {/* Top Toolbar / Mode Selector */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+          {/* Interactive Supporting Visual: Clean High-Contrast Glassmorphic Card */}
+          <div 
+            className="max-w-5xl mx-auto rounded-[36px] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.85)] p-6 sm:p-10 relative overflow-hidden"
+            style={{
+              background: "rgba(255, 255, 255, 0.05)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)"
+            }}
+          >
+            {/* 3-Step Simple Flow Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-6 mb-6 border-b border-white/10">
+              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] border border-white/10">
+                <span className="w-6 h-6 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-mono font-bold shrink-0">1</span>
+                <span className="text-xs text-gray-300 font-medium">Select Archetype & Niche</span>
+              </div>
+              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] border border-white/10">
+                <span className="w-6 h-6 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-mono font-bold shrink-0">2</span>
+                <span className="text-xs text-gray-300 font-medium">Murgii Compiles Role Frame</span>
+              </div>
+              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] border border-white/10">
+                <span className="w-6 h-6 rounded-lg bg-white text-black flex items-center justify-center text-xs font-mono font-bold shrink-0">3</span>
+                <span className="text-xs text-white font-bold">Ready-to-Use Master Prompt</span>
+              </div>
+            </div>
+
+            {/* Mode Selection Pills (Simple Universal Labels: Emails / Ads / Pages / Psych) */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.4)] shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)] shrink-0">
                   <Wand2 size={18} className="text-white" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>Prompt Architecture Studio</span>
-                    <span className="text-[9px] font-mono text-[#D946EF] bg-[#D946EF]/15 px-2 py-0.5 rounded-full border border-[#D946EF]/30 uppercase">
-                      Neural Synthesizer
-                    </span>
+                  <h4 className="text-sm font-bold text-white tracking-tight font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
+                    Select Archetype
                   </h4>
-                  <p className="text-[11px] text-gray-400">Select an asset archetype to preview guided parameter assembly</p>
+                  <p className="text-[11px] text-gray-400">See how guided parameters compile instantly</p>
                 </div>
               </div>
 
-              {/* Mode Selection Pills */}
+              {/* Plain 4 Mode Selection Pills */}
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10 overflow-x-auto max-w-full">
                 {[
-                  { id: "email", label: "Email Sequence", icon: Mail },
-                  { id: "ads", label: "Ad Copy & Hooks", icon: Target },
-                  { id: "landing", label: "Landing Page", icon: Globe },
-                  { id: "psych", label: "Psych Persuasion", icon: Zap }
+                  { id: "email", label: "Emails", icon: Mail },
+                  { id: "ads", label: "Ads", icon: Target },
+                  { id: "landing", label: "Pages", icon: Globe },
+                  { id: "psych", label: "Psych", icon: Zap }
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeDemoMode === tab.id;
@@ -970,13 +822,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveDemoMode(tab.id as any)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                         isActive
-                          ? "bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]"
-                          : "text-gray-400 hover:text-white hover:bg-white/5"
+                          ? "bg-white text-black font-bold shadow-[0_0_12px_rgba(255,255,255,0.4)]"
+                          : "text-gray-300 hover:text-white hover:bg-white/5"
                       }`}
                     >
-                      <Icon size={13} />
+                      <Icon size={14} strokeWidth={2.2} />
                       <span>{tab.label}</span>
                     </button>
                   );
@@ -984,121 +836,104 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
               </div>
             </div>
 
-            {/* 2-Column Guided Assembly Visual Grid */}
+            {/* 2-Column Guided Inputs vs Role-Framed Output Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8 items-stretch">
-              {/* Left Column: Guided Questions Mockup */}
+              {/* Left Column: 2 Simplified Guided Questions */}
               <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
-                <div className="space-y-3.5">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#E879F9] font-bold">
-                      01. Guided Context Injection
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-white/80 font-bold">
+                      01. Quick Inputs
                     </span>
-                    <span className="text-[10px] font-mono text-gray-500">4 / 4 Complete</span>
+                    <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                      <Check size={12} /> Configured
+                    </span>
                   </div>
 
-                  {/* Question Field 1 */}
-                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-[#8B5CF6]/30 transition-all">
+                  {/* Field 1: Target Niche */}
+                  <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10">
                     <label className="text-[11px] font-mono text-gray-400 block mb-1">Target Niche & Audience</label>
-                    <div className="text-xs font-semibold text-white bg-black/40 px-3 py-2 rounded-xl border border-white/[0.05] flex items-center justify-between">
+                    <div className="text-xs font-semibold text-white">
                       <span>{activeDemoMode === "email" ? "B2B SaaS & High-Ticket Consultants" : activeDemoMode === "ads" ? "Direct-to-Consumer Fitness & Wellness" : activeDemoMode === "landing" ? "Enterprise AI Developer Platform" : "High-Ticket Course Buyers & Founders"}</span>
-                      <Check size={14} className="text-emerald-400 shrink-0" />
                     </div>
                   </div>
 
-                  {/* Question Field 2 */}
-                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-[#8B5CF6]/30 transition-all">
+                  {/* Field 2: Primary Goal */}
+                  <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10">
                     <label className="text-[11px] font-mono text-gray-400 block mb-1">Primary Conversion Goal</label>
-                    <div className="text-xs font-semibold text-white bg-black/40 px-3 py-2 rounded-xl border border-white/[0.05] flex items-center justify-between">
+                    <div className="text-xs font-semibold text-white">
                       <span>{activeDemoMode === "email" ? "Drive urgency for demo bookings before launch" : activeDemoMode === "ads" ? "Break through ad fatigue with pattern-interrupt hooks" : activeDemoMode === "landing" ? "Convert cold traffic with proof & risk reversal" : "Overcome deep buying friction with cognitive reframing"}</span>
-                      <Check size={14} className="text-emerald-400 shrink-0" />
-                    </div>
-                  </div>
-
-                  {/* Question Field 3 */}
-                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-[#8B5CF6]/30 transition-all">
-                    <label className="text-[11px] font-mono text-gray-400 block mb-1">Tone of Voice & Frame</label>
-                    <div className="text-xs font-semibold text-white bg-black/40 px-3 py-2 rounded-xl border border-white/[0.05] flex items-center justify-between">
-                      <span>{activeDemoMode === "email" ? "Bold, authoritative, and direct" : activeDemoMode === "ads" ? "Punchy, relatable, and high-energy" : activeDemoMode === "landing" ? "Polished, high-contrast, and deeply persuasive" : "Subtle, loss-averse, and psychologically locked"}</span>
-                      <Check size={14} className="text-emerald-400 shrink-0" />
                     </div>
                   </div>
                 </div>
 
-                {/* Synthesis Indicator */}
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/10 via-[#A855F7]/10 to-[#D946EF]/10 border border-[#8B5CF6]/25 flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#E879F9] animate-ping shrink-0" />
-                  <p className="text-xs text-gray-300 font-medium">
-                    <span className="text-white font-bold">Dynamic Prompt Compiler:</span> Translates custom parameters into role-framed cognitive structures for Murgii&apos;s $500M neural core.
+                {/* Honest confident compiler statement */}
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center gap-3">
+                  <Sparkles size={16} className="text-white shrink-0" />
+                  <p className="text-xs text-gray-300 font-medium leading-relaxed">
+                    Compiled automatically into a structured, role-framed master prompt built for Murgii&apos;s generation engine.
                   </p>
                 </div>
               </div>
 
-              {/* Right Column: Synthesized Master Prompt Output Preview */}
-              <div className="lg:col-span-7 flex flex-col rounded-2xl bg-black/60 border border-white/10 p-5 sm:p-6 relative font-mono text-xs overflow-hidden shadow-inner">
+              {/* Right Column: Compiled Master Prompt Output Preview */}
+              <div className="lg:col-span-7 flex flex-col rounded-2xl bg-black/70 border border-white/15 p-5 sm:p-6 relative font-mono text-xs overflow-hidden shadow-inner">
                 {/* Code Header */}
                 <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-white/40" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-white/60" />
                     </div>
                     <span className="text-[11px] font-mono text-gray-400 ml-2">master_prompt_output.md</span>
                   </div>
-                  <span className="text-[9px] font-mono text-[#E879F9] bg-[#8B5CF6]/20 px-2 py-0.5 rounded border border-[#8B5CF6]/40 uppercase tracking-widest">
-                    SYNTHESIZED & READY
+                  <span className="text-[9px] font-mono text-white bg-white/15 px-2 py-0.5 rounded border border-white/25 uppercase tracking-widest font-bold">
+                    COMPILED MASTER PROMPT
                   </span>
                 </div>
 
                 {/* Formatted Master Prompt Output */}
                 <div className="flex-1 space-y-3 text-gray-300 leading-relaxed overflow-hidden">
                   <div>
-                    <span className="text-[#D946EF] font-bold">[ROLE & FRAME]</span>
+                    <span className="text-white font-bold">[ROLE & FRAME]</span>
                     <p className="text-gray-200 mt-1 font-sans text-xs">
-                      Act as an elite world-class Direct Response Copywriter and Conversion Psychologist specializing in {activeDemoMode === "email" ? "high-converting email sequencing" : activeDemoMode === "ads" ? "viral paid performance advertising" : activeDemoMode === "landing" ? "high-ticket landing page funnels" : "behavioral persuasion engineering"}.
+                      Act as an elite Direct Response Copywriter specializing in {activeDemoMode === "email" ? "high-converting email sequencing" : activeDemoMode === "ads" ? "viral paid performance advertising" : activeDemoMode === "landing" ? "high-ticket landing page funnels" : "behavioral persuasion engineering"}.
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-[#8B5CF6] font-bold">[TARGET MARKET & PAIN VECTOR]</span>
+                    <span className="text-gray-300 font-bold">[TARGET MARKET & PAIN VECTOR]</span>
                     <p className="text-gray-200 mt-1 font-sans text-xs">
-                      Target Audience: {activeDemoMode === "email" ? "B2B SaaS executives and agency operators facing pipeline drop-offs" : activeDemoMode === "ads" ? "High-intent consumers scrolling through congested feeds" : activeDemoMode === "landing" ? "Enterprise decision-makers needing immediate ROI validation" : "Skeptical high-ticket prospects requiring proof mechanisms"}.
+                      Audience: {activeDemoMode === "email" ? "B2B SaaS executives and agency operators facing pipeline drop-offs" : activeDemoMode === "ads" ? "High-intent consumers scrolling through congested feeds" : activeDemoMode === "landing" ? "Enterprise decision-makers needing immediate ROI validation" : "Skeptical high-ticket prospects requiring proof mechanisms"}.
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-[#38BDF8] font-bold">[COGNITIVE TRIGGERS & CONVERSION MECHANICS]</span>
+                    <span className="text-gray-300 font-bold">[DELIVERABLE BLUEPRINT]</span>
                     <p className="text-gray-200 mt-1 font-sans text-xs">
-                      Apply Cialdini Scarcity, the Von Restorff novelty bias, and extreme micro-commitment pacing. Eliminate filler and engineer immediate action.
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-[#34D399] font-bold">[STRUCTURAL DELIVERABLES]</span>
-                    <p className="text-gray-200 mt-1 font-sans text-xs">
-                      Generate 3 hook variants, body persuasion loops, risk-reversal stack, and high-impact CTA.
+                      Generate 3 pattern-interrupt hook variants, core persuasion loops, objection-reversal stack, and high-impact CTA.
                     </p>
                   </div>
                 </div>
 
-                {/* Output Footnote / Badge */}
-                <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-gray-500">
-                  <span>Tokens: ~480</span>
-                  <span className="text-[#C084FC] font-semibold">1-Click Import into Workspace</span>
+                {/* Output Footnote */}
+                <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-gray-400">
+                  <span>Structured Architecture</span>
+                  <span className="text-white font-semibold">Ready for 1-Click Generation</span>
                 </div>
               </div>
             </div>
 
-            {/* Bottom CTA & Tier Gating Action */}
-            <div className="mt-10 pt-8 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-2xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-[#E879F9] shrink-0">
-                  <Sparkles size={18} />
-                </div>
-                <div>
-                  <h5 className="text-sm font-bold text-white">Unlock Unlimited Custom Prompt Synthesis</h5>
-                  <p className="text-xs text-gray-400">Available on Bolt Core and Max tiers with full workspace synchronization.</p>
-                </div>
+            {/* Bottom CTA Area: Value Contrast & Desirability */}
+            <div className="mt-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="text-left space-y-1">
+                <h5 className="text-sm font-bold text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
+                  Stop Wasting Hours Rewriting AI Prompts
+                </h5>
+                <p className="text-xs text-gray-400 max-w-lg leading-relaxed">
+                  Unlocked on Bolt Core and Max tiers. Get structured, role-framed master prompts synced directly to your generation workspace.
+                </p>
               </div>
 
               {/* Primary CTA Button */}
@@ -1106,7 +941,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCraftPromptClick}
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] text-white font-extrabold text-sm tracking-tight shadow-[0_0_30px_rgba(139,92,246,0.4)] hover:brightness-110 transition-all flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-black font-extrabold text-sm tracking-tight shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
               >
                 <Wand2 size={16} />
                 <span>Craft Your First Prompt</span>
@@ -1117,52 +952,169 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
         </div>
       </section>
 
-      {/* $500M LIVE REVENUE & PERSUASION ENGINE SHOWCASE */}
-      <section className="py-36 px-4 relative overflow-hidden">
-        {/* Cinematic ambient background glow and subtle grid */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(139,92,246,0.12)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
-        
+      {/* UPGRADED REPLACEMENT SECTION: Clean, Honest "How Murgii Operates" 3-Step Flow & 4-Mode Capability Grid */}
+      <section id="workflow" className="py-32 px-4 relative overflow-hidden">
+        {/* Cinematic Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(255,255,255,0.04)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
+
         <div className="max-w-7xl mx-auto relative z-10">
+          {/* Section Header */}
           <div className="text-center mb-16 px-4">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[10px] font-black text-[#E879F9] uppercase tracking-[0.25em] mb-6 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.25)]"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-black text-white uppercase tracking-[0.25em] mb-6 backdrop-blur-md"
             >
-              <Activity size={12} className="animate-pulse text-[#D946EF]" />
-              $500M LIVE TELEMETRY MATRIX
+              <Compass size={12} className="text-white" />
+              THE EXECUTION WORKFLOW
             </motion.div>
             <h2 
-              className="text-4xl md:text-8xl font-bold tracking-tighter mb-6 bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent italic leading-[0.95] font-nohemi"
-              style={{ fontFamily: "'Nohemi', sans-serif" }}
+              className="text-4xl md:text-7xl font-bold tracking-tight mb-6 text-white font-nohemi"
+              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              Real-Time Revenue <br /> & Persuasion Analytics
+              From Brief to Market-Ready Copy <br className="hidden md:block" /> in 3 Honest Steps
             </h2>
-            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Every copy asset generated by Murgii AI undergoes multi-vector psychological testing to maximize click-through rate, conversions, and direct-response returns.
+            <div className="w-28 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-8" />
+            <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              No complex prompt engineering tricks. Murgii connects your brand voice and offer context directly to high-converting assets in seconds.
             </p>
           </div>
 
-          {/* Dual 3D Vault & Live Graph Showcase */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* 3D Revenue Vault Object with Orbiting Telemetry */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center p-8 rounded-[32px] bg-black/60 border border-white/10 backdrop-blur-3xl shadow-[0_25px_60px_rgba(0,0,0,0.7)] relative group">
-              <div className="absolute top-4 left-6 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#D946EF] animate-ping" />
-                <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">3D REVENUE VAULT</span>
-              </div>
-              <FloatingRevenueObject3D className="w-full h-[360px]" />
-              <div className="text-center mt-2">
-                <span className="text-xs font-mono text-[#C084FC] font-bold tracking-widest uppercase">
-                  CALIBRATED FOR HIGH-TICKET ASSETS
-                </span>
-              </div>
+          {/* Live White/Glass Linear 3-Stage Pipeline Demonstration */}
+          <LinearPipelineVisual />
+
+          {/* 3-Step Visual Process Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-20">
+            {[
+              {
+                step: "01",
+                title: "Define Brief & Lock Memory",
+                desc: "Choose from Emails, Ads, Pages, or Psych. Your saved Memory (niche, brand tone, and offer details) loads automatically so you never start from zero context.",
+                icon: Sliders,
+                badge: "Memory-Linked"
+              },
+              {
+                step: "02",
+                title: "Engineered Generation",
+                desc: "Murgii synthesizes role-framing, proven direct-response formulas, and objection-reversal loops to produce high-impact copy variants tailored to your goal.",
+                icon: Sparkles,
+                badge: "Psych-Optimized"
+              },
+              {
+                step: "03",
+                title: "Polish & Ship to Market",
+                desc: "Review multiple hook angles, fine-tune copy with 1-click refinement tools, and copy directly to your email platform, ad manager, or landing page builder.",
+                icon: Send,
+                badge: "Conversion-Ready"
+              }
+            ].map((card, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15, duration: 0.8 }}
+                className="relative rounded-3xl p-8 border border-white/15 flex flex-col justify-between group transition-all duration-300 hover:border-white/40"
+                style={{
+                  background: "rgba(255, 255, 255, 0.04)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)"
+                }}
+              >
+                <div className="space-y-6">
+                  {/* Top Step Pill & Icon */}
+                  <div className="flex items-center justify-between">
+                    <div 
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/20 transition-transform duration-300 group-hover:scale-110"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.1)",
+                        backdropFilter: "blur(12px)"
+                      }}
+                    >
+                      <card.icon size={22} className="text-white" />
+                    </div>
+                    <span 
+                      className="text-3xl font-extrabold text-white/30 group-hover:text-white/60 transition-colors font-nohemi"
+                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                    >
+                      {card.step}
+                    </span>
+                  </div>
+
+                  {/* Title & Description */}
+                  <div className="space-y-2.5">
+                    <h3 
+                      className="text-xl font-bold text-white font-nohemi"
+                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                    >
+                      {card.title}
+                    </h3>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      {card.desc}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{card.badge}</span>
+                  <ArrowRight size={14} className="text-white/60 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* 4 Core Persuasion Engines Capability Strip */}
+          <div 
+            className="rounded-3xl border border-white/15 p-8 sm:p-10 shadow-2xl relative overflow-hidden"
+            style={{
+              background: "rgba(255, 255, 255, 0.03)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)"
+            }}
+          >
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <h3 
+                className="text-2xl sm:text-3xl font-bold text-white font-nohemi mb-3"
+                style={{ fontFamily: "'Nohemi', sans-serif" }}
+              >
+                4 Specialized Modes. One Unified Workspace.
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Each mode is calibrated with dedicated cognitive prompts, deliverables, and structural outputs.
+              </p>
             </div>
 
-            {/* Interactive Animated Revenue Graph */}
-            <div className="lg:col-span-7">
-              <AnimatedRevenueGraph />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { name: "Emails Mode", role: "Multi-Email Sequences", desc: "Nurture sequences, flash sale blasts, cold outbound, and re-engagement drips.", icon: Mail },
+                { name: "Ads Mode", role: "Hooks & Performance Copy", desc: "Pattern interrupts, problem-agitate angles, direct-response video scripts.", icon: Target },
+                { name: "Pages Mode", role: "Sales & Landing Copy", desc: "High-converting hero sections, proof stacks, pricing tables, and CTA blocks.", icon: Globe },
+                { name: "Psych Mode", role: "Behavioral Biases", desc: "Loss-aversion frames, Cialdini triggers, cognitive friction removal.", icon: Zap }
+              ].map((item, i) => (
+                <div 
+                  key={i}
+                  className="p-5 rounded-2xl border border-white/10 hover:border-white/25 transition-all space-y-3"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.03)"
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
+                    <item.icon size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
+                      {item.name}
+                    </h4>
+                    <span className="text-[10px] font-mono text-[#E879F9] uppercase tracking-wider block mt-0.5">
+                      {item.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1186,7 +1138,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                 </div>
                 <div 
                   className="text-white text-2xl font-bold tracking-tight font-nohemi flex items-center gap-1.5"
-                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                  style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
                 >
                   <span className="font-extrabold text-white">murgii</span>
                   <span className="font-extrabold text-white">AI</span>
@@ -1325,7 +1277,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                     { label: "Learn", desc: "Tutorials on persuasion psychology, conversion copy models, and prompt engineering." },
                     { label: "Guides", desc: "Step-by-step master blueprints for scaling cold emails, video ad scripts, and sales pages." },
                     { label: "Support", desc: "24/7 dedicated assistance via our priority community desk and direct engineer support." },
-                    { label: "Reviews", desc: "Verified testimonials from 500+ founders and agencies generating scalable copy revenue." }
+                    { label: "Reviews", desc: "Verified testimonials from founders and agencies generating scalable copy revenue." }
                   ].map((item, i) => (
                     <li key={i}>
                       <button
@@ -1427,7 +1379,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onNavigate }: La
                 <button
                   type="button"
                   onClick={() => setInfoModal(null)}
-                  className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -1504,29 +1456,30 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
            <motion.span 
              animate={{ opacity: [0.6, 1, 0.6] }}
              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-             className="text-5xl md:text-8xl font-black bg-gradient-to-br from-[#8B5CF6] via-[#D946EF] to-white/20 bg-clip-text text-transparent tracking-tighter select-none will-change-opacity"
+             className="text-5xl md:text-8xl font-black bg-gradient-to-br from-white via-white/80 to-white/20 bg-clip-text text-transparent tracking-tighter select-none will-change-opacity font-nohemi"
+             style={{ fontFamily: "'Nohemi', sans-serif" }}
            >
              0{index}
            </motion.span>
-           <div className="w-16 h-[1px] bg-gradient-to-r from-[#8B5CF6]/60 via-[#D946EF]/60 to-transparent" />
+           <div className="w-16 h-[1px] bg-gradient-to-r from-white/40 via-white/20 to-transparent" />
         </div>
         <h3 
-          className="text-4xl md:text-6xl font-bold leading-tight tracking-tight text-white font-nohemi"
-          style={{ fontFamily: "'Nohemi', sans-serif" }}
+          className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-white font-nohemi"
+          style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
         >
           {title}
         </h3>
         <div className="space-y-4">
-          <p className="text-gray-300 text-lg md:text-xl leading-relaxed">{description}</p>
+          <p className="text-gray-300 text-base md:text-lg leading-relaxed">{description}</p>
           {trustLine && (
-            <p className="text-[#C084FC]/80 text-xs font-sans tracking-widest uppercase font-bold">{trustLine}</p>
+            <p className="text-white/70 text-xs font-mono tracking-wider uppercase font-bold">{trustLine}</p>
           )}
         </div>
-        <div className="space-y-4 pt-4">
+        <div className="space-y-3.5 pt-2">
            {points.map((p, i) => (
-             <div key={i} className="flex items-center gap-4 group">
-               <div className="w-1.5 h-1.5 rounded-full bg-[#D946EF] group-hover:scale-150 group-hover:shadow-[0_0_10px_#D946EF] transition-all" />
-               <span className="text-sm md:text-base font-medium text-gray-300 group-hover:text-white transition-colors">{p}</span>
+             <div key={i} className="flex items-start gap-3.5 group">
+               <div className="w-1.5 h-1.5 rounded-full bg-white mt-2 group-hover:scale-150 group-hover:shadow-[0_0_10px_#ffffff] transition-all shrink-0" />
+               <span className="text-sm md:text-base font-medium text-gray-300 group-hover:text-white transition-colors leading-relaxed">{p}</span>
              </div>
            ))}
         </div>
@@ -1540,22 +1493,21 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        className="flex-1 w-full aspect-square md:aspect-auto md:h-[600px] relative group cursor-crosshair"
+        className="flex-1 w-full aspect-square md:aspect-auto md:h-[540px] relative group cursor-crosshair"
       >
         <div 
-          className="absolute inset-0 rounded-[48px] bg-white/[0.03] border border-white/10 backdrop-blur-xl overflow-hidden group-hover:border-[#8B5CF6]/50 transition-all duration-700 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]"
+          className="absolute inset-0 rounded-[48px] bg-white/[0.03] border border-white/15 backdrop-blur-xl overflow-hidden group-hover:border-white/30 transition-all duration-700 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)]"
           style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }}
         >
-           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent" />
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.15),transparent_50%)]" />
-           <div className="relative w-full h-full flex items-center justify-center" style={{ transform: "translateZ(80px)" }}>
+           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-transparent" />
+           <div className="relative w-full h-full flex items-center justify-center p-4" style={{ transform: "translateZ(80px)" }}>
              {visual}
            </div>
         </div>
         
-        {/* Floating Accents */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#8B5CF6]/15 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#D946EF]/15 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        {/* Floating Ambient Accents */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
       </motion.div>
     </div>
   );
