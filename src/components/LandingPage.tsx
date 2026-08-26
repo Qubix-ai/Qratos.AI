@@ -35,7 +35,9 @@ import {
   PromptCompilerVisual,
   TierExpansionVisual,
   BoltEcosystemVisual,
-  LinearPipelineVisual
+  LinearPipelineVisual,
+  PromptStudioInteractiveDemo,
+  SpecializedModeCard
 } from "./FeatureVisuals";
 
 interface LandingPageProps {
@@ -749,12 +751,12 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
       {/* PROMPT BUILDER ARCHITECTURE SECTION */}
       <section id="prompt-builder" className="py-32 px-4 relative overflow-hidden">
-        {/* Ambient Glows */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(139,92,246,0.12)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#D946EF]/8 rounded-full blur-[140px] pointer-events-none" />
+        {/* Ambient Pure White/Glass Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-white/[0.02] rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          {/* Section Header (Redundant badge removed for clean, frictionless entry) */}
+          {/* Section Header */}
           <div className="text-center mb-16 px-4">
             <h2 
               className="text-4xl md:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent leading-[1.05] font-nohemi"
@@ -762,7 +764,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             >
               Build Custom Prompts, <br className="hidden md:block" /> Engineered for You
             </h2>
-            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent mx-auto mb-8 shadow-[0_0_20px_#8B5CF6]" />
+            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-8 shadow-[0_0_20px_rgba(255,255,255,0.2)]" />
             <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
               Generic one-line prompting forces you into tedious re-prompting loops. Murgii&apos;s Prompt Builder assembles tailored, role-framed master prompts from guided questions — giving you structured persuasion on draft one.
             </p>
@@ -836,94 +838,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               </div>
             </div>
 
-            {/* 2-Column Guided Inputs vs Role-Framed Output Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-8 items-stretch">
-              {/* Left Column: 2 Simplified Guided Questions */}
-              <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-white/80 font-bold">
-                      01. Quick Inputs
-                    </span>
-                    <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                      <Check size={12} /> Configured
-                    </span>
-                  </div>
-
-                  {/* Field 1: Target Niche */}
-                  <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10">
-                    <label className="text-[11px] font-mono text-gray-400 block mb-1">Target Niche & Audience</label>
-                    <div className="text-xs font-semibold text-white">
-                      <span>{activeDemoMode === "email" ? "B2B SaaS & High-Ticket Consultants" : activeDemoMode === "ads" ? "Direct-to-Consumer Fitness & Wellness" : activeDemoMode === "landing" ? "Enterprise AI Developer Platform" : "High-Ticket Course Buyers & Founders"}</span>
-                    </div>
-                  </div>
-
-                  {/* Field 2: Primary Goal */}
-                  <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10">
-                    <label className="text-[11px] font-mono text-gray-400 block mb-1">Primary Conversion Goal</label>
-                    <div className="text-xs font-semibold text-white">
-                      <span>{activeDemoMode === "email" ? "Drive urgency for demo bookings before launch" : activeDemoMode === "ads" ? "Break through ad fatigue with pattern-interrupt hooks" : activeDemoMode === "landing" ? "Convert cold traffic with proof & risk reversal" : "Overcome deep buying friction with cognitive reframing"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Honest confident compiler statement */}
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center gap-3">
-                  <Sparkles size={16} className="text-white shrink-0" />
-                  <p className="text-xs text-gray-300 font-medium leading-relaxed">
-                    Compiled automatically into a structured, role-framed master prompt built for Murgii&apos;s generation engine.
-                  </p>
-                </div>
-              </div>
-
-              {/* Right Column: Compiled Master Prompt Output Preview */}
-              <div className="lg:col-span-7 flex flex-col rounded-2xl bg-black/70 border border-white/15 p-5 sm:p-6 relative font-mono text-xs overflow-hidden shadow-inner">
-                {/* Code Header */}
-                <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-white/40" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-white/60" />
-                    </div>
-                    <span className="text-[11px] font-mono text-gray-400 ml-2">master_prompt_output.md</span>
-                  </div>
-                  <span className="text-[9px] font-mono text-white bg-white/15 px-2 py-0.5 rounded border border-white/25 uppercase tracking-widest font-bold">
-                    COMPILED MASTER PROMPT
-                  </span>
-                </div>
-
-                {/* Formatted Master Prompt Output */}
-                <div className="flex-1 space-y-3 text-gray-300 leading-relaxed overflow-hidden">
-                  <div>
-                    <span className="text-white font-bold">[ROLE & FRAME]</span>
-                    <p className="text-gray-200 mt-1 font-sans text-xs">
-                      Act as an elite Direct Response Copywriter specializing in {activeDemoMode === "email" ? "high-converting email sequencing" : activeDemoMode === "ads" ? "viral paid performance advertising" : activeDemoMode === "landing" ? "high-ticket landing page funnels" : "behavioral persuasion engineering"}.
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-gray-300 font-bold">[TARGET MARKET & PAIN VECTOR]</span>
-                    <p className="text-gray-200 mt-1 font-sans text-xs">
-                      Audience: {activeDemoMode === "email" ? "B2B SaaS executives and agency operators facing pipeline drop-offs" : activeDemoMode === "ads" ? "High-intent consumers scrolling through congested feeds" : activeDemoMode === "landing" ? "Enterprise decision-makers needing immediate ROI validation" : "Skeptical high-ticket prospects requiring proof mechanisms"}.
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-gray-300 font-bold">[DELIVERABLE BLUEPRINT]</span>
-                    <p className="text-gray-200 mt-1 font-sans text-xs">
-                      Generate 3 pattern-interrupt hook variants, core persuasion loops, objection-reversal stack, and high-impact CTA.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Output Footnote */}
-                <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-gray-400">
-                  <span>Structured Architecture</span>
-                  <span className="text-white font-semibold">Ready for 1-Click Generation</span>
-                </div>
-              </div>
-            </div>
+            {/* Interactive Assembling Prompt Studio Demo */}
+            <PromptStudioInteractiveDemo 
+              activeArchetype={activeDemoMode} 
+              onSelectArchetype={(m) => setActiveDemoMode(m as any)} 
+            />
 
             {/* Bottom CTA Area: Value Contrast & Desirability */}
             <div className="mt-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -984,91 +903,99 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
           {/* Live White/Glass Linear 3-Stage Pipeline Demonstration */}
           <LinearPipelineVisual />
 
-          {/* 3-Step Visual Process Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-20">
-            {[
-              {
-                step: "01",
-                title: "Define Brief & Lock Memory",
-                desc: "Choose from Emails, Ads, Pages, or Psych. Your saved Memory (niche, brand tone, and offer details) loads automatically so you never start from zero context.",
-                icon: Sliders,
-                badge: "Memory-Linked"
-              },
-              {
-                step: "02",
-                title: "Engineered Generation",
-                desc: "Murgii synthesizes role-framing, proven direct-response formulas, and objection-reversal loops to produce high-impact copy variants tailored to your goal.",
-                icon: Sparkles,
-                badge: "Psych-Optimized"
-              },
-              {
-                step: "03",
-                title: "Polish & Ship to Market",
-                desc: "Review multiple hook angles, fine-tune copy with 1-click refinement tools, and copy directly to your email platform, ad manager, or landing page builder.",
-                icon: Send,
-                badge: "Conversion-Ready"
-              }
-            ].map((card, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.8 }}
-                className="relative rounded-3xl p-8 border border-white/15 flex flex-col justify-between group transition-all duration-300 hover:border-white/40"
-                style={{
-                  background: "rgba(255, 255, 255, 0.04)",
-                  backdropFilter: "blur(16px)",
-                  WebkitBackdropFilter: "blur(16px)"
-                }}
-              >
-                <div className="space-y-6">
-                  {/* Top Step Pill & Icon */}
-                  <div className="flex items-center justify-between">
-                    <div 
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/20 transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.1)",
-                        backdropFilter: "blur(12px)"
-                      }}
-                    >
-                      <card.icon size={22} className="text-white" />
+          {/* 3-Step Visual Process Grid with Connecting Light Paths */}
+          <div className="relative mb-20">
+            {/* Connecting Animated White Track between 3 Steps */}
+            <div className="hidden lg:block absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-[1.5px] bg-white/10 pointer-events-none z-0">
+              <div className="w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 relative z-10">
+              {[
+                {
+                  step: "01",
+                  title: "Define Brief & Lock Memory",
+                  desc: "Choose from Emails, Ads, Pages, or Psych. Your saved Memory (niche, brand tone, and offer details) loads automatically so you never start from zero context.",
+                  icon: Sliders,
+                  badge: "Memory-Linked"
+                },
+                {
+                  step: "02",
+                  title: "Engineered Generation",
+                  desc: "Murgii synthesizes role-framing, proven direct-response formulas, and objection-reversal loops to produce high-impact copy variants tailored to your goal.",
+                  icon: Sparkles,
+                  badge: "Psych-Optimized"
+                },
+                {
+                  step: "03",
+                  title: "Polish & Ship to Market",
+                  desc: "Review multiple hook angles, fine-tune copy with 1-click refinement tools, and copy directly to your email platform, ad manager, or landing page builder.",
+                  icon: Send,
+                  badge: "Conversion-Ready"
+                }
+              ].map((card, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.8 }}
+                  className="relative rounded-3xl p-8 border border-white/12 flex flex-col justify-between group transition-all duration-300 hover:border-white/40 hover:scale-[1.01]"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.05)",
+                    backdropFilter: "blur(20px)",
+                    WebkitBackdropFilter: "blur(20px)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
+                  }}
+                >
+                  <div className="space-y-6">
+                    {/* Top Step Pill & Icon */}
+                    <div className="flex items-center justify-between">
+                      <div 
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/20 transition-transform duration-300 group-hover:scale-110"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.1)",
+                          backdropFilter: "blur(12px)"
+                        }}
+                      >
+                        <card.icon size={22} className="text-white" />
+                      </div>
+                      <span 
+                        className="text-3xl font-extrabold text-white/30 group-hover:text-white/70 transition-colors font-nohemi"
+                        style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      >
+                        {card.step}
+                      </span>
                     </div>
-                    <span 
-                      className="text-3xl font-extrabold text-white/30 group-hover:text-white/60 transition-colors font-nohemi"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
-                    >
-                      {card.step}
-                    </span>
+
+                    {/* Title & Description */}
+                    <div className="space-y-2.5">
+                      <h3 
+                        className="text-xl font-bold text-white font-nohemi"
+                        style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      >
+                        {card.title}
+                      </h3>
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        {card.desc}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Title & Description */}
-                  <div className="space-y-2.5">
-                    <h3 
-                      className="text-xl font-bold text-white font-nohemi"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
-                    >
-                      {card.title}
-                    </h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">
-                      {card.desc}
-                    </p>
+                  <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{card.badge}</span>
+                    <ArrowRight size={14} className="text-white/60 group-hover:translate-x-1 transition-transform" />
                   </div>
-                </div>
-
-                <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{card.badge}</span>
-                  <ArrowRight size={14} className="text-white/60 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
 
-          {/* 4 Core Persuasion Engines Capability Strip */}
+          {/* 4 Core Persuasion Engines Capability Strip with Animated Micro-Demo Cards */}
           <div 
-            className="rounded-3xl border border-white/15 p-8 sm:p-10 shadow-2xl relative overflow-hidden"
+            className="rounded-[36px] border border-white/15 p-8 sm:p-10 shadow-2xl relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]"
             style={{
-              background: "rgba(255, 255, 255, 0.03)",
+              background: "rgba(255, 255, 255, 0.04)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)"
             }}
@@ -1080,41 +1007,40 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               >
                 4 Specialized Modes. One Unified Workspace.
               </h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-300 text-sm">
                 Each mode is calibrated with dedicated cognitive prompts, deliverables, and structural outputs.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { name: "Emails Mode", role: "Multi-Email Sequences", desc: "Nurture sequences, flash sale blasts, cold outbound, and re-engagement drips.", icon: Mail },
-                { name: "Ads Mode", role: "Hooks & Performance Copy", desc: "Pattern interrupts, problem-agitate angles, direct-response video scripts.", icon: Target },
-                { name: "Pages Mode", role: "Sales & Landing Copy", desc: "High-converting hero sections, proof stacks, pricing tables, and CTA blocks.", icon: Globe },
-                { name: "Psych Mode", role: "Behavioral Biases", desc: "Loss-aversion frames, Cialdini triggers, cognitive friction removal.", icon: Zap }
-              ].map((item, i) => (
-                <div 
-                  key={i}
-                  className="p-5 rounded-2xl border border-white/10 hover:border-white/25 transition-all space-y-3"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.03)"
-                  }}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
-                    <item.icon size={20} className="text-white" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
-                      {item.name}
-                    </h4>
-                    <span className="text-[10px] font-mono text-[#E879F9] uppercase tracking-wider block mt-0.5">
-                      {item.role}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-300 leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-              ))}
+              <SpecializedModeCard 
+                name="Emails Mode"
+                role="Multi-Email Sequences"
+                desc="Nurture sequences, flash sale blasts, cold outbound, and re-engagement drips."
+                icon={Mail}
+                sampleCopy="Subject: Quick question about scaling [Product]..."
+              />
+              <SpecializedModeCard 
+                name="Ads Mode"
+                role="Hooks & Performance"
+                desc="Pattern interrupts, problem-agitate angles, and direct-response video scripts."
+                icon={Target}
+                sampleCopy="Hook: Stop losing 64% of qualified clicks on draft 1."
+              />
+              <SpecializedModeCard 
+                name="Pages Mode"
+                role="Sales & Landing Copy"
+                desc="High-converting hero sections, proof stacks, pricing tables, and CTA blocks."
+                icon={Globe}
+                sampleCopy="Headline: The Persuasion Engine Built for Operators."
+              />
+              <SpecializedModeCard 
+                name="Psych Mode"
+                role="Behavioral Biases"
+                desc="Loss-aversion frames, Cialdini triggers, and cognitive friction removal."
+                icon={Zap}
+                sampleCopy="Trigger: Loss-aversion framing + micro-commitment CTA."
+              />
             </div>
           </div>
         </div>
