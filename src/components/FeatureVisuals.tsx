@@ -297,12 +297,12 @@ export const PromptCompilerVisual: React.FC = () => {
    ═══════════════════════════════════════════════════════════════ */
 export const TierExpansionVisual: React.FC = () => {
   const [activeTier, setActiveTier] = useState<0 | 1 | 2>(1);
-  const [displayCredits, setDisplayCredits] = useState(40);
+  const [displayCredits, setDisplayCredits] = useState(20);
 
   const tiers = [
-    { name: "Basic (Free)", credits: 20, desc: "All 4 Modes Included", pct: 20 },
-    { name: "Core ($29/mo)", credits: 40, desc: "Prompt Builder Unlocked", pct: 40 },
-    { name: "Max ($97/mo)", credits: 100, desc: "Blueprint Studio + Priority", pct: 100 }
+    { name: "Basic (Free)", credits: 3, desc: "All 4 Modes Included", pct: 15 },
+    { name: "Core ($29/mo)", credits: 20, desc: "Prompt Builder Unlocked", pct: 45 },
+    { name: "Max ($97/mo)", credits: 60, desc: "Blueprint Studio + Priority", pct: 100 }
   ];
 
   // Cycling tier loop

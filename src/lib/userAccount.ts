@@ -42,21 +42,28 @@ export function normalizePlan(raw?: string | null): "basic" | "core" | "max" | "
 export function getPlanMaxCredits(plan: "basic" | "core" | "max" | "none"): number {
   switch (plan) {
     case "max":
-      return 100;
+      return 60;
     case "core":
-      return 40;
+      return 20;
     case "basic":
     case "none":
     default:
-      return 20;
+      return 3;
   }
 }
 
 /**
- * Fetches user plan from shared user_plan table, falling back to auth user metadata
+ * Fetches user plan from shared user_plan table in Supabase, falling back to auth user metadata
  */
 export async function fetchUserPlan(userId: string, userMetadata?: any): Promise<UserPlanData> {
-  let planString: string = userMetadata?.plan || "none";
+  let planString: string = "";
+
+  if (!userId) {
+    return {
+      plan: "none",
+      maxCredits: getPlanMaxCredits("none"),
+    };
+  }
 
   try {
     const { data, error } = await supabase
@@ -67,25 +74,106 @@ export async function fetchUserPlan(userId: string, userMetadata?: any): Promise
 
     if (!error && data?.plan) {
       planString = data.plan;
-    } else if (error) {
-      // If user_id column differs, try id
-      const { data: altData } = await supabase
+    } else {
+      // If user_id column differs, try id column
+      const { data: altData, error: altError } = await supabase
         .from("user_plan")
         .select("plan, status")
         .eq("id", userId)
         .maybeSingle();
-      if (altData?.plan) {
+      if (!altError && altData?.plan) {
         planString = altData.plan;
       }
     }
   } catch (err) {
-    console.warn("Could not query user_plan table, using metadata fallback:", err);
+    console.warn("Could not query user_plan table from Supabase:", err);
+  }
+
+  // Fallback to metadata only if user_plan table query returned nothing
+  if (!planString && userMetadata?.plan) {
+    planString = userMetadata.plan;
   }
 
   const normalized = normalizePlan(planString);
   return {
     plan: normalized,
     maxCredits: getPlanMaxCredits(normalized),
+  };
+}
+
+/**
+ * Fetches the user's generation usage count for today from murgii_usage table in Supabase
+ */
+export async function fetchTodayUsageCount(userId: string): Promise<number> {
+  if (!userId) return 0;
+
+  try {
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const todayIso = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+    // 1. Try querying by date column if the table stores daily aggregates
+    const { data: dateData, error: dateErr } = await supabase
+      .from("murgii_usage")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", todayIso)
+      .maybeSingle();
+
+    if (!dateErr && dateData) {
+      if (typeof dateData.count === "number") return dateData.count;
+      if (typeof dateData.usage_count === "number") return dateData.usage_count;
+      if (typeof dateData.generations === "number") return dateData.generations;
+      return 1;
+    }
+
+    // 2. Query event rows with created_at >= start of today (UTC)
+    const { count, data: rows, error: countErr } = await supabase
+      .from("murgii_usage")
+      .select("id", { count: "exact" })
+      .eq("user_id", userId)
+      .gte("created_at", todayStart.toISOString());
+
+    if (!countErr && typeof count === "number") {
+      return count;
+    }
+    if (rows && Array.isArray(rows)) {
+      return rows.length;
+    }
+  } catch (err) {
+    console.warn("Could not query murgii_usage table from Supabase:", err);
+  }
+
+  return 0;
+}
+
+/**
+ * Fetches user plan from user_plan and calculates or assigns remaining credits.
+ * If knownRemaining is supplied (from murgii-generate response body), it uses that exact value.
+ */
+export async function fetchUserPlanAndCredits(
+  userId: string, 
+  knownRemaining?: number,
+  userMetadata?: any
+): Promise<{
+  planData: UserPlanData;
+  remainingCredits: number;
+}> {
+  const planData = await fetchUserPlan(userId, userMetadata);
+
+  if (typeof knownRemaining === "number") {
+    return {
+      planData,
+      remainingCredits: knownRemaining,
+    };
+  }
+
+  const usageCount = await fetchTodayUsageCount(userId);
+  const remainingCredits = Math.max(0, planData.maxCredits - usageCount);
+
+  return {
+    planData,
+    remainingCredits,
   };
 }
 

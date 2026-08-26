@@ -15,11 +15,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
 import { AmbientBackground } from "./components/AmbientBackground";
 import { SpotlightCursor } from "./components/SpotlightCursor";
-import { fetchUserPlan, UserPlanData } from "./lib/userAccount";
+import { fetchUserPlan, fetchUserPlanAndCredits, UserPlanData } from "./lib/userAccount";
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
-  const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 20 });
+  const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 3 });
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
@@ -31,13 +31,18 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("signup");
 
-  const loadUserData = async (currentUser: any) => {
+  const loadUserData = async (currentUser: any, knownRemaining?: number) => {
     if (currentUser?.id) {
       try {
-        const plan = await fetchUserPlan(currentUser.id, currentUser.user_metadata);
-        setUserPlanData(plan);
+        const { planData, remainingCredits: freshCredits } = await fetchUserPlanAndCredits(
+          currentUser.id,
+          knownRemaining,
+          currentUser.user_metadata
+        );
+        setUserPlanData(planData);
+        setRemainingCredits(freshCredits);
       } catch (err) {
-        console.warn("Could not fetch user plan:", err);
+        console.warn("Could not fetch user plan and credit usage from Supabase:", err);
       }
     }
   };
@@ -45,12 +50,12 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    // Splash Screen Timer (3s)
+    // Splash Screen Timer (13s)
     const splashTimer = setTimeout(() => {
       if (isMounted) setShowSplash(false);
-    }, 3000);
+    }, 13000);
 
-    // Initial Supabase Session Check
+    // Initial Supabase Session Check - Fetches user plan and daily credit usage on load
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error("Supabase getSession error:", error);
@@ -71,11 +76,11 @@ export default function App() {
       if (isMounted) {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        if (event === "SIGNED_IN" && currentUser) {
+        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") && currentUser) {
           loadUserData(currentUser);
           setActiveTab("chat");
         } else if (event === "SIGNED_OUT") {
-          setUserPlanData({ plan: "none", maxCredits: 20 });
+          setUserPlanData({ plan: "none", maxCredits: 3 });
           setRemainingCredits(null);
           setActiveTab("landing");
         }
@@ -101,7 +106,7 @@ export default function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    setUserPlanData({ plan: "none", maxCredits: 20 });
+    setUserPlanData({ plan: "none", maxCredits: 3 });
     setRemainingCredits(null);
     setActiveTab("landing");
     setSidebarOpen(false);
@@ -339,11 +344,16 @@ export default function App() {
               >
                 <ChatInterface 
                   user={user} 
+                  userData={userPlanData}
                   activeTab={activeTab} 
                   activeSessionId={activeSessionId}
                   pendingPrompt={pendingPrompt}
                   remainingCredits={remainingCredits}
                   onRemainingCreditsChange={(credits) => setRemainingCredits(credits)}
+                  onUserDataRefresh={(plan, credits) => {
+                    setUserPlanData(plan);
+                    setRemainingCredits(credits);
+                  }}
                   onClearPendingPrompt={() => setPendingPrompt(null)}
                   onSessionChange={(id) => setActiveSessionId(id)}
                   onMenuToggle={() => setSidebarOpen(true)}

@@ -24,7 +24,6 @@ import { Murgii3DChicken } from "./Murgii3DChicken";
 import { AIProcessingTelemetry } from "./AIProcessingTelemetry";
 import { QreatoLogo } from "./QreatoLogo";
 import { FloatingIridescentBlobs } from "./FloatingIridescentBlobs";
-import FloatingLines from "./FloatingLines";
 import { 
   callMurgiiGenerateEdgeFunction, 
   DailyLimitError, 
@@ -37,6 +36,7 @@ import {
   generateTitleFromMessage, 
   ChatSession 
 } from "../lib/chatHistory";
+import { fetchUserPlanAndCredits, UserPlanData } from "../lib/userAccount";
 
 // SECTION THREE — 3D CARD SYSTEM WITH MOUSE TRACKING & FROSTED GLASS
 const Card3D = ({ children, delay = 0, isSelected = false, onClick }: { children: React.ReactNode, delay?: number, isSelected?: boolean, onClick?: (e: React.MouseEvent<HTMLDivElement>) => void }) => {
@@ -215,6 +215,7 @@ interface ChatInterfaceProps {
   pendingPrompt?: { text: string; mode: MurgiiMode; autoSubmit?: boolean } | null;
   remainingCredits?: number | null;
   onRemainingCreditsChange?: (credits: number) => void;
+  onUserDataRefresh?: (plan: UserPlanData, credits: number) => void;
   onClearPendingPrompt?: () => void;
   onSessionChange?: (id: string) => void;
   onMenuToggle?: () => void;
@@ -232,6 +233,7 @@ export function ChatInterface({
   pendingPrompt,
   remainingCredits: propCredits,
   onRemainingCreditsChange,
+  onUserDataRefresh,
   onClearPendingPrompt,
   onSessionChange, 
   onMenuToggle, 
@@ -252,8 +254,16 @@ export function ChatInterface({
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [isContextExpanded, setIsContextExpanded] = useState(false);
+  const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [animatedWordIndex, setAnimatedWordIndex] = useState(0);
+
+  const CHAT_MODES = [
+    { mode: "email" as MurgiiMode, icon: Mail, title: "Emails", desc: "Sequences" },
+    { mode: "ads" as MurgiiMode, icon: Target, title: "Ads", desc: "Hooks & Angles" },
+    { mode: "landing" as MurgiiMode, icon: FileText, title: "Pages", desc: "Sales Leads" },
+    { mode: "psych" as MurgiiMode, icon: Zap, title: "Psych", desc: "Biases & Triggers" }
+  ];
 
   const ANIMATED_WORDS = ["ignore", "forget", "resist"];
 
@@ -388,10 +398,23 @@ export function ChatInterface({
       // Call the secure Supabase Edge Function
       const result = await callMurgiiGenerateEdgeFunction(targetMode, text);
 
-      // Update remaining count if provided
+      // Immediately after every successful call to the murgii-generate Edge Function:
+      // Re-fetch the user's current plan from user_plan table and the current day's usage count / exact remaining count.
+      // Do not calculate or guess remaining credits on the frontend:
+      // Always display the exact remaining value returned by the murgii-generate function response.
       if (typeof result.remaining === 'number') {
         setRemainingCredits(result.remaining);
         onRemainingCreditsChange?.(result.remaining);
+      }
+
+      if (userId) {
+        fetchUserPlanAndCredits(userId, result.remaining, user?.user_metadata)
+          .then(({ planData, remainingCredits: freshCredits }) => {
+            setRemainingCredits(freshCredits);
+            onRemainingCreditsChange?.(freshCredits);
+            onUserDataRefresh?.(planData, freshCredits);
+          })
+          .catch((err) => console.warn("Error re-fetching user plan from Supabase:", err));
       }
 
       const aiMessage: Message = {
@@ -424,9 +447,16 @@ export function ChatInterface({
       if (err instanceof DailyLimitError || err?.name === "DailyLimitError") {
         setDailyLimitReached(true);
         setDailyLimitMessage(err.message);
-        if (typeof err.remaining === 'number') {
-          setRemainingCredits(err.remaining);
-          onRemainingCreditsChange?.(err.remaining);
+        const limitRemaining = typeof err.remaining === 'number' ? err.remaining : 0;
+        setRemainingCredits(limitRemaining);
+        onRemainingCreditsChange?.(limitRemaining);
+
+        if (userId) {
+          fetchUserPlanAndCredits(userId, limitRemaining, user?.user_metadata)
+            .then(({ planData, remainingCredits: freshCredits }) => {
+              onUserDataRefresh?.(planData, freshCredits);
+            })
+            .catch(() => {});
         }
 
         const limitNotice: Message = {
@@ -486,45 +516,7 @@ export function ChatInterface({
   };
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden font-sans h-full min-h-0 bg-transparent">
-      {/* Background Floating Lines Experience (Transferred from Landing Page with soft opacity) */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        <FloatingLines 
-          enabledWaves={["top", "middle", "bottom"]}
-          lineCount={4}
-          lineDistance={38}
-          bendRadius={12}
-          bendStrength={4.5}
-          interactive={true}
-          parallax={true}
-          animationSpeed={0.5}
-          gradientStart="#10ffb0"
-          gradientMid="#8B5CF6"
-          gradientEnd="#D946EF"
-          linesGradient={["#10ffb0", "#8B5CF6", "#D946EF"]}
-          mixBlendMode="screen"
-          className="w-full h-full opacity-20 sm:opacity-25"
-        />
-        {/* Soft dark radial vignette ensuring text, messages, cards, and input are 100% readable */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(7,6,11,0.4)_0%,rgba(7,6,11,0.92)_100%)] pointer-events-none" />
-      </div>
-
-      {/* Floating Iridescent Ambient Blobs */}
-      <FloatingIridescentBlobs variant="workspace" />
-
-      {/* SECTION ONE — Ambient Particle Field */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage: `radial-gradient(1px 1px at 20% 30%, rgba(139, 92, 246, 0.4) 0%, transparent 100%),
-                            radial-gradient(1px 1px at 60% 70%, rgba(255, 255, 255, 0.15) 0%, transparent 100%),
-                            radial-gradient(1px 1px at 80% 20%, rgba(217, 70, 239, 0.35) 0%, transparent 100%),
-                            radial-gradient(1px 1px at 40% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 100%),
-                            radial-gradient(1px 1px at 10% 60%, rgba(139, 92, 246, 0.25) 0%, transparent 100%),
-                            radial-gradient(1px 1px at 90% 40%, rgba(217, 70, 239, 0.2) 0%, transparent 100%)`
-        }}
-      />
-
+    <div className="flex-1 flex flex-col relative overflow-hidden font-sans h-full min-h-0 bg-black">
       {/* DAILY LIMIT BANNER (IF REACHED) */}
       {dailyLimitReached && (
         <div className="z-30 bg-gradient-to-r from-[#FF2A55]/20 via-[#8B5CF6]/20 to-[#FF2A55]/20 border-b border-[#8B5CF6]/35 backdrop-blur-lg px-4 py-2 flex items-center justify-between shrink-0">
@@ -545,8 +537,8 @@ export function ChatInterface({
         </div>
       )}
 
-      {/* SECTION NINE — MAIN SCROLL AREA */}
-      <div className="flex-1 overflow-y-auto pt-3 sm:pt-5 pb-[130px] px-3 sm:px-4 custom-scrollbar scroll-smooth relative z-10">
+      {/* MAIN SCROLL AREA */}
+      <div className="flex-1 overflow-y-auto pt-4 sm:pt-6 pb-[130px] px-3 sm:px-4 custom-scrollbar scroll-smooth relative z-10">
         <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
           
           {/* Neural Context Summary - Collapsible Label Section */}
@@ -593,232 +585,47 @@ export function ChatInterface({
             </div>
           )}
 
-          {/* EMPTY STATE / COMPACT MOBILE-OPTIMIZED STARTER SCREEN */}
+          {/* EMPTY STATE - CLEAN MINIMALIST HEADER */}
           {messages.length === 0 && (
-            <div className="flex flex-col items-center pt-1 sm:pt-2">
+            <div className="flex flex-col items-center justify-center pt-8 sm:pt-16 pb-6 text-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center justify-center gap-3 mb-2"
+              >
+                {/* Qreato Brand Geometric Mark Badge */}
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-black border border-white/20 flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.2)] shrink-0">
+                  <QreatoLogo size={20} className="text-white" dotClassName="text-white fill-white" />
+                </div>
+
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-['Nohemi',sans-serif] tracking-tight text-white">
+                  Let's make something that moves people
+                </h1>
+              </motion.div>
               
-              {/* CLEAN PRODUCT UTILITY HEADER */}
-              <div className="flex flex-col items-center text-center">
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex items-center justify-center gap-3 mb-1.5"
-                >
-                  {/* Qreato Brand Geometric Mark Badge */}
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#8B5CF6]/30 via-[#A855F7]/20 to-[#D946EF]/30 border border-[#8B5CF6]/40 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.25)] shrink-0">
-                    <QreatoLogo size={18} className="text-white" />
-                  </div>
-
-                  <h1 className="text-xl sm:text-2xl font-bold font-['Nohemi',sans-serif] tracking-tight text-white">
-                    Let's make something that moves people
-                  </h1>
-                </motion.div>
-                
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.15 }}
-                  className="text-xs sm:text-sm text-neutral-300 max-w-md mx-auto leading-normal px-2 font-normal flex items-center justify-center gap-1.5 min-h-[26px]"
-                >
-                  <span>What are we making impossible to</span>
-                  <span className="inline-block relative">
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={ANIMATED_WORDS[animatedWordIndex]}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        transition={{ duration: 0.35, ease: "easeInOut" }}
-                        className="text-[#FFBE0B] italic font-bold tracking-wide inline-block"
-                      >
-                        {ANIMATED_WORDS[animatedWordIndex]}?
-                      </motion.span>
-                    </AnimatePresence>
-                  </span>
-                </motion.div>
-              </div>
-
-              {/* COMPACT 4 MODE TILES (EMAILS, ADS, PAGES, PSYCH) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full mt-3.5 px-1">
-                {[
-                  { mode: "email" as MurgiiMode, icon: Mail, title: "Emails", desc: "Sequences", prompt: "Brief me on email sequence for " },
-                  { mode: "ads" as MurgiiMode, icon: Target, title: "Ads", desc: "Hooks & Angles", prompt: "Brief me on Facebook/IG ad hooks for " },
-                  { mode: "landing" as MurgiiMode, icon: FileText, title: "Pages", desc: "Sales Leads", prompt: "Brief me on sales landing page for " },
-                  { mode: "psych" as MurgiiMode, icon: Zap, title: "Psych", desc: "Biases & Triggers", prompt: "Brief me on behavioral triggers and psychological hooks for " }
-                ].map((item, i) => {
-                  const isSelected = activeSelectedTile === item.mode;
-                  return (
-                    <motion.button
-                      key={item.mode}
-                      type="button"
-                      initial={{ opacity: 0, y: 15 }}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="text-xs sm:text-sm text-neutral-300 max-w-md mx-auto leading-normal px-2 font-normal flex items-center justify-center gap-1.5 min-h-[26px]"
+              >
+                <span>What are we making impossible to</span>
+                <span className="inline-block relative">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={ANIMATED_WORDS[animatedWordIndex]}
+                      initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.35, delay: 0.08 * i }}
-                      whileHover={{ y: -2, scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => {
-                        if (!dailyLimitReached) {
-                          setActiveSelectedTile(item.mode);
-                          setSelectedMode(item.mode);
-                          setInputValue(item.prompt);
-                          inputRef.current?.focus();
-                        }
-                      }}
-                      className={`relative flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer overflow-hidden group ${
-                        isSelected
-                          ? "bg-[#8B5CF6]/20 border-[#D946EF]/60 shadow-[0_0_20px_rgba(139,92,246,0.35),inset_0_1px_0_rgba(255,255,255,0.15)]"
-                          : "bg-[#0B0914]/80 hover:bg-[#130E22] border-white/10 hover:border-[#8B5CF6]/40 shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
-                      }`}
-                      style={{ minHeight: "48px" }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.35, ease: "easeInOut" }}
+                      className="text-[#FFBE0B] italic font-bold tracking-wide inline-block"
                     >
-                      {/* Top light highlight line */}
-                      <div className="absolute top-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6]/40 via-white/40 to-transparent pointer-events-none" />
-                      
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-                        isSelected
-                          ? "bg-gradient-to-br from-[#8B5CF6] to-[#D946EF] border-white/30 text-white shadow-[0_0_10px_rgba(217,70,239,0.5)]"
-                          : "bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-white group-hover:bg-[#8B5CF6]/25"
-                      }`}>
-                        <item.icon size={15} className="text-white" />
-                      </div>
-                      
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold text-white/95 leading-tight truncate">
-                          {item.title}
-                        </div>
-                        <div className="text-[10px] text-white/45 font-medium leading-tight truncate">
-                          {item.desc}
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* COLLAPSED SUGGESTED STARTER PROMPTS DROPDOWN */}
-              <div className="w-full mt-3 px-1">
-                <motion.button
-                  type="button"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.3 }}
-                  onClick={() => setSuggestionsOpen(!suggestionsOpen)}
-                  className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-[#0B0914]/80 hover:bg-[#130E22] border border-[#8B5CF6]/25 hover:border-[#8B5CF6]/45 backdrop-blur-xl shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition-all group cursor-pointer"
-                  style={{ minHeight: "44px" }}
-                  aria-expanded={suggestionsOpen}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-white">
-                      <Sparkles size={13} className="text-white" />
-                    </div>
-                    <span className="text-xs font-bold text-white/90 group-hover:text-white transition-colors">
-                      Use ready made prompts
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/30 text-[9px] font-black uppercase text-[#E879F9] tracking-wider">
-                      5 Formulas
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-white/40 group-hover:text-[#D946EF] transition-colors">
-                    <span className="text-[10px] font-medium hidden sm:inline">
-                      {suggestionsOpen ? "Hide" : "Explore"}
-                    </span>
-                    <ChevronDown
-                      size={15}
-                      className={`transition-transform duration-200 ${suggestionsOpen ? "rotate-180 text-[#D946EF]" : ""}`}
-                    />
-                  </div>
-                </motion.button>
-
-                <AnimatePresence>
-                  {suggestionsOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-2 p-2 rounded-xl bg-[#08060E]/90 border border-[#8B5CF6]/25 backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.6)] max-h-56 sm:max-h-64 overflow-y-auto custom-scrollbar space-y-1.5">
-                        {[
-                          {
-                            mode: "email" as MurgiiMode,
-                            tag: "Email Flow",
-                            icon: Mail,
-                            title: "SaaS Onboarding Welcome Sequence",
-                            brief: "Create a 4-part onboarding email sequence for a B2B productivity app that drives Day-7 activation and converts trial users into annual paid subscribers using loss aversion.",
-                          },
-                          {
-                            mode: "ads" as MurgiiMode,
-                            tag: "Direct Response",
-                            icon: Target,
-                            title: "Scroll-Stopping Facebook Ad Hooks",
-                            brief: "Generate 5 pattern-interrupt Facebook & Instagram ad hooks for a high-ticket coaching program targeting busy professionals who struggle with burnout.",
-                          },
-                          {
-                            mode: "landing" as MurgiiMode,
-                            tag: "Landing Hero",
-                            icon: FileText,
-                            title: "High-Converting Sales Page Lead",
-                            brief: "Architect a high-converting long-form sales page hero headline, subheadline, and 3 quantifiable value props for an AI workflow platform.",
-                          },
-                          {
-                            mode: "psych" as MurgiiMode,
-                            tag: "Behavioral Psych",
-                            icon: Zap,
-                            title: "Buyer Psychology & Cognitive Bias Stack",
-                            brief: "Brief me on behavioral triggers and psychological cognitive biases (scarcity, social proof, status framing) to double checkout conversion for a premium brand.",
-                          },
-                          {
-                            mode: "email" as MurgiiMode,
-                            tag: "VIP Teaser",
-                            icon: Sparkles,
-                            title: "Exclusive Product Drop Waitlist",
-                            brief: "Write a 3-part teaser email campaign for a private product drop that builds extreme FOMO and drives a 35%+ day-one reservation rate.",
-                          }
-                        ].map((promptItem, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => {
-                              if (!dailyLimitReached) {
-                                setActiveSelectedTile(promptItem.mode);
-                                setSelectedMode(promptItem.mode);
-                                setInputValue(promptItem.brief);
-                                inputRef.current?.focus();
-                              }
-                            }}
-                            className="w-full text-left p-2.5 rounded-lg bg-white/[0.03] hover:bg-[#8B5CF6]/15 border border-white/5 hover:border-[#8B5CF6]/30 transition-all group/item flex items-start justify-between gap-2.5 cursor-pointer"
-                          >
-                            <div className="space-y-1 flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <div className="px-1.5 py-0.5 rounded bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center gap-1">
-                                  <promptItem.icon size={10} className="text-white" />
-                                  <span className="text-[8px] font-black uppercase tracking-wider text-[#E879F9]">
-                                    {promptItem.tag}
-                                  </span>
-                                </div>
-                                <span className="text-[11px] font-bold text-white/90 group-hover/item:text-white truncate">
-                                  {promptItem.title}
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-white/50 group-hover/item:text-white/75 line-clamp-2 leading-relaxed">
-                                {promptItem.brief}
-                              </p>
-                            </div>
-
-                            <div className="shrink-0 self-center px-2 py-1 rounded bg-white/5 border border-white/10 group-hover/item:bg-[#8B5CF6]/25 group-hover/item:border-[#8B5CF6]/40 text-[9px] font-bold text-white/50 group-hover/item:text-[#D946EF] transition-all flex items-center gap-0.5">
-                              <span>Use</span>
-                              <span>→</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                      {ANIMATED_WORDS[animatedWordIndex]}?
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
+              </motion.div>
             </div>
           )}
 
@@ -890,88 +697,145 @@ export function ChatInterface({
         </div>
       </div>
 
-      {/* SECTION FIVE — BOTTOM INPUT BAR */}
-      <footer className="input-bar-container fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-b from-[#08070E]/85 via-[#08070E]/97 to-[#06050A] backdrop-blur-[24px] saturate-[200%] border-t border-[rgba(139,92,246,0.18)] p-[12px_16px_20px] pb-[max(20px,env(safe-area-inset-bottom))]">
-        {/* Top shimmer line */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6]/40 via-[#E9D5FF]/60 via-[#D946EF]/40 to-transparent" />
-        
+      {/* BOTTOM INPUT BAR WITH GLASSMORPHISM & EMBEDDED MODE SELECTOR */}
+      <footer className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-2xl border-t border-white/[0.08] p-[12px_16px_20px] pb-[max(20px,env(safe-area-inset-bottom))]">
         <div className="max-w-2xl mx-auto">
           <form 
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
             }}
-            className="flex items-center gap-[10px]"
+            className="relative"
           >
-            <motion.input
-              animate={inputFocused ? 'focused' : 'initial'}
-              variants={{
-                initial: { boxShadow: '0 0 0 0 rgba(139, 92, 246, 0)' },
-                focused: { 
-                  boxShadow: [
-                    '0 0 0 0 rgba(139, 92, 246, 0)',
-                    '0 0 0 3px rgba(139, 92, 246, 0.25)',
-                    '0 0 20px rgba(217, 70, 239, 0.15)'
-                  ]
-                }
-              }}
-              transition={{ duration: 0.25 }}
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder={dailyLimitReached ? "Daily limit reached — upgrade to continue" : "Describe what you want to write…"}
-              disabled={isLoading || dailyLimitReached}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="sentences"
-              spellCheck="false"
-              className="flex-1 bg-white/5 border border-white/10 rounded-[16px] p-[14px_18px] text-white/90 outline-none backdrop-blur-[8px] transition-all focus:border-[#8B5CF6]/50 focus:bg-white/7 placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            {/* Glassmorphic Typing Container Block */}
+            <div
+              className="relative flex items-center rounded-2xl sm:rounded-3xl border border-white/[0.18] shadow-[0_8px_32px_0_rgba(0,0,0,0.7),inset_0_1px_1px_0_rgba(255,255,255,0.22)] transition-all duration-300 focus-within:border-white/40 focus-within:shadow-[0_8px_36px_0_rgba(0,0,0,0.9),inset_0_1px_1px_0_rgba(255,255,255,0.3)]"
               style={{
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
-                fontSize: '16px',
-                height: '48px'
+                background: "rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
               }}
-            />
-
-            <motion.button
-              whileHover={{ scale: 1.06, y: -1 }}
-              whileTap={{ scale: 0.94, y: 1 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 28 }}
-              type="submit"
-              disabled={isLoading || !inputValue.trim() || dailyLimitReached}
-              className="group relative w-[48px] h-[48px] rounded-[16px] bg-white/10 hover:bg-white/20 active:bg-white/15 border border-white/25 hover:border-white/50 backdrop-blur-2xl flex items-center justify-center transition-all duration-300 shrink-0 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shadow-[0_8px_32px_rgba(0,0,0,0.37),inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(0,0,0,0.25),0_0_20px_rgba(255,255,255,0.08)] overflow-hidden"
-              style={{
-                pointerEvents: (isLoading || dailyLimitReached) ? 'none' : 'all',
-                position: 'relative',
-                zIndex: 10,
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent'
-              }}
-              aria-label="Send brief"
             >
-              {/* 3D Glass Surface Curvature / Specular Reflection Sheen */}
-              <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/35 via-white/10 to-transparent rounded-t-[15px] pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/20 pointer-events-none" />
-              
-              {/* Subtle ambient interior glow */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none blur-sm" />
+              {/* Subtle top light sheen on glass surface */}
+              <div
+                className="absolute inset-0 rounded-2xl sm:rounded-3xl pointer-events-none"
+                style={{
+                  background: "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.12) 0%, transparent 65%)"
+                }}
+              />
 
-              {isLoading ? (
-                <div className="relative z-10 w-[18px] h-[18px] border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <ArrowUp size={20} className="relative z-10 text-white group-hover:scale-110 transition-transform duration-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" strokeWidth={2.8} />
-              )}
-            </motion.button>
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder={
+                  dailyLimitReached 
+                    ? "Daily limit reached — upgrade to continue" 
+                    : `Describe what you want to write (${CHAT_MODES.find(m => m.mode === selectedMode)?.title || "Email"} Mode)…`
+                }
+                disabled={isLoading || dailyLimitReached}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="sentences"
+                spellCheck="false"
+                className="flex-1 bg-transparent px-4 sm:px-5 py-3.5 text-white/90 text-sm sm:text-base outline-none placeholder:text-white/35 disabled:opacity-50 disabled:cursor-not-allowed relative z-10"
+                style={{
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                  height: '50px'
+                }}
+              />
+
+              {/* Right Controls: Mode Selector Button + Send Button */}
+              <div className="flex items-center gap-1.5 sm:gap-2 pr-2.5 relative z-20 shrink-0">
+                {/* Mode Selector Popover Button */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsModeSelectorOpen(!isModeSelectorOpen)}
+                    disabled={isLoading || dailyLimitReached}
+                    className="h-9 px-2.5 sm:px-3 rounded-xl sm:rounded-2xl flex items-center gap-1.5 border border-white/20 bg-white/[0.08] hover:bg-white/[0.16] text-white transition-all text-xs font-medium backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.5)] cursor-pointer"
+                    title="Change persuasion mode"
+                  >
+                    {(() => {
+                      const currentMode = CHAT_MODES.find((m) => m.mode === selectedMode) || CHAT_MODES[0];
+                      const CurrentIcon = currentMode.icon;
+                      return (
+                        <>
+                          <CurrentIcon size={14} className="text-white" />
+                          <span className="hidden sm:inline-block font-semibold">{currentMode.title}</span>
+                          <ChevronDown size={12} className={`text-gray-400 transition-transform ${isModeSelectorOpen ? "rotate-180" : ""}`} />
+                        </>
+                      );
+                    })()}
+                  </button>
+
+                  {/* Mode Selector Popup Menu */}
+                  {isModeSelectorOpen && (
+                    <div className="absolute bottom-full right-0 mb-2.5 w-52 sm:w-56 p-1.5 rounded-2xl border border-white/20 bg-black/95 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.2)] z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-2.5 py-1.5 text-[10px] uppercase font-bold tracking-wider text-gray-400 border-b border-white/10 mb-1">
+                        Persuasion Mode
+                      </div>
+                      <div className="space-y-1">
+                        {CHAT_MODES.map((modeItem) => {
+                          const ModeIcon = modeItem.icon;
+                          const isSelected = selectedMode === modeItem.mode;
+                          return (
+                            <button
+                              key={modeItem.mode}
+                              type="button"
+                              onClick={() => {
+                                setSelectedMode(modeItem.mode);
+                                setActiveSelectedTile(modeItem.mode);
+                                setIsModeSelectorOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-white/20 text-white font-semibold border border-white/20"
+                                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              <div className={`p-1.5 rounded-lg ${isSelected ? "bg-white text-black" : "bg-white/10 text-white"}`}>
+                                <ModeIcon size={13} />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold truncate">{modeItem.title}</div>
+                                <div className="text-[10px] text-gray-400 truncate">{modeItem.desc}</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Send Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="submit"
+                  disabled={isLoading || !inputValue.trim() || dailyLimitReached}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white text-black hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(255,255,255,0.2)]"
+                  aria-label="Send brief"
+                >
+                  {isLoading ? (
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <ArrowUp size={18} className="text-black stroke-[2.5]" />
+                  )}
+                </motion.button>
+              </div>
+            </div>
           </form>
         </div>
       </footer>

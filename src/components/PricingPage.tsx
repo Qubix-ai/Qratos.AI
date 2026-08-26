@@ -3,6 +3,7 @@ import { Check, X, Sparkles, ExternalLink, Zap, Shield, Crown, ArrowRight, Arrow
 import { motion } from "motion/react";
 import { fetchUserPlan } from "../lib/userAccount";
 import LightPillar from "./LightPillar";
+import StarBorder from "./StarBorder";
 
 interface PricingPageProps {
   user: any;
@@ -150,7 +151,7 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
                     <Check size={11} className="text-white" />
                   </div>
                   <span className="text-xs text-gray-200 font-medium leading-tight">
-                    <strong className="text-white font-bold">20 credits</strong> per day
+                    <strong className="text-white font-bold">3 credits</strong> per day
                   </span>
                 </div>
 
@@ -254,7 +255,7 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
                     <Check size={11} className="text-white" />
                   </div>
                   <span className="text-xs text-gray-200 font-medium leading-tight">
-                    <strong className="text-white font-bold">40 credits</strong> per day (2x capacity)
+                    <strong className="text-white font-bold">20 credits</strong> per day
                   </span>
                 </div>
 
@@ -311,18 +312,19 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="relative h-full"
+            className="relative h-full flex flex-col"
           >
-            <div
-              className={`relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 overflow-hidden h-full border ${
+            <StarBorder
+              as="div"
+              className="w-full h-full !flex !flex-col"
+              innerClassName={`relative p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 overflow-hidden h-full ${
                 isMax
-                  ? "bg-[#0e0924]/60 border-white/45 shadow-[0_26px_58px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)]"
-                  : "bg-[#0e0924]/45 border-white/25 hover:border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  ? "!bg-[#0e0924]/80 !border-white/45 shadow-[0_26px_58px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)]"
+                  : "!bg-[#0e0924]/60 !border-white/25 hover:!border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)]"
               }`}
-              style={{
-                backdropFilter: "blur(20px) saturate(1.3)",
-                WebkitBackdropFilter: "blur(20px) saturate(1.3)"
-              }}
+              color="magenta"
+              speed="5s"
+              thickness={1}
             >
               {/* MOST POPULAR BADGE - Clean White/Silver Ribbon */}
               <div className="absolute top-0 right-0 z-20">
@@ -366,7 +368,7 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
                       <Check size={11} className="text-white" />
                     </div>
                     <span className="text-xs text-gray-200 font-medium leading-tight">
-                      <strong className="text-white font-bold">100 credits</strong> per day (5x capacity)
+                      <strong className="text-white font-bold">60 credits</strong> per day (3x Core capacity)
                     </span>
                   </div>
 
@@ -416,7 +418,7 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
                   </a>
                 )}
               </div>
-            </div>
+            </StarBorder>
           </motion.div>
 
         </div>

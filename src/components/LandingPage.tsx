@@ -34,7 +34,6 @@ import { Murgii3DChicken } from "./Murgii3DChicken";
 import { TrueFocus } from "./TrueFocus";
 import { ShinyText } from "./ShinyText";
 import LightPillar from "./LightPillar";
-import SplashCursor from "./SplashCursor";
 import {
   ModesCycleVisual,
   PromptCompilerVisual,
@@ -118,20 +117,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
   return (
     <div className="min-h-screen bg-[#07060B] text-white selection:bg-[#8B5CF6]/40 selection:text-white relative overflow-x-hidden font-sans">
-      {/* Full Page Splash Cursor Fluid Simulation */}
-      <SplashCursor
-        DENSITY_DISSIPATION={2.5}
-        VELOCITY_DISSIPATION={4.5}
-        PRESSURE={0.6}
-        CURL={38}
-        SPLAT_RADIUS={0.1}
-        SPLAT_FORCE={17000}
-        COLOR_UPDATE_SPEED={25}
-        SHADING={true}
-        RAINBOW_MODE={false}
-        COLOR="#10B981"
-      />
-
       {/* Top Floating Glassmorphic Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 transition-all duration-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-6 py-3 rounded-full bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative">
@@ -774,12 +759,12 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             <FeatureBlock 
               index={3}
               title="Daily Credit Engine Built for Sustainable Volume"
-              description="Start with 20 daily credits on Basic to test all 4 modes with zero risk. When client deadlines and launch schedules hit, scale to Core ($29/mo) for 40 daily credits + full Prompt Builder access, or command Max ($97/mo) with 100 daily credits, AI Blueprint Assist, and priority generation bandwidth."
+              description="Start with 3 daily credits on Basic to test all 4 modes with zero risk. When client deadlines and launch schedules hit, scale to Core ($29/mo) for 20 daily credits + full Prompt Builder access, or command Max ($97/mo) with 60 daily credits, AI Blueprint Assist, and priority generation bandwidth."
               trustLine="Credits refresh every 24 hours so you never face unexpected overage bills."
               points={[
-                "Basic (Free): 20 credits/day across all 4 modes to write daily assets",
-                "Core ($29/mo): 40 credits/day + unlocked Prompt Builder & Core roadmap",
-                "Max ($97/mo): 100 credits/day + Business Blueprint Studio & Qreato Engine",
+                "Basic (Free): 3 credits/day across all 4 modes to write daily assets",
+                "Core ($29/mo): 20 credits/day + unlocked Prompt Builder & Core roadmap",
+                "Max ($97/mo): 60 credits/day + Business Blueprint Studio & Qreato Engine",
                 "No Token Traps: Predictable daily quotas built for agency & founder volume",
                 "Instant Tier Switching: Upgrade in seconds as your publishing demands scale"
               ]}
@@ -791,7 +776,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               index={4}
               reversed
               title="Complete Revenue Infrastructure with Bolt & Blueprint Studio"
-              description="Copy is only one half of the growth equation. Max tier pairs Murgii's 100 daily credits with Bolt Max's 6-category execution roadmap, Business Blueprint Studio, and AI Blueprint Assist — connecting your sales copy directly to product offers, audience growth, and full-funnel monetization."
+              description="Copy is only one half of the growth equation. Max tier pairs Murgii's 60 daily credits with Bolt Max's 6-category execution roadmap, Business Blueprint Studio, and AI Blueprint Assist — connecting your sales copy directly to product offers, audience growth, and full-funnel monetization."
               trustLine="The complete unified operating system for high-performing modern operators."
               points={[
                 "Bolt Core & Max Integration: 6-category structured execution roadmap",

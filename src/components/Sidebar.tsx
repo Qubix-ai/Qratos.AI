@@ -471,7 +471,7 @@ export function Sidebar({
               <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/05 flex items-center justify-between">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Credits</span>
                 <span className="text-xs font-bold text-[#E879F9] font-mono">
-                  {userData?.remainingCredits ?? 20} / {userData?.totalCredits ?? 20}
+                  {userData?.remainingCredits ?? 3} / {userData?.totalCredits ?? 3}
                 </span>
               </div>
 
