@@ -23,6 +23,9 @@ import {
   Menu,
   CreditCard,
   User as UserIcon,
+  Shield,
+  Crown,
+  ExternalLink,
 } from "lucide-react";
 import { QreatoLogo } from "./QreatoLogo";
 import { AuthModal } from "./AuthModal";
@@ -30,6 +33,9 @@ import { OutcomeNetworkDiagram } from "./OutcomeNetworkDiagram";
 import { Murgii3DChicken } from "./Murgii3DChicken";
 import { TrueFocus } from "./TrueFocus";
 import { ShinyText } from "./ShinyText";
+import FloatingLines from "./FloatingLines";
+import LightPillar from "./LightPillar";
+import SplashCursor from "./SplashCursor";
 import {
   ModesCycleVisual,
   PromptCompilerVisual,
@@ -102,29 +108,51 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
   };
 
   const handleCraftPromptClick = () => {
-    if (effectiveTier === "free" && !user) {
-      handleSignupClick();
-    } else if (effectiveTier === "free") {
-      setInfoModal({
-        title: "Prompt Builder (Core & Max Tier)",
-        content: "Prompt Builder is unlocked on Bolt Core ($29/mo) and Max ($97/mo). It transforms guided questions into structured, role-framed master prompts engineered specifically for Murgii's direct-response engine."
-      });
+    if (onNavigate) {
+      onNavigate("prompt-builder");
+    } else if (user) {
+      onStart();
     } else {
-      if (onNavigate) {
-        onNavigate("prompt-builder");
-      } else {
-        onStart();
-      }
+      handleSignupClick();
     }
   };
 
   return (
     <div className="min-h-screen bg-[#07060B] text-white selection:bg-[#8B5CF6]/40 selection:text-white relative overflow-x-hidden font-sans">
-      {/* Background Ambience / Glows */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.18)_0%,transparent_70%)] blur-[90px]" />
-        <div className="absolute top-[28%] -left-48 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(217,70,239,0.08)_0%,transparent_70%)] blur-[100px]" />
-        <div className="absolute top-[65%] -right-48 w-[700px] h-[700px] bg-[radial-gradient(circle,rgba(139,92,246,0.08)_0%,transparent_70%)] blur-[120px]" />
+      {/* Full Page Splash Cursor Fluid Simulation */}
+      <SplashCursor
+        DENSITY_DISSIPATION={2.5}
+        VELOCITY_DISSIPATION={4.5}
+        PRESSURE={0.6}
+        CURL={38}
+        SPLAT_RADIUS={0.1}
+        SPLAT_FORCE={17000}
+        COLOR_UPDATE_SPEED={25}
+        SHADING={true}
+        RAINBOW_MODE={false}
+        COLOR="#10B981"
+      />
+
+      {/* Background Floating Lines Full Page Experience */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <FloatingLines 
+          enabledWaves={["top", "middle", "bottom"]}
+          lineCount={5}
+          lineDistance={33}
+          bendRadius={13}
+          bendStrength={6.5}
+          interactive={true}
+          parallax={true}
+          animationSpeed={0.7}
+          gradientStart="#10ffb0"
+          gradientMid="#e93333"
+          gradientEnd="#EAB308"
+          linesGradient={["#10ffb0", "#e93333", "#EAB308"]}
+          mixBlendMode="screen"
+          className="w-full h-full opacity-60 sm:opacity-75"
+        />
+        {/* Deep contrast base overlay ensuring all cards, typography, diagrams and text remain 100% sharp and readable */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(7,6,11,0.25)_0%,rgba(7,6,11,0.85)_100%)] pointer-events-none" />
       </div>
 
       {/* Top Floating Glassmorphic Navigation Bar */}
@@ -903,94 +931,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
           {/* Live White/Glass Linear 3-Stage Pipeline Demonstration */}
           <LinearPipelineVisual />
 
-          {/* 3-Step Visual Process Grid with Connecting Light Paths */}
-          <div className="relative mb-20">
-            {/* Connecting Animated White Track between 3 Steps */}
-            <div className="hidden lg:block absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-[1.5px] bg-white/10 pointer-events-none z-0">
-              <div className="w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 relative z-10">
-              {[
-                {
-                  step: "01",
-                  title: "Define Brief & Lock Memory",
-                  desc: "Choose from Emails, Ads, Pages, or Psych. Your saved Memory (niche, brand tone, and offer details) loads automatically so you never start from zero context.",
-                  icon: Sliders,
-                  badge: "Memory-Linked"
-                },
-                {
-                  step: "02",
-                  title: "Engineered Generation",
-                  desc: "Murgii synthesizes role-framing, proven direct-response formulas, and objection-reversal loops to produce high-impact copy variants tailored to your goal.",
-                  icon: Sparkles,
-                  badge: "Psych-Optimized"
-                },
-                {
-                  step: "03",
-                  title: "Polish & Ship to Market",
-                  desc: "Review multiple hook angles, fine-tune copy with 1-click refinement tools, and copy directly to your email platform, ad manager, or landing page builder.",
-                  icon: Send,
-                  badge: "Conversion-Ready"
-                }
-              ].map((card, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.8 }}
-                  className="relative rounded-3xl p-8 border border-white/12 flex flex-col justify-between group transition-all duration-300 hover:border-white/40 hover:scale-[1.01]"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.05)",
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
-                  }}
-                >
-                  <div className="space-y-6">
-                    {/* Top Step Pill & Icon */}
-                    <div className="flex items-center justify-between">
-                      <div 
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/20 transition-transform duration-300 group-hover:scale-110"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.1)",
-                          backdropFilter: "blur(12px)"
-                        }}
-                      >
-                        <card.icon size={22} className="text-white" />
-                      </div>
-                      <span 
-                        className="text-3xl font-extrabold text-white/30 group-hover:text-white/70 transition-colors font-nohemi"
-                        style={{ fontFamily: "'Nohemi', sans-serif" }}
-                      >
-                        {card.step}
-                      </span>
-                    </div>
-
-                    {/* Title & Description */}
-                    <div className="space-y-2.5">
-                      <h3 
-                        className="text-xl font-bold text-white font-nohemi"
-                        style={{ fontFamily: "'Nohemi', sans-serif" }}
-                      >
-                        {card.title}
-                      </h3>
-                      <p className="text-gray-300 text-sm leading-relaxed">
-                        {card.desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">{card.badge}</span>
-                    <ArrowRight size={14} className="text-white/60 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
           {/* 4 Core Persuasion Engines Capability Strip with Animated Micro-Demo Cards */}
           <div 
             className="rounded-[36px] border border-white/15 p-8 sm:p-10 shadow-2xl relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]"
@@ -1042,6 +982,348 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 sampleCopy="Trigger: Loss-aversion framing + micro-commitment CTA."
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING & TIERS SECTION WITH LIGHT PILLAR EFFECT */}
+      <section id="pricing" className="py-32 px-4 relative overflow-hidden">
+        {/* Light Pillar Shader Background Behind Pricing Area & Cards */}
+        <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} className="pointer-events-none z-0 overflow-hidden">
+          <LightPillar
+            topColor="#3410c5"
+            bottomColor="#84CC16"
+            intensity={0.6}
+            rotationSpeed={2}
+            glowAmount={0.015}
+            pillarWidth={5}
+            pillarHeight={0.4}
+            noiseIntensity={1.8}
+            pillarRotation={154}
+            interactive={false}
+            mixBlendMode="normal"
+            quality="low"
+          />
+          {/* Subtle contrast mask keeping typography and cards high-contrast and clear */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(7,6,11,0.25)_0%,rgba(7,6,11,0.88)_100%)] pointer-events-none" />
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          {/* Section Header */}
+          <div className="text-center mb-16 px-4">
+            <h2 
+              className="text-4xl md:text-7xl font-bold tracking-tight mb-6 text-white font-nohemi leading-tight"
+              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+            >
+              Scale Your Persuasion Quota <br className="hidden md:block" /> Without Surprise Overages
+            </h2>
+            <div className="w-28 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-8" />
+            <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Start with 20 daily credits free on Basic or scale to Core and Max for enhanced daily quotas, Prompt Builder access, and shared Bolt roadmap synchronization.
+            </p>
+          </div>
+
+          {/* 3 Pricing Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-6xl mx-auto mb-12">
+            
+            {/* TIER 1: BASIC (FREE) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+              className="relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl border border-white/15 hover:border-white/30 bg-[#0c081e]/35 hover:bg-[#0c081e]/45 shadow-[0_16px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300"
+              style={{
+                backdropFilter: "blur(20px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.3)"
+              }}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-sm">
+                      <Shield size={16} />
+                    </div>
+                    <h3 className="text-xl font-bold text-white tracking-tight font-nohemi">Basic</h3>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-mono text-gray-300 uppercase">
+                    Free Forever
+                  </span>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-white tracking-tight font-nohemi">$0</span>
+                    <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">/ Free</span>
+                  </div>
+                  <p className="text-xs text-gray-300 mt-2 leading-relaxed">
+                    Applies to Murgii only. Not connected to Bolt roadmap.
+                  </p>
+                </div>
+
+                <div className="h-px bg-white/10 my-6" />
+
+                <div className="space-y-3.5 mb-8">
+                  <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">Included Capabilities</p>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-white" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      <strong className="text-white font-bold">20 credits</strong> per day
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-white" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      Access to all 4 modes: <strong className="text-white">Emails, Ads, Pages, Psych</strong>
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3 opacity-60">
+                    <div className="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <X size={11} className="text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-400 font-medium leading-tight line-through">
+                      Prompt Builder access
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3 opacity-60">
+                    <div className="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <X size={11} className="text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-400 font-medium leading-tight line-through">
+                      Bolt account activity visibility
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={onStart}
+                  className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-center text-xs font-bold text-white transition-all cursor-pointer shadow-sm"
+                >
+                  Start with Basic
+                </button>
+              </div>
+            </motion.div>
+
+            {/* TIER 2: CORE */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl border border-white/20 hover:border-white/35 bg-[#0c081e]/40 hover:bg-[#0c081e]/50 shadow-[0_20px_48px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-300"
+              style={{
+                backdropFilter: "blur(20px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.3)"
+              }}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-white shadow-[0_0_12px_rgba(255,255,255,0.2)]">
+                      <Zap size={16} />
+                    </div>
+                    <h3 className="text-xl font-bold text-white tracking-tight font-nohemi">Core</h3>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-mono text-gray-300 uppercase">
+                    Direct Response
+                  </span>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-white tracking-tight font-nohemi">$29</span>
+                    <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">/ month</span>
+                  </div>
+                  <p className="text-xs text-gray-300 mt-2 leading-relaxed">
+                    Full direct response generation &amp; shared Bolt Core integration.
+                  </p>
+                </div>
+
+                <div className="h-px bg-white/10 my-6" />
+
+                <div className="space-y-3.5 mb-8">
+                  <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">Everything in Basic, plus:</p>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-white" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      <strong className="text-white font-bold">40 credits</strong> per day (2x capacity)
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-white" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      <strong className="text-white font-bold">Prompt Builder access</strong> (Guided input architect)
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-white" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      Connects to <strong className="text-white">Bolt Core</strong>: full 6-category roadmap
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} className="text-white" />
+                    </div>
+                    <span className="text-xs text-gray-200 font-medium leading-tight">
+                      Full AI Prompt Library access
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <a
+                  href="https://whop.com/qreato/ai-leverage"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-center text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(255,255,255,0.25)] cursor-pointer"
+                >
+                  <span>Get Core</span>
+                  <ExternalLink size={13} />
+                </a>
+              </div>
+            </motion.div>
+
+            {/* TIER 3: MAX (MOST POPULAR) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="relative h-full"
+            >
+              <div
+                className="relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 overflow-hidden h-full border border-white/25 hover:border-white/45 bg-[#0e0924]/45 hover:bg-[#0e0924]/55 shadow-[0_24px_54px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.25)]"
+                style={{
+                  backdropFilter: "blur(20px) saturate(1.3)",
+                  WebkitBackdropFilter: "blur(20px) saturate(1.3)"
+                }}
+              >
+                {/* MOST POPULAR BADGE - Clean White/Silver Ribbon */}
+                <div className="absolute top-0 right-0 z-20">
+                  <div className="bg-white text-black text-[9px] font-black uppercase tracking-[0.2em] py-1.5 px-5 rounded-bl-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                    Most Popular
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-white shadow-[0_0_16px_rgba(255,255,255,0.25)]">
+                        <Crown size={16} />
+                      </div>
+                      <h3 className="text-xl font-bold text-white tracking-tight font-nohemi">Max</h3>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold text-white tracking-tight font-nohemi">$97</span>
+                      <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">/ month</span>
+                    </div>
+                    <p className="text-xs text-gray-300 mt-2 leading-relaxed">
+                      Maximum credit capacity &amp; complete Qreato AI ecosystem integration.
+                    </p>
+                  </div>
+
+                  <div className="h-px bg-white/10 my-6" />
+
+                  <div className="space-y-3.5 mb-8">
+                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">Everything in Core, plus:</p>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check size={11} className="text-white" />
+                      </div>
+                      <span className="text-xs text-gray-200 font-medium leading-tight">
+                        <strong className="text-white font-bold">100 credits</strong> per day (5x capacity)
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check size={11} className="text-white" />
+                      </div>
+                      <span className="text-xs text-gray-200 font-medium leading-tight">
+                        Connects to <strong className="text-white">Bolt Max</strong> suite
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check size={11} className="text-white" />
+                      </div>
+                      <span className="text-xs text-gray-200 font-medium leading-tight">
+                        <strong className="text-white font-bold">AI Blueprint Assist</strong> &amp; Qreato AI engine
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check size={11} className="text-white" />
+                      </div>
+                      <span className="text-xs text-gray-200 font-medium leading-tight">
+                        Your Business Blueprint interactive studio
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/10">
+                  <a
+                    href="https://whop.com/qreato/qreato-max"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-center text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.3)] cursor-pointer"
+                  >
+                    <span>Get Max</span>
+                    <ExternalLink size={13} />
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* Unified Cross-App Note */}
+          <div className="max-w-6xl mx-auto rounded-2xl p-6 bg-[#0c081e]/40 border border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl shadow-lg">
+            <div className="space-y-1 text-center sm:text-left">
+              <h4 className="text-sm font-bold text-white font-nohemi">Unified Cross-App Infrastructure</h4>
+              <p className="text-xs text-gray-300">
+                Murgii shares authenticated state and roadmap milestones directly with your Bolt account.
+              </p>
+            </div>
+            <a
+              href="https://bolt.vercel.app"
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs font-semibold text-white flex items-center gap-2 transition-colors shrink-0"
+            >
+              <span>Open Bolt Studio</span>
+              <ExternalLink size={12} className="text-white" />
+            </a>
           </div>
         </div>
       </section>

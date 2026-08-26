@@ -496,42 +496,45 @@ export const LinearPipelineVisual: React.FC = () => {
     {
       num: "01",
       title: "Define Brief & Lock Memory",
-      desc: "Niche, audience, and tone load instantly from saved context.",
-      icon: Sliders
+      desc: "Niche, audience, and brand tone load instantly from saved context so you never start from zero.",
+      icon: Sliders,
+      badge: "Memory-Linked"
     },
     {
       num: "02",
       title: "Cognitive Synthesis",
-      desc: "Direct-response formulas & behavioral triggers compile seamlessly.",
-      icon: Cpu
+      desc: "Direct-response formulas, Cialdini triggers, and objection-reversal loops compile seamlessly.",
+      icon: Cpu,
+      badge: "Psych-Optimized"
     },
     {
       num: "03",
       title: "Conversion-Ready Copy",
-      desc: "Market-tested variants ready for instant 1-click publishing.",
-      icon: Send
+      desc: "Multi-angle hook variants and structured body copy ready for instant 1-click deployment.",
+      icon: Send,
+      badge: "Conversion-Ready"
     }
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 3);
-    }, 2800);
+    }, 3200);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="w-full max-w-5xl mx-auto rounded-[32px] border border-white/12 p-6 sm:p-8 bg-white/[0.05] backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.1)] relative overflow-hidden mb-12">
+    <div className="w-full max-w-6xl mx-auto rounded-[36px] border border-white/15 p-6 sm:p-10 bg-white/[0.05] backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.4)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12)] relative overflow-hidden mb-12">
       {/* Background Animated Traveling Pulse Track */}
-      <div className="hidden md:block absolute top-[52px] left-[15%] right-[15%] h-[2px] bg-white/10 z-0">
+      <div className="hidden md:block absolute top-[68px] left-[18%] right-[18%] h-[2px] bg-white/10 z-0">
         <div 
           className="h-full bg-white shadow-[0_0_14px_white] transition-all duration-700 ease-out"
-          style={{ width: `${(activeStep + 1) * 33.3}%` }}
+          style={{ width: `${activeStep === 0 ? "15%" : activeStep === 1 ? "60%" : "100%"}` }}
         />
         {/* Traveling light node */}
         <div 
-          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-[0_0_12px_white] transition-all duration-700 ease-out"
-          style={{ left: `calc(${(activeStep + 1) * 33.3}% - 6px)` }}
+          className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_white] transition-all duration-700 ease-out"
+          style={{ left: `calc(${activeStep === 0 ? "15%" : activeStep === 1 ? "60%" : "100%"} - 7px)` }}
         />
       </div>
 
@@ -545,40 +548,42 @@ export const LinearPipelineVisual: React.FC = () => {
             <div
               key={step.num}
               onClick={() => setActiveStep(idx)}
-              className={`p-5 rounded-2xl border transition-all duration-500 cursor-pointer flex flex-col justify-between ${
+              className={`p-6 rounded-3xl border transition-all duration-500 cursor-pointer flex flex-col justify-between group ${
                 isActive
-                  ? "bg-white/15 border-white/40 shadow-[0_0_24px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.3)] scale-[1.02]"
+                  ? "bg-white/15 border-white/40 shadow-[0_0_30px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.3)] scale-[1.02]"
                   : isPassed
-                  ? "bg-white/[0.06] border-white/20"
-                  : "bg-white/[0.02] border-white/10 opacity-70"
+                  ? "bg-white/[0.06] border-white/20 hover:border-white/30"
+                  : "bg-white/[0.02] border-white/10 opacity-70 hover:opacity-90"
               }`}
             >
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-5">
                   <div
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                      isActive ? "bg-white text-black shadow-md" : "bg-white/10 text-white"
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                      isActive ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105" : "bg-white/10 text-white group-hover:scale-105"
                     }`}
                   >
-                    <Icon size={20} strokeWidth={2.2} />
+                    <Icon size={22} strokeWidth={2.2} />
                   </div>
-                  <span className="text-2xl font-black font-nohemi text-white/40">
+                  <span className="text-3xl font-black font-nohemi text-white/35 group-hover:text-white/60 transition-colors">
                     {step.num}
                   </span>
                 </div>
-                <h4 className="text-base font-bold text-white mb-1.5 font-nohemi">
+                <h4 className="text-lg font-bold text-white mb-2 font-nohemi tracking-tight">
                   {step.title}
                 </h4>
-                <p className="text-xs text-gray-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-normal">
                   {step.desc}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] font-mono">
-                <span className="text-gray-400">Stage {idx + 1} of 3</span>
-                <span className={isActive ? "text-white font-bold flex items-center gap-1.5" : "text-gray-500"}>
-                  {isActive ? "Active Flow" : isPassed ? "Complete" : "Queued"}
-                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />}
+              <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono">
+                <span className="text-white/80 bg-white/10 px-2 py-0.5 rounded border border-white/15 font-bold uppercase tracking-wider text-[9px]">
+                  {step.badge}
+                </span>
+                <span className={isActive ? "text-white font-bold flex items-center gap-1.5" : "text-gray-400"}>
+                  {isActive ? "Active Phase" : isPassed ? "Completed" : "Queued"}
+                  {isActive && <span className="w-2 h-2 rounded-full bg-white animate-ping" />}
                 </span>
               </div>
             </div>
@@ -887,47 +892,57 @@ export const SpecializedModeCard: React.FC<{
   sampleCopy: string;
 }> = ({ name, role, desc, icon: Icon, sampleCopy }) => {
   const [typed, setTyped] = useState("");
-  const [isHovered, setIsHovered] = useState(false);
+  const [_isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     let currentIdx = 0;
     let timer: NodeJS.Timeout;
+    let isCancelled = false;
     
     const runTyping = () => {
+      if (isCancelled) return;
       setTyped("");
       currentIdx = 0;
       const interval = setInterval(() => {
+        if (isCancelled) {
+          clearInterval(interval);
+          return;
+        }
         if (currentIdx <= sampleCopy.length) {
           setTyped(sampleCopy.slice(0, currentIdx));
           currentIdx++;
         } else {
           clearInterval(interval);
-          timer = setTimeout(runTyping, 4000);
+          timer = setTimeout(runTyping, 3500);
         }
-      }, 35);
+      }, 30);
     };
 
     runTyping();
-    return () => clearTimeout(timer);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
   }, [sampleCopy]);
 
   return (
     <div 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="p-5 rounded-3xl border border-white/12 hover:border-white/30 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]"
+      className="p-5 sm:p-6 rounded-3xl border border-white/12 hover:border-white/35 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(255,255,255,0.08)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12)] cursor-pointer"
       style={{
         background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)"
+        backdropFilter: "blur(20px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(20px) saturate(1.3)"
       }}
     >
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">
             <Icon size={20} strokeWidth={2.2} />
           </div>
-          <span className="text-[9px] font-mono uppercase tracking-wider text-white/80 bg-white/10 px-2 py-0.5 rounded border border-white/15">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-white bg-white/10 px-2.5 py-1 rounded-full border border-white/15 flex items-center gap-1.5 font-bold shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white] animate-pulse" />
             Active Mode
           </span>
         </div>
@@ -935,27 +950,27 @@ export const SpecializedModeCard: React.FC<{
         <h4 className="text-base font-bold text-white font-nohemi mb-0.5">
           {name}
         </h4>
-        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block mb-2">
+        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block mb-2 font-semibold">
           {role}
         </span>
-        <p className="text-xs text-gray-300 leading-relaxed mb-4">
+        <p className="text-xs text-neutral-300 leading-relaxed mb-4 font-normal">
           {desc}
         </p>
       </div>
 
-      {/* Live Animated Output Preview */}
-      <div className="p-3 rounded-2xl bg-black/50 border border-white/10 min-h-[52px] flex items-center justify-between gap-2 shadow-inner">
+      {/* Live Animated Output Preview with Blinking Terminal Cursor */}
+      <div className="p-3.5 rounded-2xl bg-black/60 border border-white/10 min-h-[56px] flex items-center justify-between gap-2 shadow-inner group-hover:border-white/20 transition-colors">
         <div className="min-w-0 flex-1">
-          <span className="block text-[8px] font-mono uppercase tracking-widest text-gray-500 mb-0.5">
-            Sample Output
+          <span className="block text-[8px] font-mono uppercase tracking-widest text-gray-400 mb-1 font-bold">
+            Live Stream Sample
           </span>
-          <p className="text-[11px] font-mono text-white truncate">
+          <p className="text-[11px] font-mono text-white truncate font-medium">
             {typed}
-            <span className="animate-pulse font-bold text-white">|</span>
+            <span className="animate-pulse font-extrabold text-white ml-0.5 inline-block">|</span>
           </p>
         </div>
         <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center shrink-0 border border-white/15">
-          <Check size={10} className="text-white" />
+          <Check size={11} className="text-white" />
         </div>
       </div>
     </div>
