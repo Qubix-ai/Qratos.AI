@@ -346,14 +346,14 @@ export const TierExpansionVisual: React.FC = () => {
       </div>
 
       {/* 3 Tier Cards */}
-      <div className="space-y-2.5 my-3">
+      <div className="space-y-2 sm:space-y-2.5 my-2 sm:my-3">
         {tiers.map((tier, idx) => {
           const isSelected = activeTier === idx;
           return (
             <div
               key={tier.name}
               onClick={() => setActiveTier(idx as 0 | 1 | 2)}
-              className={`p-3 rounded-2xl transition-all duration-400 cursor-pointer flex items-center justify-between border ${
+              className={`p-2.5 sm:p-3 rounded-2xl transition-all duration-400 cursor-pointer flex items-center justify-between border ${
                 isSelected
                   ? "bg-white/15 border-white/40 shadow-[0_4px_20px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.3)] scale-[1.02]"
                   : "bg-white/[0.03] border-white/10 opacity-70 hover:opacity-100"
@@ -377,24 +377,27 @@ export const TierExpansionVisual: React.FC = () => {
         })}
       </div>
 
-      {/* Dynamic Animated Capacity Bar with Counter */}
-      <div className="p-3.5 rounded-2xl bg-black/60 border border-white/15 space-y-2">
-        <div className="flex items-center justify-between text-[10px] font-mono text-gray-300">
-          <span>Active Quota ({tiers[activeTier].name})</span>
-          <span className="text-white font-bold font-mono text-xs">{displayCredits} Credits / Day</span>
+      {/* Bottom Telemetry & Overage Section with Clean Spacing */}
+      <div className="space-y-2.5 sm:space-y-3 mt-2 sm:mt-3">
+        {/* Dynamic Animated Capacity Bar with Counter */}
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-black/60 border border-white/15 space-y-2 shadow-inner">
+          <div className="flex items-center justify-between text-[10px] font-mono text-gray-300">
+            <span>Active Quota ({tiers[activeTier].name})</span>
+            <span className="text-white font-bold font-mono text-xs">{displayCredits} Credits / Day</span>
+          </div>
+          <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden relative p-[1px]">
+            <div
+              className="h-full bg-white rounded-full transition-all duration-700 ease-out shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+              style={{ width: `${tiers[activeTier].pct}%` }}
+            />
+          </div>
         </div>
-        <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden relative p-[1px]">
-          <div
-            className="h-full bg-white rounded-full transition-all duration-700 ease-out shadow-[0_0_12px_rgba(255,255,255,0.8)]"
-            style={{ width: `${tiers[activeTier].pct}%` }}
-          />
-        </div>
-      </div>
 
-      {/* Footer */}
-      <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between text-xs text-gray-300">
-        <span className="font-semibold">Overage Policy</span>
-        <span className="text-white font-mono font-bold">Zero Surprise Bills</span>
+        {/* Overage Policy Card */}
+        <div className="p-2.5 sm:p-3 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-between text-xs text-gray-300">
+          <span className="font-semibold">Overage Policy</span>
+          <span className="text-white font-mono font-bold">Zero Surprise Bills</span>
+        </div>
       </div>
     </div>
   );

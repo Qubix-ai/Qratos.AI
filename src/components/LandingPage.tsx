@@ -33,7 +33,6 @@ import { OutcomeNetworkDiagram } from "./OutcomeNetworkDiagram";
 import { Murgii3DChicken } from "./Murgii3DChicken";
 import { TrueFocus } from "./TrueFocus";
 import { ShinyText } from "./ShinyText";
-import FloatingLines from "./FloatingLines";
 import LightPillar from "./LightPillar";
 import SplashCursor from "./SplashCursor";
 import {
@@ -132,28 +131,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
         RAINBOW_MODE={false}
         COLOR="#10B981"
       />
-
-      {/* Background Floating Lines Full Page Experience */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <FloatingLines 
-          enabledWaves={["top", "middle", "bottom"]}
-          lineCount={5}
-          lineDistance={33}
-          bendRadius={13}
-          bendStrength={6.5}
-          interactive={true}
-          parallax={true}
-          animationSpeed={0.7}
-          gradientStart="#10ffb0"
-          gradientMid="#e93333"
-          gradientEnd="#EAB308"
-          linesGradient={["#10ffb0", "#e93333", "#EAB308"]}
-          mixBlendMode="screen"
-          className="w-full h-full opacity-60 sm:opacity-75"
-        />
-        {/* Deep contrast base overlay ensuring all cards, typography, diagrams and text remain 100% sharp and readable */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(7,6,11,0.25)_0%,rgba(7,6,11,0.85)_100%)] pointer-events-none" />
-      </div>
 
       {/* Top Floating Glassmorphic Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 transition-all duration-300">
@@ -630,25 +607,77 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="text-center mb-16 sm:mb-20 flex flex-col items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#8B5CF6]/10 border border-[#8B5CF6]/25 text-[10px] sm:text-xs font-mono text-[#D946EF] uppercase tracking-[0.2em] mb-4"
-            >
-              <Sparkles size={11} className="text-[#E879F9]" />
-              <span>Unified Intelligence Ecosystem</span>
-            </motion.div>
-
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-5 text-white font-nohemi"
+              viewport={{ once: false, amount: 0.4 }}
+              transition={{ duration: 0.6 }}
+              className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-white font-nohemi"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
               Built for every outcome <br className="hidden sm:block" />
-              <span>that <span className="text-[#FFBE0B]">matters</span></span>
+              <span>that{" "}
+                <span className="relative inline-block text-white font-bold">
+                  matters
+                  {/* Dynamic Red Underline Animation that triggers whenever scrolled into view */}
+                  <motion.svg
+                    viewBox="0 0 160 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="absolute left-0 -bottom-2.5 sm:-bottom-3.5 w-[105%] h-3 sm:h-4.5 overflow-visible pointer-events-none"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: false, amount: 0.4 }}
+                  >
+                    {/* Glowing outer aura path */}
+                    <motion.path
+                      d="M 4 12 C 40 4, 110 16, 156 7"
+                      stroke="#EF4444"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      filter="drop-shadow(0 0 8px rgba(239, 68, 68, 0.8))"
+                      variants={{
+                        hidden: { pathLength: 0, opacity: 0 },
+                        visible: { 
+                          pathLength: 1, 
+                          opacity: 0.85,
+                          transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.15 }
+                        }
+                      }}
+                    />
+                    {/* Primary sharp red drawn line */}
+                    <motion.path
+                      d="M 4 12 C 40 4, 110 16, 156 7"
+                      stroke="#FF2A2A"
+                      strokeWidth="3.2"
+                      strokeLinecap="round"
+                      variants={{
+                        hidden: { pathLength: 0, opacity: 0 },
+                        visible: { 
+                          pathLength: 1, 
+                          opacity: 1,
+                          transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.15 }
+                        }
+                      }}
+                    />
+                    {/* Secondary accent stroke for authentic handwritten weight */}
+                    <motion.path
+                      d="M 16 16 C 56 10, 105 17, 145 12"
+                      stroke="#DC2626"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      variants={{
+                        hidden: { pathLength: 0, opacity: 0 },
+                        visible: { 
+                          pathLength: 1, 
+                          opacity: 0.8,
+                          transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.3 }
+                        }
+                      }}
+                    />
+                  </motion.svg>
+                </span>
+              </span>
             </motion.h2>
 
             <motion.p
@@ -986,348 +1015,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
         </div>
       </section>
 
-      {/* PRICING & TIERS SECTION WITH LIGHT PILLAR EFFECT */}
-      <section id="pricing" className="py-32 px-4 relative overflow-hidden">
-        {/* Light Pillar Shader Background Behind Pricing Area & Cards */}
-        <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} className="pointer-events-none z-0 overflow-hidden">
-          <LightPillar
-            topColor="#3410c5"
-            bottomColor="#84CC16"
-            intensity={0.6}
-            rotationSpeed={2}
-            glowAmount={0.015}
-            pillarWidth={5}
-            pillarHeight={0.4}
-            noiseIntensity={1.8}
-            pillarRotation={154}
-            interactive={false}
-            mixBlendMode="normal"
-            quality="low"
-          />
-          {/* Subtle contrast mask keeping typography and cards high-contrast and clear */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(7,6,11,0.25)_0%,rgba(7,6,11,0.88)_100%)] pointer-events-none" />
-        </div>
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Section Header */}
-          <div className="text-center mb-16 px-4">
-            <h2 
-              className="text-4xl md:text-7xl font-bold tracking-tight mb-6 text-white font-nohemi leading-tight"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-            >
-              Scale Your Persuasion Quota <br className="hidden md:block" /> Without Surprise Overages
-            </h2>
-            <div className="w-28 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-8" />
-            <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Start with 20 daily credits free on Basic or scale to Core and Max for enhanced daily quotas, Prompt Builder access, and shared Bolt roadmap synchronization.
-            </p>
-          </div>
-
-          {/* 3 Pricing Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-6xl mx-auto mb-12">
-            
-            {/* TIER 1: BASIC (FREE) */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl border border-white/15 hover:border-white/30 bg-[#0c081e]/35 hover:bg-[#0c081e]/45 shadow-[0_16px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-300"
-              style={{
-                backdropFilter: "blur(20px) saturate(1.3)",
-                WebkitBackdropFilter: "blur(20px) saturate(1.3)"
-              }}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-sm">
-                      <Shield size={16} />
-                    </div>
-                    <h3 className="text-xl font-bold text-white tracking-tight font-nohemi">Basic</h3>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-mono text-gray-300 uppercase">
-                    Free Forever
-                  </span>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-white tracking-tight font-nohemi">$0</span>
-                    <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">/ Free</span>
-                  </div>
-                  <p className="text-xs text-gray-300 mt-2 leading-relaxed">
-                    Applies to Murgii only. Not connected to Bolt roadmap.
-                  </p>
-                </div>
-
-                <div className="h-px bg-white/10 my-6" />
-
-                <div className="space-y-3.5 mb-8">
-                  <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">Included Capabilities</p>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} className="text-white" />
-                    </div>
-                    <span className="text-xs text-gray-200 font-medium leading-tight">
-                      <strong className="text-white font-bold">20 credits</strong> per day
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} className="text-white" />
-                    </div>
-                    <span className="text-xs text-gray-200 font-medium leading-tight">
-                      Access to all 4 modes: <strong className="text-white">Emails, Ads, Pages, Psych</strong>
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-3 opacity-60">
-                    <div className="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <X size={11} className="text-gray-400" />
-                    </div>
-                    <span className="text-xs text-gray-400 font-medium leading-tight line-through">
-                      Prompt Builder access
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-3 opacity-60">
-                    <div className="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <X size={11} className="text-gray-400" />
-                    </div>
-                    <span className="text-xs text-gray-400 font-medium leading-tight line-through">
-                      Bolt account activity visibility
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={onStart}
-                  className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-center text-xs font-bold text-white transition-all cursor-pointer shadow-sm"
-                >
-                  Start with Basic
-                </button>
-              </div>
-            </motion.div>
-
-            {/* TIER 2: CORE */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl border border-white/20 hover:border-white/35 bg-[#0c081e]/40 hover:bg-[#0c081e]/50 shadow-[0_20px_48px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-300"
-              style={{
-                backdropFilter: "blur(20px) saturate(1.3)",
-                WebkitBackdropFilter: "blur(20px) saturate(1.3)"
-              }}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-white shadow-[0_0_12px_rgba(255,255,255,0.2)]">
-                      <Zap size={16} />
-                    </div>
-                    <h3 className="text-xl font-bold text-white tracking-tight font-nohemi">Core</h3>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-mono text-gray-300 uppercase">
-                    Direct Response
-                  </span>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-white tracking-tight font-nohemi">$29</span>
-                    <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">/ month</span>
-                  </div>
-                  <p className="text-xs text-gray-300 mt-2 leading-relaxed">
-                    Full direct response generation &amp; shared Bolt Core integration.
-                  </p>
-                </div>
-
-                <div className="h-px bg-white/10 my-6" />
-
-                <div className="space-y-3.5 mb-8">
-                  <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">Everything in Basic, plus:</p>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} className="text-white" />
-                    </div>
-                    <span className="text-xs text-gray-200 font-medium leading-tight">
-                      <strong className="text-white font-bold">40 credits</strong> per day (2x capacity)
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} className="text-white" />
-                    </div>
-                    <span className="text-xs text-gray-200 font-medium leading-tight">
-                      <strong className="text-white font-bold">Prompt Builder access</strong> (Guided input architect)
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} className="text-white" />
-                    </div>
-                    <span className="text-xs text-gray-200 font-medium leading-tight">
-                      Connects to <strong className="text-white">Bolt Core</strong>: full 6-category roadmap
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check size={11} className="text-white" />
-                    </div>
-                    <span className="text-xs text-gray-200 font-medium leading-tight">
-                      Full AI Prompt Library access
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-white/10">
-                <a
-                  href="https://whop.com/qreato/ai-leverage"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-center text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(255,255,255,0.25)] cursor-pointer"
-                >
-                  <span>Get Core</span>
-                  <ExternalLink size={13} />
-                </a>
-              </div>
-            </motion.div>
-
-            {/* TIER 3: MAX (MOST POPULAR) */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              className="relative h-full"
-            >
-              <div
-                className="relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 overflow-hidden h-full border border-white/25 hover:border-white/45 bg-[#0e0924]/45 hover:bg-[#0e0924]/55 shadow-[0_24px_54px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.25)]"
-                style={{
-                  backdropFilter: "blur(20px) saturate(1.3)",
-                  WebkitBackdropFilter: "blur(20px) saturate(1.3)"
-                }}
-              >
-                {/* MOST POPULAR BADGE - Clean White/Silver Ribbon */}
-                <div className="absolute top-0 right-0 z-20">
-                  <div className="bg-white text-black text-[9px] font-black uppercase tracking-[0.2em] py-1.5 px-5 rounded-bl-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                    Most Popular
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-white shadow-[0_0_16px_rgba(255,255,255,0.25)]">
-                        <Crown size={16} />
-                      </div>
-                      <h3 className="text-xl font-bold text-white tracking-tight font-nohemi">Max</h3>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold text-white tracking-tight font-nohemi">$97</span>
-                      <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">/ month</span>
-                    </div>
-                    <p className="text-xs text-gray-300 mt-2 leading-relaxed">
-                      Maximum credit capacity &amp; complete Qreato AI ecosystem integration.
-                    </p>
-                  </div>
-
-                  <div className="h-px bg-white/10 my-6" />
-
-                  <div className="space-y-3.5 mb-8">
-                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">Everything in Core, plus:</p>
-                    
-                    <div className="flex items-start gap-3">
-                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check size={11} className="text-white" />
-                      </div>
-                      <span className="text-xs text-gray-200 font-medium leading-tight">
-                        <strong className="text-white font-bold">100 credits</strong> per day (5x capacity)
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check size={11} className="text-white" />
-                      </div>
-                      <span className="text-xs text-gray-200 font-medium leading-tight">
-                        Connects to <strong className="text-white">Bolt Max</strong> suite
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check size={11} className="text-white" />
-                      </div>
-                      <span className="text-xs text-gray-200 font-medium leading-tight">
-                        <strong className="text-white font-bold">AI Blueprint Assist</strong> &amp; Qreato AI engine
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-4 h-4 rounded-full bg-white/15 border border-white/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check size={11} className="text-white" />
-                      </div>
-                      <span className="text-xs text-gray-200 font-medium leading-tight">
-                        Your Business Blueprint interactive studio
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-white/10">
-                  <a
-                    href="https://whop.com/qreato/qreato-max"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black text-center text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.3)] cursor-pointer"
-                  >
-                    <span>Get Max</span>
-                    <ExternalLink size={13} />
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-
-          </div>
-
-          {/* Unified Cross-App Note */}
-          <div className="max-w-6xl mx-auto rounded-2xl p-6 bg-[#0c081e]/40 border border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl shadow-lg">
-            <div className="space-y-1 text-center sm:text-left">
-              <h4 className="text-sm font-bold text-white font-nohemi">Unified Cross-App Infrastructure</h4>
-              <p className="text-xs text-gray-300">
-                Murgii shares authenticated state and roadmap milestones directly with your Bolt account.
-              </p>
-            </div>
-            <a
-              href="https://bolt.vercel.app"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs font-semibold text-white flex items-center gap-2 transition-colors shrink-0"
-            >
-              <span>Open Bolt Studio</span>
-              <ExternalLink size={12} className="text-white" />
-            </a>
-          </div>
-        </div>
-      </section>
-
       {/* Footer Ecosystem */}
       <footer className="relative pt-20 pb-12 overflow-hidden border-t border-white/5 bg-transparent">
         {/* Cinematic Ambient Glows */}
@@ -1433,10 +1120,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                     <button
                       type="button"
                       onClick={() => {
-                        const pricingEl = document.getElementById("pricing") || document.querySelector("section:has(.MVPPriceCard)");
-                        if (pricingEl) {
-                          pricingEl.scrollIntoView({ behavior: "smooth" });
-                        } else if (onNavigate) {
+                        if (onNavigate) {
                           onNavigate("pricing");
                         } else {
                           handleLoginClick();
@@ -1701,14 +1385,14 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        className="flex-1 w-full aspect-square md:aspect-auto md:h-[540px] relative group cursor-crosshair"
+        className="flex-1 w-full min-h-[470px] sm:min-h-[510px] md:min-h-0 md:h-[540px] relative group cursor-crosshair"
       >
         <div 
-          className="absolute inset-0 rounded-[48px] bg-white/[0.03] border border-white/15 backdrop-blur-xl overflow-hidden group-hover:border-white/30 transition-all duration-700 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)]"
+          className="absolute inset-0 rounded-[36px] sm:rounded-[48px] bg-white/[0.03] border border-white/15 backdrop-blur-xl overflow-hidden group-hover:border-white/30 transition-all duration-700 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)]"
           style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }}
         >
            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-transparent" />
-           <div className="relative w-full h-full flex items-center justify-center p-4" style={{ transform: "translateZ(80px)" }}>
+           <div className="relative w-full h-full flex items-center justify-center p-3.5 sm:p-4" style={{ transform: "translateZ(80px)" }}>
              {visual}
            </div>
         </div>

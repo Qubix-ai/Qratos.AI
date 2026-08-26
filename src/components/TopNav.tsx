@@ -154,19 +154,20 @@ export function TopNav({
                 initial={{ opacity: 0, scale: 0.96, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 8 }}
-                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute right-0 mt-2 w-72 rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.85)] p-3 z-[120]"
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute right-0 mt-2 w-72 rounded-2xl p-3 z-[120]"
                 style={{
-                  background: "rgba(20, 20, 25, 0.7)",
-                  backdropFilter: "blur(24px) saturate(1.4)",
-                  WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  background: "rgba(11, 8, 22, 0.94)",
+                  backdropFilter: "blur(32px) saturate(1.8)",
+                  WebkitBackdropFilter: "blur(32px) saturate(1.8)",
+                  border: "1px solid rgba(255, 255, 255, 0.18)",
+                  boxShadow: "0 28px 70px -10px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.22)",
                 }}
               >
-                <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
+                <div className="px-3 py-2 border-b border-white/15 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/70 shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
-                    <p className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest font-semibold">Settings & Nav</p>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#E879F9] shadow-[0_0_8px_rgba(232,121,249,0.8)]" />
+                    <p className="text-[10px] font-mono text-neutral-300 uppercase tracking-widest font-bold">Settings & Nav</p>
                   </div>
                 </div>
 
@@ -178,21 +179,21 @@ export function TopNav({
                       setSettingsMenuOpen(false);
                       onTabChange("chat");
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-left group"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.15] group-hover:border-white/30"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.2] group-hover:border-white/40 shadow-sm"
                       style={{
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                        backdropFilter: "blur(8px)",
+                        background: "rgba(255, 255, 255, 0.12)",
+                        border: "1px solid rgba(255, 255, 255, 0.22)",
+                        backdropFilter: "blur(12px)",
                       }}
                     >
                       <Sparkles size={14} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block truncate font-bold text-white">Workspace</span>
-                      <span className="block truncate text-[10px] text-neutral-400">Interactive persuasion engine</span>
+                      <span className="block truncate text-[10px] text-neutral-300">Interactive persuasion engine</span>
                     </div>
                   </button>
 
@@ -203,21 +204,21 @@ export function TopNav({
                       setSettingsMenuOpen(false);
                       onTabChange("prompt-builder");
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-left group"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.15] group-hover:border-white/30"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.2] group-hover:border-white/40 shadow-sm"
                       style={{
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                        backdropFilter: "blur(8px)",
+                        background: "rgba(255, 255, 255, 0.12)",
+                        border: "1px solid rgba(255, 255, 255, 0.22)",
+                        backdropFilter: "blur(12px)",
                       }}
                     >
                       <Wand2 size={14} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block truncate font-bold text-white">Prompt Builder</span>
-                      <span className="block truncate text-[10px] text-neutral-400">Role-framed master prompts</span>
+                      <span className="block truncate text-[10px] text-neutral-300">Role-framed master prompts</span>
                     </div>
                   </button>
 
@@ -228,21 +229,21 @@ export function TopNav({
                       setSettingsMenuOpen(false);
                       onTabChange("pricing");
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-left group"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.15] group-hover:border-white/30"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.2] group-hover:border-white/40 shadow-sm"
                       style={{
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                        backdropFilter: "blur(8px)",
+                        background: "rgba(255, 255, 255, 0.12)",
+                        border: "1px solid rgba(255, 255, 255, 0.22)",
+                        backdropFilter: "blur(12px)",
                       }}
                     >
                       <CreditCard size={14} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block truncate font-bold text-white">Pricing & Plans</span>
-                      <span className="block truncate text-[10px] text-neutral-400">Credit quotas & tiers</span>
+                      <span className="block truncate text-[10px] text-neutral-300">Credit quotas & tiers</span>
                     </div>
                   </button>
 
@@ -253,21 +254,21 @@ export function TopNav({
                       setSettingsMenuOpen(false);
                       onTabChange("account");
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-left group"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.15] group-hover:border-white/30"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.2] group-hover:border-white/40 shadow-sm"
                       style={{
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                        backdropFilter: "blur(8px)",
+                        background: "rgba(255, 255, 255, 0.12)",
+                        border: "1px solid rgba(255, 255, 255, 0.22)",
+                        backdropFilter: "blur(12px)",
                       }}
                     >
                       <UserIcon size={14} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block truncate font-bold text-white">Account Settings</span>
-                      <span className="block truncate text-[10px] text-neutral-400">Subscription & security</span>
+                      <span className="block truncate text-[10px] text-neutral-300">Subscription & security</span>
                     </div>
                   </button>
 
@@ -278,21 +279,21 @@ export function TopNav({
                       setSettingsMenuOpen(false);
                       onTabChange("memory");
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-left group"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.15] group-hover:border-white/30"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.2] group-hover:border-white/40 shadow-sm"
                       style={{
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                        backdropFilter: "blur(8px)",
+                        background: "rgba(255, 255, 255, 0.12)",
+                        border: "1px solid rgba(255, 255, 255, 0.22)",
+                        backdropFilter: "blur(12px)",
                       }}
                     >
                       <SlidersHorizontal size={14} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block truncate font-bold text-white">Memory & Context</span>
-                      <span className="block truncate text-[10px] text-neutral-400">Brand voice & preferences</span>
+                      <span className="block truncate text-[10px] text-neutral-300">Brand voice & preferences</span>
                     </div>
                   </button>
 
@@ -303,26 +304,26 @@ export function TopNav({
                       setSettingsMenuOpen(false);
                       onTabChange("landing");
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-left group"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.15] group-hover:border-white/30"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all group-hover:scale-105 group-hover:bg-white/[0.2] group-hover:border-white/40 shadow-sm"
                       style={{
-                        background: "rgba(255, 255, 255, 0.08)",
-                        border: "1px solid rgba(255, 255, 255, 0.15)",
-                        backdropFilter: "blur(8px)",
+                        background: "rgba(255, 255, 255, 0.12)",
+                        border: "1px solid rgba(255, 255, 255, 0.22)",
+                        backdropFilter: "blur(12px)",
                       }}
                     >
                       <ExternalLink size={14} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="block truncate font-bold text-white">Landing Page</span>
-                      <span className="block truncate text-[10px] text-neutral-400">Return to landing</span>
+                      <span className="block truncate text-[10px] text-neutral-300">Return to landing</span>
                     </div>
                   </button>
                 </div>
 
-                <div className="pt-2 mt-1 border-t border-white/10">
+                <div className="pt-2 mt-1 border-t border-white/15">
                   {/* Sign Out */}
                   <button
                     type="button"
@@ -330,9 +331,9 @@ export function TopNav({
                       setSettingsMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer text-left"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                    <div className="w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/25 flex items-center justify-center text-red-400">
                       <LogOut size={14} />
                     </div>
                     <span>Sign Out</span>
@@ -365,30 +366,37 @@ export function TopNav({
           <AnimatePresence>
             {accountMenuOpen && (
               <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#0D0A18] border border-[#8B5CF6]/30 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_30px_rgba(139,92,246,0.2)] p-2 z-[120]"
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute right-0 mt-2 w-64 rounded-2xl p-2.5 z-[120]"
+                style={{
+                  background: "rgba(11, 8, 22, 0.94)",
+                  backdropFilter: "blur(32px) saturate(1.8)",
+                  WebkitBackdropFilter: "blur(32px) saturate(1.8)",
+                  border: "1px solid rgba(255, 255, 255, 0.18)",
+                  boxShadow: "0 28px 70px -10px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.22)",
+                }}
               >
-                <div className="px-3 py-2.5 border-b border-white/08">
+                <div className="px-3 py-2.5 border-b border-white/15">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">Account Plan</p>
-                    <span className="px-2 py-0.5 rounded bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[9px] font-black text-[#E879F9] uppercase">
+                    <p className="text-[10px] font-mono text-neutral-300 uppercase tracking-wider font-bold">Account Plan</p>
+                    <span className="px-2 py-0.5 rounded bg-[#8B5CF6]/25 border border-[#8B5CF6]/50 text-[9px] font-black text-[#E879F9] uppercase shadow-sm">
                       {userPlan.toUpperCase()}
                     </span>
                   </div>
                   <p className="text-xs font-bold text-white truncate mt-1">{user?.email || "Authenticated User"}</p>
                 </div>
 
-                <div className="py-1 space-y-1">
+                <div className="py-1.5 space-y-1">
                   <button
                     type="button"
                     onClick={() => {
                       setAccountMenuOpen(false);
                       onTabChange("account");
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer text-left"
                   >
                     <UserIcon size={14} className="text-white" />
                     <span>My Profile & Settings</span>
@@ -400,7 +408,7 @@ export function TopNav({
                       setAccountMenuOpen(false);
                       onTabChange("memory");
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer text-left"
                   >
                     <SlidersHorizontal size={14} className="text-white" />
                     <span>Memory & Personalization</span>
@@ -412,7 +420,7 @@ export function TopNav({
                       setAccountMenuOpen(false);
                       onTabChange("pricing");
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer text-left"
                   >
                     <CreditCard size={14} className="text-white" />
                     <span>Pricing & Plans</span>
@@ -424,7 +432,7 @@ export function TopNav({
                       setAccountMenuOpen(false);
                       onTabChange("landing");
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-200 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer text-left"
                   >
                     <LayoutDashboard size={14} className="text-white" />
                     <span>Landing Page</span>
@@ -436,7 +444,7 @@ export function TopNav({
                       setAccountMenuOpen(false);
                       onTabChange("pricing");
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#E879F9] hover:bg-[#8B5CF6]/15 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-[#E879F9] hover:bg-[#8B5CF6]/20 transition-colors cursor-pointer text-left"
                   >
                     <span className="flex items-center gap-2">
                       <Sparkles size={13} />
@@ -446,14 +454,14 @@ export function TopNav({
                   </button>
                 </div>
 
-                <div className="pt-1 mt-1 border-t border-white/08">
+                <div className="pt-1.5 mt-1 border-t border-white/15">
                   <button
                     type="button"
                     onClick={() => {
                       setAccountMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer text-left"
                   >
                     <LogOut size={14} />
                     <span>Sign Out</span>

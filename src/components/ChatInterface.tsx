@@ -24,6 +24,7 @@ import { Murgii3DChicken } from "./Murgii3DChicken";
 import { AIProcessingTelemetry } from "./AIProcessingTelemetry";
 import { QreatoLogo } from "./QreatoLogo";
 import { FloatingIridescentBlobs } from "./FloatingIridescentBlobs";
+import FloatingLines from "./FloatingLines";
 import { 
   callMurgiiGenerateEdgeFunction, 
   DailyLimitError, 
@@ -486,6 +487,28 @@ export function ChatInterface({
 
   return (
     <div className="flex-1 flex flex-col relative overflow-hidden font-sans h-full min-h-0 bg-transparent">
+      {/* Background Floating Lines Experience (Transferred from Landing Page with soft opacity) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <FloatingLines 
+          enabledWaves={["top", "middle", "bottom"]}
+          lineCount={4}
+          lineDistance={38}
+          bendRadius={12}
+          bendStrength={4.5}
+          interactive={true}
+          parallax={true}
+          animationSpeed={0.5}
+          gradientStart="#10ffb0"
+          gradientMid="#8B5CF6"
+          gradientEnd="#D946EF"
+          linesGradient={["#10ffb0", "#8B5CF6", "#D946EF"]}
+          mixBlendMode="screen"
+          className="w-full h-full opacity-20 sm:opacity-25"
+        />
+        {/* Soft dark radial vignette ensuring text, messages, cards, and input are 100% readable */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(7,6,11,0.4)_0%,rgba(7,6,11,0.92)_100%)] pointer-events-none" />
+      </div>
+
       {/* Floating Iridescent Ambient Blobs */}
       <FloatingIridescentBlobs variant="workspace" />
 
