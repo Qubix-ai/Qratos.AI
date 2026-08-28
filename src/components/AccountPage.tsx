@@ -66,7 +66,8 @@ export function AccountPage({
 
   useEffect(() => {
     async function loadAccountData() {
-      if (!user) {
+      const uid = user?.id || user?.uid;
+      if (!uid) {
         setLoading(false);
         return;
       }
@@ -74,8 +75,8 @@ export function AccountPage({
       try {
         const [prof, freshPlanAndCredits, bolt] = await Promise.all([
           fetchUserProfile(user),
-          fetchUserPlanAndCredits(user.id, remainingCredits ?? undefined, user.user_metadata),
-          fetchBoltProgress(user.id),
+          fetchUserPlanAndCredits(uid, remainingCredits ?? undefined, user.user_metadata, user.email),
+          fetchBoltProgress(uid),
         ]);
 
         setProfile(prof);

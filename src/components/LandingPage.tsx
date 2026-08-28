@@ -971,7 +971,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               <SpecializedModeCard 
                 name="Emails Mode"
                 role="Multi-Email Sequences"
-                desc="Nurture sequences, flash sale blasts, cold outbound, and re-engagement drips."
+                bullets={[
+                  "Nurture sequences",
+                  "Flash sale blasts",
+                  "Cold outbound drips"
+                ]}
                 icon={Mail}
                 sampleCopy="Subject: Quick question about scaling [Product]..."
                 delay={0}
@@ -979,29 +983,110 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               <SpecializedModeCard 
                 name="Ads Mode"
                 role="Hooks & Performance"
-                desc="Pattern interrupts, problem-agitate angles, and direct-response video scripts."
+                bullets={[
+                  "Pattern interrupts",
+                  "Problem-agitate angles",
+                  "Direct-response scripts"
+                ]}
                 icon={Target}
                 sampleCopy="Hook: Stop losing 64% of qualified clicks on draft 1."
-                delay={300}
+                delay={200}
               />
               <SpecializedModeCard 
                 name="Pages Mode"
                 role="Sales & Landing Copy"
-                desc="High-converting hero sections, proof stacks, pricing tables, and CTA blocks."
+                bullets={[
+                  "High-converting heroes",
+                  "Proof & trust stacks",
+                  "High-intent CTA blocks"
+                ]}
                 icon={Globe}
                 sampleCopy="Headline: The Persuasion Engine Built for Operators."
-                delay={600}
+                delay={400}
               />
               <SpecializedModeCard 
                 name="Psych Mode"
                 role="Behavioral Biases"
-                desc="Loss-aversion frames, Cialdini triggers, and cognitive friction removal."
+                bullets={[
+                  "Loss-aversion frames",
+                  "Cialdini persuasion levers",
+                  "Friction elimination"
+                ]}
                 icon={Zap}
                 sampleCopy="Trigger: Loss-aversion framing + micro-commitment CTA."
-                delay={900}
+                delay={600}
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Affiliate Partner Section (Positioned Directly Above Footer) */}
+      <section className="relative py-12 sm:py-16 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-[36px] border border-white/15 p-8 sm:p-12 shadow-2xl relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12)]"
+            style={{
+              background: "rgba(255, 255, 255, 0.04)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)"
+            }}
+          >
+            {/* Subtle Ambient Backlight Glow */}
+            <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/[0.06] rounded-full blur-[70px] pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-white/[0.04] rounded-full blur-[70px] pointer-events-none" />
+
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 md:gap-12 relative z-10">
+              <div className="max-w-2xl space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md">
+                  <Sparkles size={12} className="text-white" />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-white/90 font-bold">
+                    Partner Program
+                  </span>
+                </div>
+
+                <h3 
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold text-white font-nohemi leading-tight"
+                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                >
+                  Earn 50% Referring Murgii
+                </h3>
+
+                <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-normal">
+                  Affiliates earn a 50% commission on each customer referred to Murgii. Get your unique tracked affiliate link and monitor your clicks, signups, and earnings seamlessly through Whop’s built-in affiliate engine — with no separate dashboard needed.
+                </p>
+
+                {/* Honest Subscription Disclosure */}
+                <div className="pt-1 flex items-start gap-2.5 text-xs text-gray-400">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/60 mt-1.5 shrink-0" />
+                  <p className="leading-relaxed">
+                    <span className="text-white/80 font-semibold">Subscription Disclosure:</span> Since Core and Max are recurring monthly subscriptions, the 50% commission applies to the customer’s first month payment only, not to ongoing renewal payments.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Button & Tracking Note */}
+              <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-3">
+                {/* PLACEHOLDER: Whop Affiliate Portal URL - update with dedicated Whop link when live */}
+                <a
+                  href="https://whop.com/qreato/ai-leverage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all duration-300 shadow-[0_0_25px_rgba(255,255,255,0.25)] hover:scale-[1.02] cursor-pointer group"
+                >
+                  <span>Become an Affiliate</span>
+                  <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                </a>
+                <span className="text-[11px] font-mono text-gray-400 text-center lg:text-left">
+                  Tracked via Whop &bull; 50% payout
+                </span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1031,8 +1116,8 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               </div>
 
               {/* High-Converting Value Statement */}
-              <p className="text-white text-xs sm:text-[13.5px] leading-relaxed font-normal max-w-[360px] sm:max-w-[390px] [text-wrap:pretty]">
-                Write <span className="text-[#FFBE0B] font-bold">sharper</span> emails, ads, sales pages & psychologically persuasive copy all powered by AI that remembers your <span className="text-[#FFBE0B] font-bold">business, brand voice & goals</span>.
+              <p className="text-gray-300 text-xs sm:text-[13px] leading-relaxed font-normal max-w-[380px] sm:max-w-[420px]">
+                Murgii AI is Qreato Labs proprietary copywriting engine, trained to write emails, ads, contents & sales pages that convert. Built for creators and founders who need results, not busywork. Every generation remembers your brand, your voice & your goals.
               </p>
             </div>
 

@@ -32,19 +32,23 @@ export default function App() {
   const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("signup");
 
   const loadUserData = async (currentUser: any, knownRemaining?: number) => {
-    if (currentUser?.id) {
+    const uid = currentUser?.id || currentUser?.uid;
+    if (uid) {
       try {
         const { planData, remainingCredits: freshCredits } = await fetchUserPlanAndCredits(
-          currentUser.id,
+          uid,
           knownRemaining,
-          currentUser.user_metadata
+          currentUser.user_metadata,
+          currentUser.email
         );
         setUserPlanData(planData);
         setRemainingCredits(freshCredits);
+        return { planData, remainingCredits: freshCredits };
       } catch (err) {
         console.warn("Could not fetch user plan and credit usage from Supabase:", err);
       }
     }
+    return null;
   };
 
   useEffect(() => {
@@ -56,7 +60,7 @@ export default function App() {
     }, 13000);
 
     // Initial Supabase Session Check - Fetches user plan and daily credit usage on load
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
         console.error("Supabase getSession error:", error);
       }
@@ -64,7 +68,7 @@ export default function App() {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          loadUserData(currentUser);
+          await loadUserData(currentUser);
           setActiveTab("chat");
         }
         setLoading(false);
@@ -72,12 +76,12 @@ export default function App() {
     });
 
     // Supabase Auth State Change Listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (isMounted) {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") && currentUser) {
-          loadUserData(currentUser);
+        if (currentUser && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED")) {
+          await loadUserData(currentUser);
           setActiveTab("chat");
         } else if (event === "SIGNED_OUT") {
           setUserPlanData({ plan: "none", maxCredits: 3 });

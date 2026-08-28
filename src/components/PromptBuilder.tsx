@@ -9,6 +9,7 @@ import {
   Target, 
   FileText, 
   Zap, 
+  Megaphone,
   RefreshCw, 
   X,
   Wand2, 
@@ -65,7 +66,8 @@ export function PromptBuilder({
     { id: "email", label: "Email Sequence", icon: Mail, desc: "High-CTR campaigns, launches & onboarding" },
     { id: "ads", label: "Ad Copy & Hooks", icon: Target, desc: "Pattern interrupts, headlines & paid media" },
     { id: "landing", label: "Sales Page / Landing", icon: FileText, desc: "Hero headlines, value pillars & conversion copy" },
-    { id: "psych", label: "Contents & Persuasion", icon: Zap, desc: "Cognitive bias stack & psychological hooks" },
+    { id: "psych", label: "Psych & Biases", icon: Zap, desc: "Cognitive bias stack & psychological hooks" },
+    { id: "content", label: "Social & Content Scripts", icon: Megaphone, desc: "Shorts, video scripts, carousels & organic posts" },
   ];
 
   const outcomeOptions = [
@@ -152,7 +154,6 @@ Architect a high-converting sales page lead and core structure. Structure the ou
 6. Final Urgency Push & Risk-Reversal Guarantee`;
 
       case "psych":
-      default:
         return `Act as a behavioral psychologist, cognitive persuasion master, and consumer decision strategist.
 
 Context & Offer:
@@ -168,6 +169,23 @@ Develop a deep behavioral persuasion framework and psychological hook stack. Str
 3. Objection-Reversal Matrix (Subconscious Fear vs. Psychological Reframe)
 4. Framing & Metaphor Architecture (A memorable analogy that makes the offer value undeniable)
 5. Urgency & Commitment Trigger (Ethical scarcity and immediate decision driver)`;
+
+      case "content":
+      default:
+        return `Act as an elite organic content strategist, viral scriptwriter, and audience engagement architect.
+
+Context & Offer:
+- Industry / Niche: ${effectiveNiche}
+- Product / Offer Type: ${effectiveProduct}
+- Target Outcome: ${effectiveOutcome}
+- Tone & Voice: ${effectiveTone}${uspSection}
+
+Task & Output Architecture:
+Generate a high-impact social content & video script architecture. Structure the output into:
+1. 3 High-Retention First-3-Second Spoken/Text Hooks (Optimized for organic virality)
+2. Complete Script / Post Framework (Hook, Story/Mechanism, Key Takeaways, Actionable Takeaway)
+3. 2 High-Engagement Question CTAs (Designed to trigger organic comments & shares)
+4. Platform Repurposing Guide (How to adapt for LinkedIn, X/Twitter thread, and Short-form video)`;
     }
   }, [selectedCategory, niche, productType, effectiveOutcome, tone, keyUSP]);
 

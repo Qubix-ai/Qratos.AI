@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Mail, 
   Target, 
@@ -571,27 +572,41 @@ export const LinearPipelineVisual: React.FC = () => {
           const isPassed = activeStep >= idx;
 
           return (
-            <div
+            <motion.div
               key={step.num}
+              initial={{ opacity: 0, y: 20, x: idx === 0 ? -16 : idx === 2 ? 16 : 0 }}
+              whileInView={{ opacity: 1, y: 0, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, delay: idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -4, scale: 1.015 }}
               onClick={() => setActiveStep(idx)}
-              className={`p-6 rounded-3xl border transition-all duration-500 cursor-pointer flex flex-col justify-between group ${
+              className={`p-6 rounded-3xl border transition-all duration-500 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
                 isActive
-                  ? "bg-white/15 border-white/40 shadow-[0_0_30px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.3)] scale-[1.02]"
+                  ? "bg-white/15 border-white/45 shadow-[0_0_35px_rgba(255,255,255,0.18),inset_0_1px_0_rgba(255,255,255,0.35)]"
                   : isPassed
-                  ? "bg-white/[0.06] border-white/20 hover:border-white/30"
-                  : "bg-white/[0.02] border-white/10 opacity-70 hover:opacity-90"
+                  ? "bg-white/[0.06] border-white/20 hover:border-white/35 shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+                  : "bg-white/[0.02] border-white/10 opacity-70 hover:opacity-100 hover:border-white/25"
               }`}
             >
-              <div>
+              {/* Subtle Ambient Radial Highlight for the Active Step */}
+              {isActive && (
+                <div className="absolute -top-12 -left-12 w-40 h-40 bg-white/[0.12] rounded-full blur-[36px] pointer-events-none" />
+              )}
+
+              <div className="relative z-10">
                 <div className="flex items-center justify-between mb-5">
                   <div
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                      isActive ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105" : "bg-white/10 text-white group-hover:scale-105"
+                      isActive 
+                        ? "bg-white text-black shadow-[0_0_24px_rgba(255,255,255,0.4)] scale-105" 
+                        : "bg-white/10 text-white group-hover:scale-105 group-hover:bg-white/15"
                     }`}
                   >
                     <Icon size={22} strokeWidth={2.2} />
                   </div>
-                  <span className="text-3xl font-black font-nohemi text-white/35 group-hover:text-white/60 transition-colors">
+                  <span className={`text-3xl font-black font-nohemi transition-colors ${
+                    isActive ? "text-white/80" : "text-white/25 group-hover:text-white/50"
+                  }`}>
                     {step.num}
                   </span>
                 </div>
@@ -603,7 +618,7 @@ export const LinearPipelineVisual: React.FC = () => {
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono">
+              <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] font-mono relative z-10">
                 <span className="text-white/80 bg-white/10 px-2 py-0.5 rounded border border-white/15 font-bold uppercase tracking-wider text-[9px]">
                   {step.badge}
                 </span>
@@ -612,7 +627,7 @@ export const LinearPipelineVisual: React.FC = () => {
                   {isActive && <span className="w-2 h-2 rounded-full bg-white animate-ping" />}
                 </span>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -913,13 +928,14 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
 export const SpecializedModeCard: React.FC<{
   name: string;
   role: string;
-  desc: string;
+  desc?: string;
+  bullets?: string[];
   icon: any;
   sampleCopy: string;
   delay?: number;
-}> = ({ name, role, desc, icon: Icon, sampleCopy, delay = 0 }) => {
+}> = ({ name, role, desc, bullets, icon: Icon, sampleCopy, delay = 0 }) => {
   const [typed, setTyped] = useState("");
-  const [_isHovered, setIsHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     let currentIdx = 0;
@@ -960,19 +976,31 @@ export const SpecializedModeCard: React.FC<{
   }, [sampleCopy, delay]);
 
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 24, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, delay: delay * 0.001, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -6, scale: 1.02 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="p-5 sm:p-6 rounded-3xl border border-white/12 hover:border-white/35 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(255,255,255,0.08)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12)] cursor-pointer"
+      className="p-5 sm:p-6 rounded-3xl border border-white/12 hover:border-white/40 transition-colors duration-300 flex flex-col justify-between group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(255,255,255,0.1),0_0_24px_rgba(255,255,255,0.06)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12)] cursor-pointer"
       style={{
         background: "rgba(255, 255, 255, 0.05)",
         backdropFilter: "blur(20px) saturate(1.3)",
         WebkitBackdropFilter: "blur(20px) saturate(1.3)"
       }}
     >
+      {/* Dynamic Hover Glow Backlight */}
+      <div 
+        className={`absolute -top-16 -right-16 w-36 h-36 rounded-full bg-white/10 blur-[30px] pointer-events-none transition-opacity duration-500 ${
+          isHovered ? "opacity-100" : "opacity-0"
+        }`} 
+      />
+
       <div>
-        <div className="flex items-center justify-between mb-3.5">
-          <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black group-hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">
+        <div className="flex items-center justify-between mb-3.5 relative z-10">
+          <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white group-hover:text-black group-hover:shadow-[0_0_20px_rgba(255,255,255,0.35)] transition-all duration-300">
             <Icon size={20} strokeWidth={2.2} />
           </div>
           <span className="text-[9px] font-mono uppercase tracking-wider text-white bg-white/10 px-2.5 py-1 rounded-full border border-white/15 flex items-center gap-1.5 font-bold shadow-sm">
@@ -981,19 +1009,32 @@ export const SpecializedModeCard: React.FC<{
           </span>
         </div>
 
-        <h4 className="text-base font-bold text-white font-nohemi mb-0.5">
+        <h4 className="text-base font-bold text-white font-nohemi mb-0.5 relative z-10">
           {name}
         </h4>
-        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block mb-2 font-semibold">
+        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block mb-3 font-semibold relative z-10">
           {role}
         </span>
-        <p className="text-xs text-neutral-300 leading-relaxed mb-4 font-normal">
-          {desc}
-        </p>
+
+        {/* 2-3 Short Punchy Key-Point Bullets (max 4-5 words each) */}
+        {bullets && bullets.length > 0 ? (
+          <ul className="space-y-1.5 mb-5 relative z-10">
+            {bullets.map((item, bIdx) => (
+              <li key={bIdx} className="text-xs text-neutral-300 flex items-center gap-2 font-normal">
+                <span className="w-1.5 h-1.5 rounded-full bg-white/80 shrink-0 shadow-[0_0_6px_rgba(255,255,255,0.7)]" />
+                <span className="leading-tight text-gray-200">{item}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-neutral-300 leading-relaxed mb-5 font-normal relative z-10">
+            {desc}
+          </p>
+        )}
       </div>
 
       {/* Live Animated Output Preview with Blinking Terminal Cursor */}
-      <div className="p-3.5 rounded-2xl bg-black/60 border border-white/10 min-h-[56px] flex items-center justify-between gap-2 shadow-inner group-hover:border-white/20 transition-colors">
+      <div className="p-3.5 rounded-2xl bg-black/60 border border-white/10 min-h-[56px] flex items-center justify-between gap-2 shadow-inner group-hover:border-white/20 transition-colors relative z-10">
         <div className="min-w-0 flex-1">
           <span className="block text-[8px] font-mono uppercase tracking-widest text-gray-400 mb-1 font-bold">
             Live Stream Sample
@@ -1007,6 +1048,6 @@ export const SpecializedModeCard: React.FC<{
           <Check size={11} className="text-white" />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

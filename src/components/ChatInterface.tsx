@@ -6,6 +6,7 @@ import {
   Target, 
   FileText, 
   Zap, 
+  Megaphone,
   X, 
   ArrowUp, 
   LayoutDashboard, 
@@ -262,7 +263,8 @@ export function ChatInterface({
     { mode: "email" as MurgiiMode, icon: Mail, title: "Emails", desc: "Sequences" },
     { mode: "ads" as MurgiiMode, icon: Target, title: "Ads", desc: "Hooks & Angles" },
     { mode: "landing" as MurgiiMode, icon: FileText, title: "Pages", desc: "Sales Leads" },
-    { mode: "psych" as MurgiiMode, icon: Zap, title: "Psych", desc: "Biases & Triggers" }
+    { mode: "psych" as MurgiiMode, icon: Zap, title: "Psych", desc: "Biases & Triggers" },
+    { mode: "content" as MurgiiMode, icon: Megaphone, title: "Content", desc: "Social Posts & Scripts" }
   ];
 
   const ANIMATED_WORDS = ["ignore", "forget", "resist"];
@@ -355,6 +357,9 @@ export function ChatInterface({
     if (lower.startsWith('create a high-converting email') || lower.startsWith('brief me on email') || lower.includes('email sequence')) {
       return 'email';
     }
+    if (lower.startsWith('brief me on content') || lower.includes('social post') || lower.includes('video script') || lower.includes('content script')) {
+      return 'content';
+    }
     return currentSelectedMode;
   };
 
@@ -414,7 +419,7 @@ export function ChatInterface({
       }
 
       if (userId) {
-        fetchUserPlanAndCredits(userId, result.remaining, user?.user_metadata)
+        fetchUserPlanAndCredits(userId, result.remaining, user?.user_metadata, user?.email)
           .then(({ planData, remainingCredits: freshCredits }) => {
             setRemainingCredits(freshCredits);
             onRemainingCreditsChange?.(freshCredits);
@@ -458,7 +463,7 @@ export function ChatInterface({
         onRemainingCreditsChange?.(limitRemaining);
 
         if (userId) {
-          fetchUserPlanAndCredits(userId, limitRemaining, user?.user_metadata)
+          fetchUserPlanAndCredits(userId, limitRemaining, user?.user_metadata, user?.email)
             .then(({ planData, remainingCredits: freshCredits }) => {
               onUserDataRefresh?.(planData, freshCredits);
             })

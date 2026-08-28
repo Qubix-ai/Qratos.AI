@@ -17,7 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export type MurgiiMode = "email" | "ads" | "landing" | "psych";
+export type MurgiiMode = "email" | "ads" | "landing" | "psych" | "content";
 
 export interface MurgiiGenerateResponse {
   text: string;

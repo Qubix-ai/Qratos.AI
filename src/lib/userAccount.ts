@@ -29,10 +29,20 @@ export interface BoltProgressSummary {
  */
 export function normalizePlan(raw?: string | null): "basic" | "core" | "max" | "none" {
   if (!raw) return "none";
-  const p = raw.toLowerCase().trim();
-  if (p === "max" || p === "pro" || p === "admin") return "max";
-  if (p === "core") return "core";
-  if (p === "basic" || p === "free") return "basic";
+  const p = String(raw).toLowerCase().trim();
+  if (
+    p === "max" || 
+    p.includes("max") || 
+    p === "pro" || 
+    p.includes("pro") || 
+    p === "admin" || 
+    p === "enterprise" || 
+    p === "premium" || 
+    p === "unlimited" ||
+    p === "60"
+  ) return "max";
+  if (p === "core" || p.includes("core") || p === "20") return "core";
+  if (p === "basic" || p.includes("basic") || p === "free" || p === "starter" || p === "3") return "basic";
   return "none";
 }
 
@@ -54,9 +64,12 @@ export function getPlanMaxCredits(plan: "basic" | "core" | "max" | "none"): numb
 
 /**
  * Fetches user plan from shared user_plan table in Supabase, falling back to auth user metadata
+ * Queries the user_plan table by auth.uid() user_id, id, and optional email fallback.
+ * Uses select("*") so missing column schemas never cause query rejections.
  */
-export async function fetchUserPlan(userId: string, userMetadata?: any): Promise<UserPlanData> {
+export async function fetchUserPlan(userId: string, userMetadata?: any, userEmail?: string): Promise<UserPlanData> {
   let planString: string = "";
+  let statusString: string | undefined = undefined;
 
   if (!userId) {
     return {
@@ -65,24 +78,61 @@ export async function fetchUserPlan(userId: string, userMetadata?: any): Promise
     };
   }
 
+  const cleanUserId = userId.trim();
+  const cleanEmail = (userEmail || userMetadata?.email || "").trim().toLowerCase();
+
   try {
-    const { data, error } = await supabase
+    // 1. Primary Query: Match on user_id = auth.uid()
+    const { data: primaryData, error: primaryErr } = await supabase
       .from("user_plan")
-      .select("plan, status")
-      .eq("user_id", userId)
+      .select("*")
+      .eq("user_id", cleanUserId)
       .maybeSingle();
 
-    if (!error && data?.plan) {
-      planString = data.plan;
-    } else {
-      // If user_id column differs, try id column
-      const { data: altData, error: altError } = await supabase
+    if (!primaryErr && primaryData) {
+      planString = primaryData.plan || primaryData.tier || primaryData.subscription_tier || primaryData.plan_name || primaryData.name || "";
+      statusString = primaryData.status || primaryData.subscription_status;
+    }
+
+    // 2. Secondary Query: Match on id = auth.uid() if primary returned no plan
+    if (!planString) {
+      const { data: idData, error: idErr } = await supabase
         .from("user_plan")
-        .select("plan, status")
-        .eq("id", userId)
+        .select("*")
+        .eq("id", cleanUserId)
         .maybeSingle();
-      if (!altError && altData?.plan) {
-        planString = altData.plan;
+
+      if (!idErr && idData) {
+        planString = idData.plan || idData.tier || idData.subscription_tier || idData.plan_name || idData.name || "";
+        statusString = idData.status || idData.subscription_status;
+      }
+    }
+
+    // 3. Tertiary Query: Match on email if cleanEmail is available
+    if (!planString && cleanEmail) {
+      const { data: emailData, error: emailErr } = await supabase
+        .from("user_plan")
+        .select("*")
+        .eq("email", cleanEmail)
+        .maybeSingle();
+
+      if (!emailErr && emailData) {
+        planString = emailData.plan || emailData.tier || emailData.subscription_tier || emailData.plan_name || emailData.name || "";
+        statusString = emailData.status || emailData.subscription_status;
+      }
+    }
+
+    // 4. Quaternary Query: Match on user_email
+    if (!planString && cleanEmail) {
+      const { data: userEmailData, error: userEmailErr } = await supabase
+        .from("user_plan")
+        .select("*")
+        .eq("user_email", cleanEmail)
+        .maybeSingle();
+
+      if (!userEmailErr && userEmailData) {
+        planString = userEmailData.plan || userEmailData.tier || userEmailData.subscription_tier || userEmailData.plan_name || userEmailData.name || "";
+        statusString = userEmailData.status || userEmailData.subscription_status;
       }
     }
   } catch (err) {
@@ -90,13 +140,14 @@ export async function fetchUserPlan(userId: string, userMetadata?: any): Promise
   }
 
   // Fallback to metadata only if user_plan table query returned nothing
-  if (!planString && userMetadata?.plan) {
-    planString = userMetadata.plan;
+  if (!planString) {
+    planString = userMetadata?.plan || userMetadata?.tier || userMetadata?.app_metadata?.plan || "";
   }
 
   const normalized = normalizePlan(planString);
   return {
     plan: normalized,
+    status: statusString,
     maxCredits: getPlanMaxCredits(normalized),
   };
 }
@@ -154,12 +205,13 @@ export async function fetchTodayUsageCount(userId: string): Promise<number> {
 export async function fetchUserPlanAndCredits(
   userId: string, 
   knownRemaining?: number,
-  userMetadata?: any
+  userMetadata?: any,
+  userEmail?: string
 ): Promise<{
   planData: UserPlanData;
   remainingCredits: number;
 }> {
-  const planData = await fetchUserPlan(userId, userMetadata);
+  const planData = await fetchUserPlan(userId, userMetadata, userEmail);
 
   if (typeof knownRemaining === "number") {
     return {
