@@ -113,8 +113,8 @@ export default function App() {
     setShowAdmin(false);
   };
 
-  if (loading) {
-    return <SplashScreen />;
+  if (loading || showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
   // Full-screen Landing Page
@@ -124,9 +124,6 @@ export default function App() {
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
-        <AnimatePresence>
-          {showSplash && <SplashScreen />}
-        </AnimatePresence>
         <LandingPage 
           user={user}
           userData={userPlanData}
@@ -205,9 +202,6 @@ export default function App() {
       <AmbientBackground />
       <FilmGrainOverlay />
       <SpotlightCursor />
-      <AnimatePresence>
-        {showSplash && <SplashScreen />}
-      </AnimatePresence>
 
       <Sidebar 
         user={user}

@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { QreatoLogo } from "./QreatoLogo";
 import Hyperspeed from "./Hyperspeed";
 
-export function SplashScreen() {
+export function SplashScreen({ onComplete }: { onComplete?: () => void }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -17,11 +17,12 @@ export function SplashScreen() {
 
       if (calculatedProgress >= 100) {
         clearInterval(interval);
+        onComplete?.();
       }
     }, 20);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [onComplete]);
 
   // Hyperspeed effect options: white left trails, yellow right trails, pitch black background
   const hyperspeedOptions = useMemo(

@@ -931,10 +931,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               THE EXECUTION WORKFLOW
             </motion.div>
             <h2 
-              className="text-4xl md:text-7xl font-bold tracking-tight mb-6 text-white font-nohemi"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white font-nohemi max-w-4xl mx-auto leading-[1.15]"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              From Brief to Market-Ready Copy <br className="hidden md:block" /> in 3 Honest Steps
+              <span className="inline-block">From Brief to Market-Ready Copy</span>{" "}
+              <span className="inline-block text-white/90">in 3 Honest Steps</span>
             </h2>
             <div className="w-28 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-8" />
             <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
@@ -973,6 +974,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 desc="Nurture sequences, flash sale blasts, cold outbound, and re-engagement drips."
                 icon={Mail}
                 sampleCopy="Subject: Quick question about scaling [Product]..."
+                delay={0}
               />
               <SpecializedModeCard 
                 name="Ads Mode"
@@ -980,6 +982,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 desc="Pattern interrupts, problem-agitate angles, and direct-response video scripts."
                 icon={Target}
                 sampleCopy="Hook: Stop losing 64% of qualified clicks on draft 1."
+                delay={300}
               />
               <SpecializedModeCard 
                 name="Pages Mode"
@@ -987,6 +990,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 desc="High-converting hero sections, proof stacks, pricing tables, and CTA blocks."
                 icon={Globe}
                 sampleCopy="Headline: The Persuasion Engine Built for Operators."
+                delay={600}
               />
               <SpecializedModeCard 
                 name="Psych Mode"
@@ -994,6 +998,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 desc="Loss-aversion frames, Cialdini triggers, and cognitive friction removal."
                 icon={Zap}
                 sampleCopy="Trigger: Loss-aversion framing + micro-commitment CTA."
+                delay={900}
               />
             </div>
           </div>

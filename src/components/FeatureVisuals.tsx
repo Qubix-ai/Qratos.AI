@@ -528,17 +528,40 @@ export const LinearPipelineVisual: React.FC = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto rounded-[36px] border border-white/15 p-6 sm:p-10 bg-white/[0.05] backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.4)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12)] relative overflow-hidden mb-12">
-      {/* Background Animated Traveling Pulse Track */}
-      <div className="hidden md:block absolute top-[68px] left-[18%] right-[18%] h-[2px] bg-white/10 z-0">
-        <div 
-          className="h-full bg-white shadow-[0_0_14px_white] transition-all duration-700 ease-out"
-          style={{ width: `${activeStep === 0 ? "15%" : activeStep === 1 ? "60%" : "100%"}` }}
-        />
-        {/* Traveling light node */}
-        <div 
-          className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_white] transition-all duration-700 ease-out"
-          style={{ left: `calc(${activeStep === 0 ? "15%" : activeStep === 1 ? "60%" : "100%"} - 7px)` }}
-        />
+      {/* Sleek Top Connected Progress Tracker Line (Positioned cleanly above the cards) */}
+      <div className="hidden md:flex items-center justify-between mb-8 px-4 relative">
+        <div className="absolute top-1/2 left-8 right-8 -translate-y-1/2 h-[2px] bg-white/10 z-0">
+          <div 
+            className="h-full bg-white shadow-[0_0_12px_white] transition-all duration-700 ease-out"
+            style={{ width: `${activeStep === 0 ? "0%" : activeStep === 1 ? "50%" : "100%"}` }}
+          />
+        </div>
+        {steps.map((s, idx) => {
+          const isActive = activeStep === idx;
+          const isPassed = activeStep >= idx;
+          return (
+            <div 
+              key={s.num}
+              onClick={() => setActiveStep(idx)}
+              className="relative z-10 flex items-center gap-2.5 cursor-pointer group"
+            >
+              <div 
+                className={`w-7 h-7 rounded-full flex items-center justify-center font-mono text-[11px] font-bold transition-all duration-500 ${
+                  isActive
+                    ? "bg-white text-black shadow-[0_0_16px_rgba(255,255,255,0.8)] scale-110"
+                    : isPassed
+                    ? "bg-white/30 text-white border border-white/40"
+                    : "bg-black/80 text-white/40 border border-white/20"
+                }`}
+              >
+                {s.num}
+              </div>
+              <span className={`text-xs font-bold transition-colors ${isActive ? "text-white" : "text-gray-400 group-hover:text-white/80"}`}>
+                {s.badge}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
@@ -893,40 +916,48 @@ export const SpecializedModeCard: React.FC<{
   desc: string;
   icon: any;
   sampleCopy: string;
-}> = ({ name, role, desc, icon: Icon, sampleCopy }) => {
+  delay?: number;
+}> = ({ name, role, desc, icon: Icon, sampleCopy, delay = 0 }) => {
   const [typed, setTyped] = useState("");
   const [_isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     let currentIdx = 0;
-    let timer: NodeJS.Timeout;
     let isCancelled = false;
-    
-    const runTyping = () => {
+    let timeoutId: any = null;
+    let intervalId: any = null;
+
+    const startTyping = () => {
       if (isCancelled) return;
-      setTyped("");
       currentIdx = 0;
-      const interval = setInterval(() => {
+      setTyped("");
+
+      intervalId = setInterval(() => {
         if (isCancelled) {
-          clearInterval(interval);
+          clearInterval(intervalId);
           return;
         }
         if (currentIdx <= sampleCopy.length) {
           setTyped(sampleCopy.slice(0, currentIdx));
           currentIdx++;
         } else {
-          clearInterval(interval);
-          timer = setTimeout(runTyping, 3500);
+          clearInterval(intervalId);
+          timeoutId = setTimeout(() => {
+            if (!isCancelled) startTyping();
+          }, 3200);
         }
-      }, 30);
+      }, 35);
     };
 
-    runTyping();
+    const initialTimer = setTimeout(startTyping, delay);
+
     return () => {
       isCancelled = true;
-      clearTimeout(timer);
+      clearTimeout(initialTimer);
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
     };
-  }, [sampleCopy]);
+  }, [sampleCopy, delay]);
 
   return (
     <div 

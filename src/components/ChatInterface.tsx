@@ -282,6 +282,7 @@ export function ChatInterface({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const currentSessionIdRef = useRef<string | undefined>(activeSessionId);
   const userId = user?.id || user?.uid || "";
@@ -325,14 +326,19 @@ export function ChatInterface({
     }
   };
 
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior,
+      });
     }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages, isLoading]);
 
   const detectMode = (text: string, currentSelectedMode: MurgiiMode): MurgiiMode => {
@@ -538,7 +544,7 @@ export function ChatInterface({
       )}
 
       {/* MAIN SCROLL AREA */}
-      <div className="flex-1 overflow-y-auto pt-4 sm:pt-6 pb-[130px] px-3 sm:px-4 custom-scrollbar scroll-smooth relative z-10">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pt-4 sm:pt-6 pb-[130px] px-3 sm:px-4 custom-scrollbar scroll-smooth relative z-10">
         <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
           
           {/* Neural Context Summary - Collapsible Label Section */}

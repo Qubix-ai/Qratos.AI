@@ -436,7 +436,7 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
               </div>
             </div>
 
-            {/* LIVE SYNTHESIS PREVIEW (Frosted White Glass Card) */}
+            {/* HOW MURGII USES YOUR SAVED MEMORY (Plain Language Summary Card) */}
             <div 
               className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40"
               style={{
@@ -452,23 +452,59 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
                   <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white">
                     <Sparkle size={14} />
                   </div>
-                  <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                    Live System Prompt Context Injection Preview
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    How Murgii Personalizes Your Copy
                   </span>
                 </div>
                 <span className="text-[10px] font-mono text-white font-bold bg-white/15 px-2.5 py-1 rounded-full border border-white/25 shadow-sm">
-                  Synchronized
+                  Active in Every Generation
                 </span>
               </div>
               
-              <div className="p-5 rounded-2xl bg-black/60 border border-white/15 font-mono text-[11px] text-neutral-200 leading-relaxed space-y-2 shadow-inner">
-                <div><span className="text-white font-bold">OPERATOR_IDENTITY:</span> {memory.preferred_name ? `"${memory.preferred_name}"` : `<Default User>`}</div>
-                <div><span className="text-white font-bold">INDUSTRY_NICHE:</span> {memory.niche ? `"${memory.niche}"` : `<General Conversion Marketing>`}</div>
-                <div><span className="text-white font-bold">TONE_SIGNATURE:</span> "{memory.preferred_tone || "Bold and direct"}"</div>
-                <div><span className="text-white font-bold">CORE_OFFER_CONTEXT:</span> {memory.business_description ? `"${memory.business_description.slice(0, 90)}..."` : `<Not specified - standard framing applied>`}</div>
-                {memory.additional_notes && (
-                  <div><span className="text-white font-bold">CONSTRAINTS_&_GUARDRAILS:</span> "{memory.additional_notes.slice(0, 90)}..."</div>
-                )}
+              <div className="p-5 rounded-2xl bg-black/60 border border-white/15 text-sm text-neutral-200 leading-relaxed space-y-3 shadow-inner">
+                <p>
+                  Murgii will address you as{" "}
+                  {memory.preferred_name?.trim() ? (
+                    <strong className="text-white font-semibold underline decoration-white/30 underline-offset-4">{memory.preferred_name.trim()}</strong>
+                  ) : (
+                    <span className="text-white/40 italic">Add your name above so Murgii can personalize your copy</span>
+                  )}
+                  , write specifically for the{" "}
+                  {memory.niche?.trim() ? (
+                    <strong className="text-white font-semibold underline decoration-white/30 underline-offset-4">{memory.niche.trim()}</strong>
+                  ) : (
+                    <span className="text-white/40 italic">your selected industry</span>
+                  )}{" "}
+                  market, and speak in a{" "}
+                  <strong className="text-white font-semibold underline decoration-white/30 underline-offset-4">{memory.preferred_tone || "Bold and direct"}</strong>{" "}
+                  tone.
+                </p>
+
+                <p>
+                  {memory.business_description?.trim() ? (
+                    <span>
+                      Outputs will automatically spotlight your core offer:{" "}
+                      <span className="text-white font-medium italic">“{memory.business_description.trim()}”</span>
+                    </span>
+                  ) : (
+                    <span className="text-white/40 italic">
+                      Add your product or service description above so Murgii seamlessly anchors your value proposition without you having to retype it.
+                    </span>
+                  )}
+                </p>
+
+                <p>
+                  {memory.additional_notes?.trim() ? (
+                    <span>
+                      Murgii will also strictly obey your custom guardrails:{" "}
+                      <span className="text-white font-medium italic">“{memory.additional_notes.trim()}”</span>
+                    </span>
+                  ) : (
+                    <span className="text-white/40 italic">
+                      Add any forbidden clichés or negative constraints above to automatically keep every output on-brand.
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
 
