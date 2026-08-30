@@ -803,24 +803,19 @@ export const LinearPipelineVisual: React.FC = () => {
    SECTION 1 MASTER FIX: Interactive Simulated Prompt Builder Demo
    ═══════════════════════════════════════════════════════════════ */
 export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; onSelectArchetype: (id: string) => void }> = ({
-  activeArchetype,
-  onSelectArchetype
+  activeArchetype
 }) => {
   const [animStep, setAnimStep] = useState(0);
 
   useEffect(() => {
     const sequence = [
-      { step: 0, delay: 500 },
-      { step: 1, delay: 500 },
-      { step: 2, delay: 600 },
-      { step: 3, delay: 500 },
-      { step: 4, delay: 600 },
-      { step: 5, delay: 500 },
-      { step: 6, delay: 450 },
-      { step: 7, delay: 450 },
-      { step: 8, delay: 450 },
-      { step: 9, delay: 500 },
-      { step: 10, delay: 2200 }
+      { step: 0, delay: 600 },  // Hover Card 1
+      { step: 1, delay: 600 },  // Click Card 1 -> Glow
+      { step: 2, delay: 650 },  // Hover Card 2
+      { step: 3, delay: 600 },  // Click Card 2 -> Glow
+      { step: 4, delay: 650 },  // Hover Card 3
+      { step: 5, delay: 600 },  // Click Card 3 -> Glow
+      { step: 6, delay: 2200 }  // Hold all 3 glowing
     ];
 
     let currentIdx = 0;
@@ -833,78 +828,147 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
       timer = setTimeout(runNext, nextDelay);
     };
 
-    timer = setTimeout(runNext, 300);
+    timer = setTimeout(runNext, 200);
 
     return () => clearTimeout(timer);
   }, [activeArchetype]);
 
-  const cursorCoords = (() => {
+  const activeTarget = (() => {
     switch (animStep) {
       case 0:
       case 1:
-        return { x: 42, y: 32, isClicking: animStep === 1 };
+        return { cardIdx: 0, isClicking: animStep === 1 };
       case 2:
       case 3:
-        return { x: 42, y: 55, isClicking: animStep === 3 };
+        return { cardIdx: 1, isClicking: animStep === 3 };
       case 4:
       case 5:
-        return { x: 42, y: 78, isClicking: animStep === 5 };
+        return { cardIdx: 2, isClicking: animStep === 5 };
       default:
-        return { x: 92, y: 92, isClicking: false };
+        return { cardIdx: -1, isClicking: false };
     }
   })();
 
-  const field1Locked = animStep >= 1 && animStep <= 10;
-  const field2Locked = animStep >= 3 && animStep <= 10;
-  const field3Locked = animStep >= 5 && animStep <= 10;
+  const field1Locked = animStep >= 1 && animStep <= 6;
+  const field2Locked = animStep >= 3 && animStep <= 6;
+  const field3Locked = animStep >= 5 && animStep <= 6;
 
-  const showBlock1 = animStep >= 6;
-  const showBlock2 = animStep >= 7;
-  const showBlock3 = animStep >= 8;
-  const showBlock4 = animStep >= 9;
+  // Responsive cursor percentage positions
+  const getCursorStyle = () => {
+    if (activeTarget.cardIdx === 0) {
+      return {
+        left: "clamp(12%, 16%, 20%)",
+        top: "50%",
+        mobileLeft: "82%",
+        mobileTop: "18%"
+      };
+    }
+    if (activeTarget.cardIdx === 1) {
+      return {
+        left: "50%",
+        top: "50%",
+        mobileLeft: "82%",
+        mobileTop: "50%"
+      };
+    }
+    if (activeTarget.cardIdx === 2) {
+      return {
+        left: "clamp(80%, 84%, 88%)",
+        top: "50%",
+        mobileLeft: "82%",
+        mobileTop: "82%"
+      };
+    }
+    return {
+      left: "95%",
+      top: "95%",
+      mobileLeft: "95%",
+      mobileTop: "95%"
+    };
+  };
+
+  const cStyle = getCursorStyle();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-stretch relative">
-      {/* LEFT COLUMN: Guided Parameters */}
-      <div className="lg:col-span-5 flex flex-col justify-between space-y-3 relative">
-        {animStep <= 5 && (
-          <AnimatedCursor 
-            x={cursorCoords.x} 
-            y={cursorCoords.y} 
-            isClicking={cursorCoords.isClicking} 
-          />
-        )}
+    <div className="pt-3 sm:pt-4 relative">
+      {/* Guided Prompts Container */}
+      <div className="flex flex-col space-y-2.5 relative">
+        <div className="flex items-center justify-between pb-0.5">
+          <span className="text-[11px] font-mono uppercase tracking-widest text-white font-bold">
+            Guided Prompts
+          </span>
+        </div>
 
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between pb-1">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-white/90 font-bold">
-              01. Guided Parameters
-            </span>
-            <span className="text-[10px] font-mono text-white/80 flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded border border-white/20">
-              <Sparkles size={11} className="text-white" />
-              Live Assembly
-            </span>
-          </div>
+        {/* 3 Parameter Cards - Thin, sleek, and compact */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 relative">
+          {/* Animated Interactive Mouse Pointer */}
+          {animStep <= 5 && (
+            <div 
+              className="absolute pointer-events-none z-30 transition-all duration-500 ease-out hidden md:block"
+              style={{
+                left: cStyle.left,
+                top: cStyle.top,
+                transform: `translate(-50%, -50%) scale(${activeTarget.isClicking ? 0.8 : 1})`
+              }}
+            >
+              <div className="relative">
+                <MousePointer 
+                  size={15} 
+                  className="text-white fill-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" 
+                />
+                {activeTarget.isClicking && (
+                  <span className="absolute -top-1.5 -left-1.5 w-7 h-7 rounded-full bg-white/40 animate-ping pointer-events-none" />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Cursor Pointer */}
+          {animStep <= 5 && (
+            <div 
+              className="absolute pointer-events-none z-30 transition-all duration-500 ease-out md:hidden"
+              style={{
+                left: cStyle.mobileLeft,
+                top: cStyle.mobileTop,
+                transform: `translate(-50%, -50%) scale(${activeTarget.isClicking ? 0.8 : 1})`
+              }}
+            >
+              <div className="relative">
+                <MousePointer 
+                  size={15} 
+                  className="text-white fill-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" 
+                />
+                {activeTarget.isClicking && (
+                  <span className="absolute -top-1.5 -left-1.5 w-7 h-7 rounded-full bg-white/40 animate-ping pointer-events-none" />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Field 1: Target Niche */}
           <div 
-            className={`p-3 rounded-xl transition-all duration-300 border ${
+            className={`py-2.5 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
               field1Locked
-                ? "bg-white/10 border-white/35 shadow-[0_0_16px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.2)] scale-[1.01]"
-                : "bg-white/[0.03] border-white/10"
+                ? "bg-white/[0.14] border-white/60 shadow-[0_0_24px_rgba(255,255,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.015]"
+                : "bg-white/[0.03] border-white/10 opacity-75"
             }`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+            {field1Locked && (
+              <div className="absolute inset-0 bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-transparent pointer-events-none" />
+            )}
+            <div className="flex items-center justify-between mb-1 relative z-10">
+              <label className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
                 Target Niche & Audience
               </label>
-              {field1Locked && (
+              {field1Locked ? (
                 <span className="text-[9px] font-mono text-white font-bold flex items-center gap-1">
-                  <Check size={11} className="text-white" /> Locked
+                  <Check size={10} className="text-white" /> Locked
                 </span>
+              ) : (
+                <span className="text-[9px] font-mono text-gray-500">Ready</span>
               )}
             </div>
-            <div className="text-xs font-semibold text-white truncate">
+            <div className="text-xs sm:text-[13px] font-semibold text-white truncate relative z-10">
               {activeArchetype === "email" 
                 ? "B2B SaaS & High-Ticket Operators" 
                 : activeArchetype === "ads" 
@@ -912,30 +976,35 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
                 : activeArchetype === "landing" 
                 ? "Enterprise Software Platforms" 
                 : activeArchetype === "content"
-                ? "Creators, Founders & Personal Brands"
-                : "High-Ticket Buyers & Decision-Makers"}
+                ? "Creators & Personal Brands"
+                : "High-Ticket Decision-Makers"}
             </div>
           </div>
 
           {/* Field 2: Primary Goal */}
           <div 
-            className={`p-3 rounded-xl transition-all duration-300 border ${
+            className={`py-2.5 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
               field2Locked
-                ? "bg-white/10 border-white/35 shadow-[0_0_16px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.2)] scale-[1.01]"
-                : "bg-white/[0.03] border-white/10"
+                ? "bg-white/[0.14] border-white/60 shadow-[0_0_24px_rgba(255,255,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.015]"
+                : "bg-white/[0.03] border-white/10 opacity-75"
             }`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+            {field2Locked && (
+              <div className="absolute inset-0 bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-transparent pointer-events-none" />
+            )}
+            <div className="flex items-center justify-between mb-1 relative z-10">
+              <label className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
                 Primary Conversion Goal
               </label>
-              {field2Locked && (
+              {field2Locked ? (
                 <span className="text-[9px] font-mono text-white font-bold flex items-center gap-1">
-                  <Check size={11} className="text-white" /> Locked
+                  <Check size={10} className="text-white" /> Locked
                 </span>
+              ) : (
+                <span className="text-[9px] font-mono text-gray-500">Ready</span>
               )}
             </div>
-            <div className="text-xs font-semibold text-white truncate">
+            <div className="text-xs sm:text-[13px] font-semibold text-white truncate relative z-10">
               {activeArchetype === "email" 
                 ? "Drive demo bookings before launch" 
                 : activeArchetype === "ads" 
@@ -944,29 +1013,34 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
                 ? "Convert cold traffic with proof" 
                 : activeArchetype === "content"
                 ? "High-retention hooks and engagement"
-                : "Overcome buying friction with reframing"}
+                : "Overcome buying friction"}
             </div>
           </div>
 
           {/* Field 3: Psychological Framing */}
           <div 
-            className={`p-3 rounded-xl transition-all duration-300 border ${
+            className={`py-2.5 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
               field3Locked
-                ? "bg-white/10 border-white/35 shadow-[0_0_16px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.2)] scale-[1.01]"
-                : "bg-white/[0.03] border-white/10"
+                ? "bg-white/[0.14] border-white/60 shadow-[0_0_24px_rgba(255,255,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.015]"
+                : "bg-white/[0.03] border-white/10 opacity-75"
             }`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+            {field3Locked && (
+              <div className="absolute inset-0 bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-transparent pointer-events-none" />
+            )}
+            <div className="flex items-center justify-between mb-1 relative z-10">
+              <label className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
                 Psychological Framing
               </label>
-              {field3Locked && (
+              {field3Locked ? (
                 <span className="text-[9px] font-mono text-white font-bold flex items-center gap-1">
-                  <Check size={11} className="text-white" /> Locked
+                  <Check size={10} className="text-white" /> Locked
                 </span>
+              ) : (
+                <span className="text-[9px] font-mono text-gray-500">Ready</span>
               )}
             </div>
-            <div className="text-xs font-semibold text-white truncate">
+            <div className="text-xs sm:text-[13px] font-semibold text-white truncate relative z-10">
               {activeArchetype === "email" 
                 ? "Cialdini Scarcity + Authority" 
                 : activeArchetype === "ads" 
@@ -975,136 +1049,9 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
                 ? "Proof Stacking + Risk Inversion" 
                 : activeArchetype === "content"
                 ? "Curiosity Gap + Value Stacking"
-                : "Commitment Pacing + Objection Handling"}
+                : "Commitment Pacing"}
             </div>
           </div>
-        </div>
-
-        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/12 flex items-center gap-2.5">
-          <Sparkles size={14} className="text-white shrink-0" />
-          <p className="text-[11px] text-gray-200 font-medium leading-relaxed">
-            Parameters assemble automatically into a structured master blueprint.
-          </p>
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN: Assembling Master Prompt Panel with Distinct Sequential Slide-in */}
-      <div className="lg:col-span-7 flex flex-col rounded-2xl bg-white/[0.05] backdrop-blur-2xl border border-white/15 p-4 sm:p-5 relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] min-h-[340px] justify-between">
-        {/* Top Header */}
-        <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_white] animate-pulse" />
-            <span className="text-xs font-bold text-white font-nohemi tracking-tight">
-              Master Prompt Assembly
-            </span>
-          </div>
-          <span className="text-[9px] font-mono text-white bg-white/10 px-2 py-0.5 rounded-full border border-white/20 uppercase tracking-wider font-bold">
-            {animStep >= 9 ? "100% Market-Ready" : "Assembling..."}
-          </span>
-        </div>
-
-        {/* Sequential Assembling Master Prompt Cards (Distinct slide-in from bottom/left) */}
-        <div className="space-y-2 my-auto">
-          {/* Output Block 1: Role */}
-          <motion.div 
-            animate={{ 
-              opacity: showBlock1 ? 1 : 0.2, 
-              x: showBlock1 ? 0 : -8,
-              scale: showBlock1 ? 1 : 0.98
-            }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className={`p-2.5 rounded-xl border ${
-              showBlock1 ? "bg-white/10 border-white/30 shadow-sm" : "bg-white/[0.02] border-white/5"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[8px] font-mono font-bold text-white bg-white/20 px-1.5 py-0.5 rounded">
-                [ROLE & FRAME]
-              </span>
-              <span className="text-[9px] text-gray-400 font-mono">Expert Copywriter & Strategist</span>
-            </div>
-            <p className="text-[11px] text-gray-200 font-medium leading-snug">
-              Act as an elite conversion copywriter specializing in {activeArchetype === "email" ? "high-converting email sequencing" : activeArchetype === "ads" ? "viral paid performance ad hooks" : activeArchetype === "landing" ? "high-ticket landing page funnels" : activeArchetype === "content" ? "high-retention video scripts and social copy" : "behavioral persuasion architecture"}.
-            </p>
-          </motion.div>
-
-          {/* Output Block 2: Target Market */}
-          <motion.div 
-            animate={{ 
-              opacity: showBlock2 ? 1 : 0.2, 
-              x: showBlock2 ? 0 : -8,
-              scale: showBlock2 ? 1 : 0.98
-            }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className={`p-2.5 rounded-xl border ${
-              showBlock2 ? "bg-white/10 border-white/30 shadow-sm" : "bg-white/[0.02] border-white/5"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[8px] font-mono font-bold text-white bg-white/20 px-1.5 py-0.5 rounded">
-                [TARGET & PAIN]
-              </span>
-              <span className="text-[9px] text-gray-400 font-mono">Validated Audience Vector</span>
-            </div>
-            <p className="text-[11px] text-gray-200 font-medium leading-snug">
-              Target Audience: {activeArchetype === "email" ? "B2B SaaS executives and agency operators" : activeArchetype === "ads" ? "High-intent buyers scrolling feeds" : activeArchetype === "landing" ? "Enterprise decision-makers seeking ROI" : activeArchetype === "content" ? "Engaged followers seeking actionable growth frameworks" : "Skeptical buyers requiring proof mechanisms"}.
-            </p>
-          </motion.div>
-
-          {/* Output Block 3: Triggers */}
-          <motion.div 
-            animate={{ 
-              opacity: showBlock3 ? 1 : 0.2, 
-              x: showBlock3 ? 0 : -8,
-              scale: showBlock3 ? 1 : 0.98
-            }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className={`p-2.5 rounded-xl border ${
-              showBlock3 ? "bg-white/10 border-white/30 shadow-sm" : "bg-white/[0.02] border-white/5"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[8px] font-mono font-bold text-white bg-white/20 px-1.5 py-0.5 rounded">
-                [PERSUASION TRIGGERS]
-              </span>
-              <span className="text-[9px] text-gray-400 font-mono">Cognitive Levers</span>
-            </div>
-            <p className="text-[11px] text-gray-200 font-medium leading-snug">
-              Enforce Cialdini Scarcity, loss-aversion pacing, and zero-fluff pattern interrupts to drive conversion.
-            </p>
-          </motion.div>
-
-          {/* Output Block 4: Deliverables */}
-          <motion.div 
-            animate={{ 
-              opacity: showBlock4 ? 1 : 0.2, 
-              x: showBlock4 ? 0 : -8,
-              scale: showBlock4 ? 1 : 0.98
-            }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className={`p-2.5 rounded-xl border ${
-              showBlock4 ? "bg-white/12 border-white/40 shadow-sm" : "bg-white/[0.02] border-white/5"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[8px] font-mono font-bold text-white bg-white/20 px-1.5 py-0.5 rounded">
-                [DELIVERABLES]
-              </span>
-              <span className="text-[9px] text-gray-400 font-mono">Market-Ready Package</span>
-            </div>
-            <p className="text-[11px] text-gray-200 font-medium leading-snug">
-              Output 3 high-impact hook variations, core persuasion body loops, objection-reversal stack, and strong CTA.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Footer info strip */}
-        <div className="pt-2.5 mt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-gray-300">
-          <span className="font-medium">Architecture Status:</span>
-          <span className="text-white font-mono font-bold flex items-center gap-1.5">
-            <CheckCircle2 size={12} className="text-white" />
-            Synchronized with Murgii Engine
-          </span>
         </div>
       </div>
     </div>

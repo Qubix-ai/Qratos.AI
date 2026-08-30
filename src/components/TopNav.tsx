@@ -1,17 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { 
-  Coins, 
   User as UserIcon, 
   LogOut, 
-  Menu, 
+  PanelLeft, 
   Sparkles, 
   CreditCard, 
   ExternalLink,
   Wand2,
   Settings,
-  SlidersHorizontal
+  SlidersHorizontal,
+  SquarePen
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { QreatoLogo } from "./QreatoLogo";
 
 interface TopNavProps {
   user: any;
@@ -50,17 +51,26 @@ export function TopNav({
   const displayCredits = remainingCredits !== null ? remainingCredits : maxCredits;
 
   return (
-    <header className="h-16 border-b border-white/[0.08] bg-[#07050E]/85 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between z-30 sticky top-0 shrink-0">
-      {/* Left: Mobile Sidebar Trigger */}
-      <div className="flex items-center gap-3">
+    <header className="h-14 border-b border-white/[0.08] bg-[#000000]/90 backdrop-blur-xl px-3 sm:px-5 flex items-center justify-between z-30 sticky top-0 shrink-0">
+      {/* Left: Clean Sidebar Trigger (PanelLeft icon instead of 3-bar hamburger) */}
+      <div className="flex items-center gap-2.5">
         <button
           type="button"
           onClick={onMenuToggle}
-          className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
-          aria-label="Open sidebar menu"
+          className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 text-white/80 hover:text-white transition-all cursor-pointer flex items-center justify-center shadow-sm active:scale-95"
+          aria-label="Toggle sidebar"
+          title="Toggle sidebar"
         >
-          <Menu size={18} />
+          <PanelLeft size={18} className="stroke-[2.2]" />
         </button>
+
+        {/* Small Brand Title for Clean Context */}
+        <div className="flex items-center gap-2 pl-1">
+          <QreatoLogo size={20} className="text-white" dotClassName="text-white fill-white" />
+          <span className="text-xs sm:text-sm font-bold tracking-tight text-white font-nohemi hidden xs:inline-block">
+            Qreato AI
+          </span>
+        </div>
       </div>
 
       {/* Right: Direct Navigation Links + Credits Indicator + Settings Menu */}
@@ -106,20 +116,7 @@ export function TopNav({
           </button>
         </div>
 
-        {/* Daily Credits Indicator */}
-        <button
-          type="button"
-          onClick={() => onTabChange("pricing")}
-          title="Daily credits remaining. Click to view pricing tiers."
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.08)] bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all cursor-pointer text-white"
-        >
-          <Coins size={12} className="text-white" />
-          <span className="text-[11px] font-bold text-white tracking-wider font-mono">
-            {displayCredits}
-          </span>
-        </button>
-
-        {/* Top Settings Menu (near credits badge) with Premium White Glow & Rotation */}
+        {/* Top Settings Menu with Premium Glow & Rotation */}
         <div className="relative" ref={settingsMenuRef}>
           <button
             type="button"

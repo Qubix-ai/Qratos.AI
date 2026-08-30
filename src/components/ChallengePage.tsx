@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Trophy, 
   Sparkles, 
@@ -15,11 +15,15 @@ import {
   AlertCircle,
   TrendingUp,
   Brain,
-  ShieldCheck
+  ShieldCheck,
+  Download,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toPng } from "html-to-image";
 import { supabase } from "../lib/supabase";
 import { copyToClipboard } from "../lib/clipboard";
+import { QreatoLogo } from "./QreatoLogo";
 
 interface ChallengeRecord {
   overall_score: number;
@@ -29,6 +33,11 @@ interface ChallengeRecord {
   persuasion_score?: number;
   action_score?: number;
   biggest_leverage?: string;
+  diagnosis?: string;
+  user_copy?: string;
+  copy?: string;
+  prompt?: string;
+  brief?: string;
   share_slug?: string;
   slug?: string;
   created_at?: string;
@@ -66,11 +75,19 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   onGoToHome,
   onGoToSignup,
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<ChallengeRecord | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [instagramToast, setInstagramToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3200);
+  };
 
   useEffect(() => {
     async function fetchChallengeResult() {
@@ -87,7 +104,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
         // 1. Try querying with share_slug
         const { data: byShareSlug, error: err1 } = await supabase
           .from("challenge_results")
-          .select("overall_score, attention_score, clarity_score, desire_score, persuasion_score, action_score, biggest_leverage, share_slug")
+          .select("overall_score, attention_score, clarity_score, desire_score, persuasion_score, action_score, biggest_leverage, diagnosis, user_copy, copy, prompt, brief, share_slug")
           .eq("share_slug", slug)
           .maybeSingle();
 
@@ -100,7 +117,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
         // 2. Try fallback query with slug column
         const { data: bySlug, error: err2 } = await supabase
           .from("challenge_results")
-          .select("overall_score, attention_score, clarity_score, desire_score, persuasion_score, action_score, biggest_leverage, slug")
+          .select("overall_score, attention_score, clarity_score, desire_score, persuasion_score, action_score, biggest_leverage, diagnosis, user_copy, copy, prompt, brief, slug")
           .eq("slug", slug)
           .maybeSingle();
 
@@ -140,12 +157,48 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
 
   const overallScore = result?.overall_score ?? 0;
   const shareUrl = typeof window !== "undefined" ? window.location.href : `https://murgii.vercel.app/challenge/${slug}`;
-  const shareText = `I got ${overallScore}/100 on Murgii Copy Score. Can you beat me?`;
+  
+  const evaluatedUserCopy = (result?.user_copy || result?.copy || result?.prompt || result?.brief || "").trim();
+  const copySnippet = evaluatedUserCopy 
+    ? (evaluatedUserCopy.length > 55 ? evaluatedUserCopy.slice(0, 52) + "..." : evaluatedUserCopy)
+    : "";
+
+  const shareText = copySnippet
+    ? `I scored ${overallScore}/100 on Qreato Copy Challenge for: "${copySnippet}" — Can you beat me?`
+    : `I scored ${overallScore}/100 on Qreato Copy Challenge. Can you beat me?`;
+
+  const generateScorecardFile = async (): Promise<File | null> => {
+    if (!cardRef.current) return null;
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 3,
+        backgroundColor: "#07060B",
+        skipFonts: true,
+        fontEmbedCSS: "",
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
+            return false;
+          }
+          return true;
+        },
+      });
+
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const filename = `qreato-challenge-${slug || overallScore}.png`;
+      return new File([blob], filename, { type: "image/png" });
+    } catch (err) {
+      console.warn("Failed to generate scorecard file:", err);
+      return null;
+    }
+  };
 
   const handleCopyLink = async () => {
     const success = await copyToClipboard(shareUrl);
     if (success) {
       setCopiedLink(true);
+      showToast("Challenge link copied to clipboard!");
       setTimeout(() => setCopiedLink(false), 2400);
     }
   };
@@ -167,20 +220,68 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
       setTimeout(() => setInstagramToast(false), 3500);
     }
 
-    if (typeof navigator !== "undefined" && (navigator as any).share) {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
-        await (navigator as any).share({
-          title: "Murgii Copy Score Challenge",
-          text: shareText,
-          url: shareUrl,
-        });
-        return;
-      } catch (shareErr) {
-        // Fallback
+        const imageFile = await generateScorecardFile();
+        if (imageFile && typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
+          await navigator.share({
+            files: [imageFile],
+            title: "Qreato Copy Score",
+            text: shareText,
+          });
+          return;
+        } else {
+          await navigator.share({
+            title: "Qreato Copy Score",
+            text: shareText,
+            url: shareUrl,
+          });
+          return;
+        }
+      } catch (shareErr: any) {
+        if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
+          return;
+        }
       }
     }
 
+    handleDownloadCard();
     window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+  };
+
+  const handleDownloadCard = async () => {
+    if (!cardRef.current || isDownloading) return;
+    setIsDownloading(true);
+
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 3,
+        backgroundColor: "#07060B",
+        skipFonts: true,
+        fontEmbedCSS: "",
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
+            return false;
+          }
+          return true;
+        },
+      });
+
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `qreato-challenge-${slug || overallScore}.png`;
+      downloadLink.href = dataUrl;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+
+      showToast("Scorecard image downloaded!");
+    } catch (err) {
+      console.error("Failed to download scorecard image:", err);
+      showToast("Failed to save image. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   // Determine score color badge & tier
@@ -243,13 +344,13 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-[#07060B] text-white flex flex-col font-sans selection:bg-white/20 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#07060B] text-white flex flex-col font-sans selection:bg-white/20 selection:text-white relative overflow-x-hidden w-full max-w-full">
       {/* Ambient background accents */}
       <div 
-        className="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full blur-[140px] pointer-events-none opacity-20"
+        className="fixed top-0 left-1/2 -translate-x-1/2 w-[90vw] max-w-[700px] h-[500px] rounded-full blur-[140px] pointer-events-none opacity-20"
         style={{ background: tier.glow }}
       />
-      <div className="fixed -bottom-40 right-10 w-[500px] h-[500px] bg-purple-900/15 rounded-full blur-[160px] pointer-events-none" />
+      <div className="fixed -bottom-40 right-0 sm:right-10 w-[80vw] max-w-[500px] h-[500px] bg-purple-900/15 rounded-full blur-[160px] pointer-events-none" />
 
       {/* Header Bar */}
       <header className="relative z-20 border-b border-white/10 bg-black/40 backdrop-blur-xl px-4 sm:px-8 py-3.5 flex items-center justify-between">
@@ -257,12 +358,12 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
           onClick={onGoToHome}
           className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
         >
-          <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.4)]">
-            <span className="text-black font-black text-base tracking-tighter">M</span>
+          <div className="w-8 h-8 rounded-xl bg-black border border-white/20 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <QreatoLogo size={18} className="text-white" dotClassName="text-white fill-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-black tracking-tight text-white font-['Nohemi',sans-serif]">MURGII</span>
-            <span className="text-[9px] uppercase font-mono tracking-widest text-white/50">Conversion AI</span>
+            <span className="text-sm font-black tracking-tight text-white font-['Nohemi',sans-serif]">QREATO</span>
+            <span className="text-[9px] uppercase font-mono tracking-widest text-white/50">Copy Persuasion Engine</span>
           </div>
         </div>
 
@@ -337,18 +438,21 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
             <div className="text-center space-y-2.5">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.06] border border-white/15 text-white/90 text-xs font-mono uppercase tracking-widest shadow-sm">
                 <Trophy size={13} className="text-[#FFBE0B]" />
-                <span>Murgii Copy Score Challenge</span>
+                <span>Qreato Copy Score Challenge</span>
               </div>
               <h1 className="text-3xl sm:text-5xl font-black font-['Nohemi',sans-serif] tracking-tight text-white">
                 Can you beat this score?
               </h1>
               <p className="text-sm sm:text-base text-white/60 max-w-lg mx-auto">
-                An operator put their copy against Murgii's rigorous persuasion evaluation engine. Here is how it scored:
+                An operator put their copy against Qreato's rigorous persuasion evaluation engine. Here is how it scored:
               </p>
             </div>
 
-            {/* Primary Score Card */}
-            <div className={`relative rounded-3xl border ${tier.border} bg-[#0A0912]/90 backdrop-blur-3xl p-6 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.2)] overflow-hidden`}>
+            {/* Primary Score Card Frame */}
+            <div 
+              ref={cardRef}
+              className={`relative rounded-3xl border ${tier.border} ring-1 ring-white/10 bg-[#0B0813] backdrop-blur-3xl p-6 sm:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden`}
+            >
               {/* Internal ambient glow */}
               <div 
                 className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none opacity-25"
@@ -356,6 +460,30 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
               />
 
               <div className="relative z-10 flex flex-col items-center text-center">
+                {/* Top Header Bar: Qreato Brand Mark on Left | "Test your own copy" & "murgii.vercel.app" on Right */}
+                <div className="w-full flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
+                  <div className="flex items-center" title="Qreato">
+                    <QreatoLogo size={32} className="text-white" dotClassName="text-white fill-white" />
+                  </div>
+
+                  <div className="flex flex-col items-end text-right">
+                    <span 
+                      className="text-xs sm:text-sm font-bold tracking-tight text-white font-nohemi"
+                      style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+                    >
+                      Test your own copy
+                    </span>
+                    <a
+                      href="https://murgii.vercel.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] sm:text-xs font-mono font-medium text-white/70 hover:text-white underline underline-offset-2 tracking-wide transition-colors mt-0.5"
+                    >
+                      murgii.vercel.app
+                    </a>
+                  </div>
+                </div>
+
                 {/* Big Score Header */}
                 <div className="flex flex-col items-center">
                   <div className="text-[11px] uppercase font-mono tracking-widest text-white/50 mb-1">
@@ -374,6 +502,23 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                     {tier.label}
                   </div>
                 </div>
+
+                {/* Evaluated Copy Box (The exact copy given by user) */}
+                {evaluatedUserCopy && (
+                  <div className="w-full mt-6 p-4 rounded-2xl bg-white/[0.05] border border-white/[0.15] text-left backdrop-blur-xl relative overflow-hidden">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-white/70" />
+                        <span className="text-[10px] font-mono font-bold tracking-widest text-white/60 uppercase">
+                          EVALUATED COPY
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm sm:text-base text-white/95 font-normal italic leading-relaxed break-words font-sans">
+                      "{evaluatedUserCopy}"
+                    </p>
+                  </div>
+                )}
 
                 {/* 5 Dimension Breakdown Grid */}
                 <div className="w-full mt-8 pt-6 border-t border-white/10">
@@ -423,7 +568,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                         <span className="text-xs font-bold text-white">Conversion Audit</span>
                       </div>
                       <div className="text-[11px] text-white/70 leading-snug">
-                        Calculated using verified split-test matrices across direct response frameworks.
+                        Calculated using verified direct response persuasion matrices.
                       </div>
                     </div>
                   </div>
@@ -440,81 +585,110 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                         Biggest Leverage Opportunity
                       </div>
                       <div className="text-xs text-white/85 leading-relaxed">
-                        {result.biggest_leverage}
+                        {result.diagnosis || result.biggest_leverage}
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Share & Challenge Controls */}
-                <div className="w-full mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
-                  <div className="text-[10px] uppercase font-mono tracking-widest text-white/40 text-center">
-                    Share or Challenge A Colleague
+                {/* Finished Card Footer Banner */}
+                <div className="w-full mt-6 pt-4 border-t border-white/[0.1] flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-white/50">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
+                    <span>Tested on Qreato Copy Engine</span>
                   </div>
-
-                  <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
-                    {/* Share to X */}
-                    <button
-                      type="button"
-                      onClick={handleShareX}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] border border-white/10 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <XIcon size={14} />
-                      <span className="truncate">Share to X</span>
-                    </button>
-
-                    {/* Share to Instagram */}
-                    <button
-                      type="button"
-                      onClick={handleShareInstagram}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#833AB4]/20 via-[#FD1D1D]/20 to-[#F56040]/20 hover:from-[#833AB4]/35 hover:via-[#FD1D1D]/35 hover:to-[#F56040]/35 border border-[#FD1D1D]/30 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <InstagramIcon size={14} className="text-[#FD1D1D]" />
-                      <span className="truncate">Instagram</span>
-                    </button>
-
-                    {/* Share to Facebook */}
-                    <button
-                      type="button"
-                      onClick={handleShareFacebook}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#1877F2]/15 hover:bg-[#1877F2]/25 border border-[#1877F2]/30 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <FacebookIcon size={14} className="text-[#1877F2]" />
-                      <span className="truncate">Facebook</span>
-                    </button>
+                  <div className="flex items-center gap-1">
+                    <span>Score yours free at</span>
+                    <a href="https://murgii.vercel.app" target="_blank" rel="noopener noreferrer" className="text-white font-bold underline">murgii.vercel.app</a>
                   </div>
-
-                  {/* Copy Link Button */}
-                  <button
-                    type="button"
-                    onClick={handleCopyLink}
-                    className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
-                      copiedLink
-                        ? "bg-[#10B981] text-black border-[#10B981] shadow-[0_0_20px_rgba(16,185,129,0.5)]"
-                        : "bg-white/[0.08] hover:bg-white/[0.15] text-white border-white/20"
-                    }`}
-                  >
-                    {copiedLink ? (
-                      <>
-                        <Check size={14} className="stroke-[3]" />
-                        <span>Challenge Link Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={14} className="stroke-[2.5]" />
-                        <span>Copy Challenge URL</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Instagram Toast */}
-                  {instagramToast && (
-                    <div className="p-2 rounded-lg bg-[#833AB4]/20 border border-[#833AB4]/40 text-[11px] text-[#E0AAFF] text-center">
-                      ✨ Caption & challenge link copied! Paste into Instagram story, post, or DM.
-                    </div>
-                  )}
                 </div>
               </div>
+            </div>
+
+            {/* Share & Challenge Controls Bar (Positioned outside cardRef to guarantee pristine card borders on export) */}
+            <div className="w-full rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-4 sm:p-6 flex flex-col gap-3 shadow-lg">
+              <div className="text-[10px] uppercase font-mono tracking-widest text-white/40 text-center">
+                Share or Challenge A Colleague
+              </div>
+
+              <div className="grid grid-cols-1 xs:grid-cols-4 gap-2 sm:gap-3 w-full">
+                {/* Share to X */}
+                <button
+                  type="button"
+                  onClick={handleShareX}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] border border-white/10 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <XIcon size={14} />
+                  <span className="truncate">Share to X</span>
+                </button>
+
+                {/* Share to Instagram */}
+                <button
+                  type="button"
+                  onClick={handleShareInstagram}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-gradient-to-r from-[#833AB4]/20 via-[#FD1D1D]/20 to-[#F56040]/20 hover:from-[#833AB4]/35 hover:via-[#FD1D1D]/35 hover:to-[#F56040]/35 border border-[#FD1D1D]/30 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <InstagramIcon size={14} className="text-[#FD1D1D]" />
+                  <span className="truncate">Instagram</span>
+                </button>
+
+                {/* Share to Facebook */}
+                <button
+                  type="button"
+                  onClick={handleShareFacebook}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-[#1877F2]/15 hover:bg-[#1877F2]/25 border border-[#1877F2]/30 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <FacebookIcon size={14} className="text-[#1877F2]" />
+                  <span className="truncate">Facebook</span>
+                </button>
+
+                {/* Download Card */}
+                <button
+                  type="button"
+                  onClick={handleDownloadCard}
+                  disabled={isDownloading}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] border border-white/20 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {isDownloading ? <Loader2 size={14} className="animate-spin text-white" /> : <Download size={14} />}
+                  <span className="truncate">Save Image</span>
+                </button>
+              </div>
+
+              {/* Copy Link Button */}
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
+                  copiedLink
+                    ? "bg-[#10B981] text-black border-[#10B981] shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+                    : "bg-white/[0.08] hover:bg-white/[0.15] text-white border-white/20"
+                }`}
+              >
+                {copiedLink ? (
+                  <>
+                    <Check size={14} className="stroke-[3]" />
+                    <span>Challenge Link Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} className="stroke-[2.5]" />
+                    <span>Copy Challenge URL</span>
+                  </>
+                )}
+              </button>
+
+              {/* Instagram Toast */}
+              {instagramToast && (
+                <div className="p-2.5 rounded-xl bg-[#833AB4]/20 border border-[#833AB4]/40 text-xs text-[#E0AAFF] text-center">
+                  ✨ Caption copied & scorecard image saved! Add the link sticker 'murgii.vercel.app' in your story.
+                </div>
+              )}
+
+              {toastMessage && !instagramToast && (
+                <div className="p-2 rounded-xl bg-white/10 border border-white/20 text-xs text-white text-center">
+                  {toastMessage}
+                </div>
+              )}
             </div>
 
             {/* High-Converting CTA Box */}
@@ -523,7 +697,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                 Think you can write copy that scores 90+?
               </h2>
               <p className="text-xs sm:text-sm text-white/70 max-w-lg mx-auto mb-6">
-                Paste your headline, email, or ad into Murgii's Copy Score Challenge and get an instant breakdown of attention, clarity, desire, and persuasion strength.
+                Paste your headline, email, or ad into Qreato's Copy Score Challenge and get an instant breakdown of attention, clarity, desire, and persuasion strength.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -532,7 +706,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                   onClick={onGoToSignup}
                   className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-white text-black hover:bg-neutral-200 text-sm font-black transition-all shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>Get Your Own Copy Score</span>
+                  <span>Score Your Own Copy</span>
                   <ArrowRight size={16} className="stroke-[2.5]" />
                 </button>
 
@@ -541,7 +715,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                   onClick={onGoToHome}
                   className="w-full sm:w-auto px-6 py-3.5 rounded-2xl border border-white/20 bg-white/[0.05] hover:bg-white/[0.12] text-sm font-semibold text-white/80 hover:text-white transition-all cursor-pointer"
                 >
-                  Explore Murgii
+                  Explore Qreato
                 </button>
               </div>
 
@@ -569,9 +743,9 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10 bg-black/60 backdrop-blur-md py-6 px-4 text-center text-xs text-white/40">
         <div className="flex items-center justify-center gap-2 mb-1">
-          <span className="font-bold text-white/70">Murgii</span>
+          <span className="font-bold text-white/70">Qreato</span>
           <span>—</span>
-          <span>The Conversion Intelligence Engine</span>
+          <span>The Direct Response Conversion Engine</span>
         </div>
         <p className="text-[11px] text-white/30">
           Powered by persistent direct response cognitive architectures.

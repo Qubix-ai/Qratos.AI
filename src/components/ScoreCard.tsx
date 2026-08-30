@@ -36,6 +36,7 @@ const InstagramIcon: React.FC<{ size?: number; className?: string }> = ({ size =
 export interface ScoreCardProps {
   overallScore: number;
   shareSlug: string;
+  userCopy?: string;
   className?: string;
   onNavigateToPublicChallenge?: (slug: string) => void;
   biggestLeverage?: string;
@@ -142,6 +143,7 @@ function getLeverageData(
 export const ScoreCard: React.FC<ScoreCardProps> = ({
   overallScore,
   shareSlug,
+  userCopy,
   className = "",
   onNavigateToPublicChallenge,
   biggestLeverage,
@@ -156,8 +158,18 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const cleanSlug = shareSlug ? shareSlug.trim() : "";
-  const shareUrl = `https://murgii.vercel.app/challenge/${cleanSlug}`;
-  const shareText = `I got ${overallScore}/100 on Murgii Copy Score. Can you beat me?`;
+  const shareUrl = typeof window !== "undefined" && window.location.origin
+    ? `${window.location.origin}/challenge/${cleanSlug}`
+    : `https://murgii.vercel.app/challenge/${cleanSlug}`;
+
+  const cleanUserCopy = userCopy ? userCopy.trim().replace(/^["']|["']$/g, "") : "";
+  const copySnippet = cleanUserCopy 
+    ? (cleanUserCopy.length > 55 ? cleanUserCopy.slice(0, 52) + "..." : cleanUserCopy)
+    : "";
+
+  const shareText = copySnippet
+    ? `I scored ${overallScore}/100 on Qreato Copy Challenge for: "${copySnippet}" — Can you beat me?`
+    : `I scored ${overallScore}/100 on Qreato Copy Challenge. Can you beat me?`;
 
   const leverageData = getLeverageData(overallScore, biggestLeverage, diagnosis, dimensions);
 
@@ -172,8 +184,8 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     try {
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 2.5,
-        backgroundColor: "#090810",
+        pixelRatio: 3,
+        backgroundColor: "#0c0814",
         skipFonts: true,
         fontEmbedCSS: "",
         filter: (node) => {
@@ -187,7 +199,7 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
 
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const filename = `murgii-challenge-${cleanSlug || overallScore}.png`;
+      const filename = `qreato-copy-score-${cleanSlug || overallScore}.png`;
       return new File([blob], filename, { type: "image/png" });
     } catch (err) {
       console.warn("Failed to generate scorecard file:", err);
@@ -212,7 +224,7 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
         if (imageFile) {
           const testData = {
             files: [imageFile],
-            title: "Murgii Copy Score",
+            title: "Qreato Copy Score",
             text: shareText,
             url: shareUrl,
           };
@@ -237,14 +249,14 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
         }
 
         const payloadToShare = shareDataWithFiles || {
-          title: "Murgii Copy Score",
+          title: "Qreato Copy Score",
           text: shareText,
           url: shareUrl,
         };
 
         try {
           await navigator.share(payloadToShare);
-          showToast("Scorecard shared!");
+          showToast("Scorecard shared successfully!");
           setIsSharing(false);
           return;
         } catch (shareErr: any) {
@@ -258,7 +270,7 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
           if (shareDataWithFiles?.files) {
             try {
               await navigator.share({
-                title: "Murgii Copy Score",
+                title: "Qreato Copy Score",
                 text: shareText,
                 url: shareUrl,
               });
@@ -300,26 +312,25 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
 
   // Dedicated Instagram / Instagram Stories native share & save flow
   const handleShareInstagram = async () => {
-    // Copy score caption & link for easy paste
-    await copyToClipboard(`${shareText} ${shareUrl}`);
+    // Copy score caption & direct link for easy paste
+    await copyToClipboard(`${shareText} https://murgii.vercel.app`);
 
     // If native share sheet is supported on mobile, invoke it with the image file
-    // which allows users to select Instagram or Instagram Stories directly
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
         const imageFile = await generateScorecardFile();
         if (imageFile && typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
           await navigator.share({
             files: [imageFile],
-            title: "Murgii Copy Score",
+            title: "Qreato Copy Score",
             text: shareText,
           });
           return;
         } else {
           await navigator.share({
-            title: "Murgii Copy Score",
+            title: "Qreato Copy Score",
             text: shareText,
-            url: shareUrl,
+            url: "https://murgii.vercel.app",
           });
           return;
         }
@@ -330,7 +341,9 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
       }
     }
 
-    showToast("Caption copied! Download the card to share to Instagram Stories.");
+    // Also trigger instant card download for story sticker
+    handleDownloadCard();
+    showToast("Scorecard saved & link copied! Add link 'murgii.vercel.app' in your story.");
     window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
   };
 
@@ -339,24 +352,16 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     setIsDownloading(true);
 
     try {
-      // Allow fonts and styles to resolve cleanly without cross-origin cssRules blocking
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 2.5,
-        backgroundColor: "#090810",
+        pixelRatio: 3,
+        backgroundColor: "#0B0813",
         skipFonts: true,
         fontEmbedCSS: "",
-        filter: (node) => {
-          // Exclude action buttons bar from the saved gallery image for a clean showcase card
-          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
-            return false;
-          }
-          return true;
-        },
       });
 
       const downloadLink = document.createElement("a");
-      downloadLink.download = `murgii-challenge-score-${overallScore}.png`;
+      downloadLink.download = `qreato-copy-score-${cleanSlug || overallScore}.png`;
       downloadLink.href = dataUrl;
       document.body.appendChild(downloadLink);
       downloadLink.click();
@@ -375,113 +380,157 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
 
   return (
     <motion.div
-      ref={cardRef}
       initial={{ opacity: 0, y: 15, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`mt-4 relative rounded-2xl sm:rounded-3xl border border-white/[0.12] bg-[#0c0814]/95 backdrop-blur-2xl p-5 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.18)] overflow-hidden ${className}`}
+      className={`mt-4 w-full flex flex-col ${className}`}
     >
-      {/* Subtle deep burgundy ambient glow */}
-      <div 
-        className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full blur-[100px] pointer-events-none opacity-20 bg-[#8B2652]"
-      />
+      {/* 
+        STANDALONE CAPTURABLE CARD FRAME:
+        Contains full 360-degree border, fully finished bottom, 
+        and no action buttons inside, guaranteeing 100% border fidelity on export.
+      */}
+      <div
+        ref={cardRef}
+        className="w-full relative rounded-3xl border border-white/25 ring-1 ring-white/10 bg-[#0B0813] backdrop-blur-2xl p-5 sm:p-7 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden flex flex-col items-center text-center"
+      >
+        {/* Subtle deep ambient glow behind card */}
+        <div 
+          className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full blur-[100px] pointer-events-none opacity-25 bg-[#8B2652]"
+        />
 
-      <div className="relative z-10 flex flex-col items-center text-center">
-        {/* Top Header Bar: Big Clear Qreato Logo Watermark on Top Left, Murgii AI Challenge on Right */}
-        <div className="w-full flex items-center justify-between mb-3 px-1">
-          {/* Top Left: Bold Iconic Qreato Brand Logo */}
-          <div className="flex items-center" title="Qreato">
-            <QreatoLogo 
-              size={34} 
-              className="text-white drop-shadow-[0_0_16px_rgba(255,255,255,0.65)] hover:scale-105 transition-transform" 
-              dotClassName="text-white fill-white" 
-            />
+        <div className="relative z-10 w-full flex flex-col items-center text-center">
+          {/* Top Header Bar: Qreato Brand Mark on Left | "Test your own copy" & "murgii.vercel.app" on Right */}
+          <div className="w-full flex items-center justify-between mb-3 px-0.5">
+            {/* Top Left: Bold Iconic Qreato Brand Logo */}
+            <div className="flex items-center" title="Qreato">
+              <QreatoLogo 
+                size={34} 
+                className="text-white drop-shadow-[0_0_16px_rgba(255,255,255,0.65)]" 
+                dotClassName="text-white fill-white" 
+              />
+            </div>
+
+            {/* Top Right: "Test your own copy" & "murgii.vercel.app" */}
+            <div className="flex flex-col items-end text-right">
+              <span 
+                className="text-xs sm:text-sm font-bold tracking-tight text-white font-nohemi"
+                style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+              >
+                Test your own copy
+              </span>
+              <a
+                href="https://murgii.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] sm:text-xs font-mono font-medium text-white/70 hover:text-white underline underline-offset-2 tracking-wide transition-colors mt-0.5"
+              >
+                murgii.vercel.app
+              </a>
+            </div>
           </div>
 
-          {/* Top Right: Murgii AI Challenge */}
-          <span 
-            className="text-xs sm:text-sm font-bold tracking-wider text-white/90 font-nohemi"
-            style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-          >
-            Murgii AI Challenge
-          </span>
-        </div>
+          {/* Evaluated Copy Snippet (The exact copy given by user) */}
+          {cleanUserCopy && (
+            <div className="w-full my-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.14] text-left relative overflow-hidden backdrop-blur-md">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
+                  <span className="text-[9px] font-mono font-bold tracking-[0.2em] text-white/50 uppercase">
+                    EVALUATED COPY
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs sm:text-[13px] text-white/90 font-normal italic leading-relaxed line-clamp-3 break-words font-sans">
+                "{cleanUserCopy}"
+              </p>
+            </div>
+          )}
 
-        {/* Big Dominant Score Display (e.g. 35/100) */}
-        <div className="relative my-3 sm:my-4 flex flex-col items-center">
-          <div className="flex items-baseline justify-center tracking-tight">
-            <span 
-              className="text-6xl sm:text-7xl font-black font-['Nohemi',sans-serif] tracking-tight text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.35)] leading-none"
-            >
-              {overallScore}
-            </span>
-            <span className="text-2xl sm:text-3xl font-semibold text-white/35 font-mono ml-1.5">
-              /100
-            </span>
+          {/* Big Dominant Score Display (e.g. 25/100) */}
+          <div className="relative my-2 sm:my-3 flex flex-col items-center">
+            <div className="flex items-baseline justify-center tracking-tight">
+              <span 
+                className="text-6xl sm:text-7xl font-black font-['Nohemi',sans-serif] tracking-tight text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.35)] leading-none"
+              >
+                {overallScore}
+              </span>
+              <span className="text-2xl sm:text-3xl font-semibold text-white/35 font-mono ml-1.5">
+                /100
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Small "BIGGEST LEVERAGE" Label + Weakest Dimension + 1-2 Line Diagnosis */}
-        <div className="w-full max-w-sm flex flex-col items-center text-center my-1.5 px-2">
-          <span className="text-[10px] font-mono font-bold tracking-[0.22em] text-white/40 uppercase mb-1">
-            BIGGEST LEVERAGE
-          </span>
-          <span 
-            className="text-sm sm:text-base font-bold text-white tracking-wider uppercase font-nohemi"
-            style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-          >
-            {leverageData.dimension}
-          </span>
-          <p className="text-xs sm:text-[13px] text-white/70 leading-relaxed mt-1 font-sans max-w-xs sm:max-w-sm">
-            {leverageData.diagnosis}
-          </p>
-        </div>
-
-        {/* Strong Bottom CTA: "I GOT 35. CAN YOU BEAT ME?" */}
-        <div className="w-full mt-4 pt-3.5 border-t border-white/[0.08] flex items-center justify-center">
-          <div className="w-full py-2.5 px-3 rounded-xl bg-white/[0.06] border border-white/10 text-center shadow-inner">
+          {/* Small "BIGGEST LEVERAGE" Label + Weakest Dimension + 1-2 Line Diagnosis */}
+          <div className="w-full max-w-sm flex flex-col items-center text-center my-1.5 px-2">
+            <span className="text-[10px] font-mono font-bold tracking-[0.22em] text-white/40 uppercase mb-1">
+              BIGGEST LEVERAGE
+            </span>
             <span 
-              className="text-xs sm:text-sm font-black tracking-widest text-white uppercase font-nohemi drop-shadow-sm"
+              className="text-sm sm:text-base font-bold text-white tracking-wider uppercase font-nohemi"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              I GOT {overallScore}. CAN YOU BEAT ME?
+              {leverageData.dimension}
             </span>
+            <p className="text-xs sm:text-[13px] text-white/70 leading-relaxed mt-1 font-sans max-w-xs sm:max-w-sm">
+              {leverageData.diagnosis}
+            </p>
+          </div>
+
+          {/* Strong Bottom CTA: "I GOT 25. CAN YOU BEAT ME?" */}
+          <div className="w-full mt-4 pt-3 border-t border-white/[0.1] flex flex-col items-center gap-2">
+            <div className="w-full py-2.5 px-3 rounded-xl bg-white/[0.08] border border-white/15 text-center shadow-inner">
+              <span 
+                className="text-xs sm:text-sm font-black tracking-widest text-white uppercase font-nohemi drop-shadow-sm"
+                style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+              >
+                I GOT {overallScore}. CAN YOU BEAT ME?
+              </span>
+            </div>
+            
+            {/* Sleek bottom link watermark for story readers */}
+            <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-white/50 tracking-wider pt-0.5">
+              <span>Score yours at</span>
+              <span className="text-white/80 font-bold underline">murgii.vercel.app</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Short, Streamlined Share & Download Action Area (excluded from screenshot) */}
-        <div data-no-capture="true" className="w-full mt-3 pt-3 border-t border-white/10 flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-1.5 w-full">
-            {/* Primary Share Card Button */}
-            <button
-              type="button"
-              onClick={handleShareButton}
-              disabled={isSharing}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
-                copiedLink
-                  ? "bg-[#10B981] text-black border-[#10B981] shadow-[0_0_16px_rgba(16,185,129,0.5)]"
-                  : "bg-white text-black hover:bg-neutral-200 border-white shadow-[0_2px_12px_rgba(255,255,255,0.2)]"
-              }`}
-              title="Share scorecard with attached image"
-            >
-              {isSharing ? (
-                <>
-                  <Loader2 size={13} className="animate-spin text-black" />
-                  <span>Preparing...</span>
-                </>
-              ) : copiedLink ? (
-                <>
-                  <Check size={13} className="stroke-[3]" />
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 size={13} className="stroke-[2.5]" />
-                  <span>Share Card</span>
-                </>
-              )}
-            </button>
+      {/* Action Bar (Separated outside cardRef to guarantee perfect border capture) */}
+      <div className="w-full mt-2.5 px-1 flex flex-col gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 w-full">
+          {/* Primary Share Card Button */}
+          <button
+            type="button"
+            onClick={handleShareButton}
+            disabled={isSharing}
+            className={`flex-1 min-w-[110px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
+              copiedLink
+                ? "bg-[#10B981] text-black border-[#10B981] shadow-[0_0_16px_rgba(16,185,129,0.5)]"
+                : "bg-white text-black hover:bg-neutral-200 border-white shadow-[0_2px_12px_rgba(255,255,255,0.2)]"
+            }`}
+            title="Share scorecard with attached image"
+          >
+            {isSharing ? (
+              <>
+                <Loader2 size={13} className="animate-spin text-black" />
+                <span>Preparing...</span>
+              </>
+            ) : copiedLink ? (
+              <>
+                <Check size={13} className="stroke-[3]" />
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={13} className="stroke-[2.5]" />
+                <span>Share Card</span>
+              </>
+            )}
+          </button>
 
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* X Icon Button */}
             <button
               type="button"
@@ -554,21 +603,21 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
               </a>
             )}
           </div>
-
-          {/* Dynamic Feedback Toast */}
-          <AnimatePresence>
-            {toastMessage && (
-              <motion.div
-                initial={{ opacity: 0, y: 4, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, y: -4, height: 0 }}
-                className="text-[11px] font-mono text-[#E0AAFF] bg-white/[0.04] border border-white/10 rounded-lg py-1 px-2.5 text-center mt-1"
-              >
-                {toastMessage}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
+
+        {/* Dynamic Feedback Toast */}
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 4, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -4, height: 0 }}
+              className="text-[11px] font-mono text-[#E0AAFF] bg-white/[0.04] border border-white/10 rounded-lg py-1 px-2.5 text-center mt-1"
+            >
+              {toastMessage}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

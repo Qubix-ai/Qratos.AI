@@ -635,6 +635,8 @@ const challengeStore = new Map<string, {
   biggest_leverage: string;
   diagnosis?: string;
   share_slug: string;
+  copy?: string;
+  user_copy?: string;
   created_at: string;
 }>();
 
@@ -749,6 +751,8 @@ Followed immediately by a structured, elite direct-response breakdown:
     biggest_leverage: biggestLeverage,
     diagnosis,
     share_slug: shareSlug,
+    copy: brief,
+    user_copy: brief,
     created_at: new Date().toISOString(),
   };
 
@@ -766,6 +770,8 @@ Followed immediately by a structured, elite direct-response breakdown:
       action_score: action,
       biggest_leverage: biggestLeverage,
       diagnosis,
+      userCopy: brief,
+      copy: brief,
       dimensions: {
         attention,
         clarity,

@@ -173,6 +173,92 @@ interface Message {
 }
 
 // TYPEWRITER ANIMATION FOR PREMIUM CHAT REVEAL WITH PURPLE-MAGENTA CURSOR
+export const markdownComponents = {
+  p: ({ children }: any) => (
+    <p className="mb-4 last:mb-0 leading-relaxed text-[14.5px] sm:text-[15px] text-white/90 font-normal whitespace-pre-line break-words">
+      {children}
+    </p>
+  ),
+  h1: ({ children }: any) => (
+    <h1 className="text-lg sm:text-xl font-bold text-white mt-5 mb-2.5 first:mt-0 font-nohemi tracking-tight">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }: any) => (
+    <h2 className="text-base sm:text-lg font-bold text-white mt-4 mb-2 first:mt-0 font-nohemi tracking-tight">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }: any) => (
+    <h3 className="text-[15px] font-semibold text-white mt-3.5 mb-1.5 first:mt-0 font-nohemi tracking-tight">
+      {children}
+    </h3>
+  ),
+  h4: ({ children }: any) => (
+    <h4 className="text-sm font-semibold text-white mt-3 mb-1 first:mt-0">
+      {children}
+    </h4>
+  ),
+  ul: ({ children }: any) => (
+    <ul className="list-disc list-outside pl-5 mb-4 space-y-1.5 last:mb-0 text-white/90 text-[14.5px] sm:text-[15px]">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }: any) => (
+    <ol className="list-decimal list-outside pl-5 mb-4 space-y-1.5 last:mb-0 text-white/90 text-[14.5px] sm:text-[15px]">
+      {children}
+    </ol>
+  ),
+  li: ({ children }: any) => (
+    <li className="leading-relaxed pl-0.5">
+      {children}
+    </li>
+  ),
+  blockquote: ({ children }: any) => (
+    <blockquote className="border-l-2 border-[#8B5CF6] pl-4 py-1.5 italic my-4 text-white/80 bg-white/[0.02] rounded-r-lg">
+      {children}
+    </blockquote>
+  ),
+  strong: ({ children }: any) => (
+    <strong className="font-bold text-white">
+      {children}
+    </strong>
+  ),
+  em: ({ children }: any) => (
+    <em className="italic text-white/90">
+      {children}
+    </em>
+  ),
+  a: ({ href, children }: any) => (
+    <a 
+      href={href} 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="text-[#D946EF] hover:text-white underline underline-offset-2 transition-colors font-medium"
+    >
+      {children}
+    </a>
+  ),
+  code: ({ className, children, ...props }: any) => {
+    const isInline = !className && typeof children === "string" && !children.includes("\n");
+    if (isInline) {
+      return (
+        <code className="px-1.5 py-0.5 rounded bg-white/10 text-purple-200 font-mono text-[13px] border border-white/10" {...props}>
+          {children}
+        </code>
+      );
+    }
+    return (
+      <pre className="my-3.5 p-3.5 rounded-xl bg-black/60 border border-white/15 overflow-x-auto text-xs font-mono text-gray-200 custom-scrollbar leading-relaxed">
+        <code className="font-mono text-gray-200" {...props}>
+          {children}
+        </code>
+      </pre>
+    );
+  },
+  hr: () => <hr className="my-5 border-white/15" />,
+};
+
 const TypewriterMarkdown = ({ content, isNew }: { content: string; isNew?: boolean }) => {
   const [displayedContent, setDisplayedContent] = useState(isNew ? "" : content);
   const [isTyping, setIsTyping] = useState(isNew);
@@ -205,7 +291,7 @@ const TypewriterMarkdown = ({ content, isNew }: { content: string; isNew?: boole
 
   return (
     <div className="relative inline-block w-full">
-      <ReactMarkdown>{displayedContent}</ReactMarkdown>
+      <ReactMarkdown components={markdownComponents}>{displayedContent}</ReactMarkdown>
       {isTyping && (
         <span 
           className="inline-block w-1.5 h-3.5 bg-gradient-to-b from-[#8B5CF6] to-[#D946EF] ml-1 animate-pulse rounded-sm shadow-[0_0_8px_#D946EF]" 
@@ -278,6 +364,15 @@ export function ChatInterface({
     { mode: "challenge" as MurgiiMode, icon: Trophy, title: "Challenge", desc: "Score your copy" }
   ];
 
+  const MODE_PLACEHOLDERS: Record<MurgiiMode, string> = {
+    email: "Craft your powerful email…",
+    ads: "Craft your high-converting ad…",
+    landing: "Craft your high-converting landing page…",
+    psych: "Craft your psychological trigger…",
+    content: "Craft your engaging content…",
+    challenge: "Paste the copy you want scored…",
+  };
+
   const ANIMATED_WORDS = ["ignore", "forget", "resist"];
 
   useEffect(() => {
@@ -293,22 +388,53 @@ export function ChatInterface({
     }
   }, [propCredits]);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const currentSessionIdRef = useRef<string | undefined>(activeSessionId);
+  const loadedSessionIdRef = useRef<string | undefined>(activeSessionId);
   const userId = user?.id || user?.uid || "";
+
+  // Auto-resize textarea to expand/shrink based on content up to 200px max height
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const scrollHeight = textarea.scrollHeight;
+    // Constrain height between single-line 50px and maximum 200px (6-8 lines)
+    const newHeight = Math.min(Math.max(scrollHeight, 50), 200);
+    textarea.style.height = `${newHeight}px`;
+    if (scrollHeight > 200) {
+      textarea.style.overflowY = "auto";
+    } else {
+      textarea.style.overflowY = "hidden";
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [inputValue]);
 
   // Synchronize active session ID and load saved chat messages
   useEffect(() => {
+    // If activeSessionId matches what is already loaded or being processed in memory, skip reloading/clearing
+    if (activeSessionId && activeSessionId === loadedSessionIdRef.current) {
+      currentSessionIdRef.current = activeSessionId;
+      return;
+    }
+
     currentSessionIdRef.current = activeSessionId;
+    loadedSessionIdRef.current = activeSessionId;
+
     if (activeSessionId && userId) {
       getSessionById(userId, activeSessionId).then((session) => {
-        if (session && Array.isArray(session.messages)) {
-          setMessages(session.messages);
-        } else {
-          setMessages([]);
+        if (currentSessionIdRef.current === activeSessionId) {
+          if (session && Array.isArray(session.messages)) {
+            setMessages(session.messages);
+          } else {
+            setMessages([]);
+          }
         }
       });
     } else if (!activeSessionId) {
@@ -388,6 +514,7 @@ export function ChatInterface({
     if (!targetSessionId) {
       targetSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       currentSessionIdRef.current = targetSessionId;
+      loadedSessionIdRef.current = targetSessionId;
       onSessionChange?.(targetSessionId);
     }
 
@@ -446,7 +573,12 @@ export function ChatInterface({
         content: result.text,
         timestamp: new Date().toISOString(),
         isNew: true,
-        challengeResult: result.challengeResult || null,
+        challengeResult: result.challengeResult 
+          ? {
+              ...result.challengeResult,
+              userCopy: result.challengeResult.userCopy || result.challengeResult.copy || text,
+            }
+          : null,
       };
 
       const finalMessages = [...updatedWithUser, aiMessage];
@@ -600,8 +732,8 @@ export function ChatInterface({
                           <div className="w-1.5 h-1.5 rounded-full bg-[#D946EF] animate-pulse" />
                           <span className="text-[9px] font-bold text-[#C084FC]/80 uppercase tracking-widest">Latest User Brief</span>
                        </div>
-                       <div className="prose prose-invert prose-xs max-w-none text-white/70 leading-relaxed prose-p:my-1">
-                          <ReactMarkdown>
+                       <div className="prose prose-invert prose-xs max-w-none text-white/70 leading-relaxed">
+                          <ReactMarkdown components={markdownComponents}>
                             {messages.filter(m => m.role === 'user').slice(-1)[0]?.content || ""}
                           </ReactMarkdown>
                        </div>
@@ -708,6 +840,11 @@ export function ChatInterface({
                     <ScoreCard 
                       overallScore={m.challengeResult.overallScore}
                       shareSlug={m.challengeResult.shareSlug}
+                      userCopy={
+                        m.challengeResult.userCopy || 
+                        m.challengeResult.copy || 
+                        (i > 0 && messages[i - 1]?.role === "user" ? messages[i - 1].content : undefined)
+                      }
                       onNavigateToPublicChallenge={onNavigateToPublicChallenge}
                       biggestLeverage={m.challengeResult.biggest_leverage || m.challengeResult.biggestLeverage}
                       diagnosis={m.challengeResult.diagnosis || m.challengeResult.weakestReason}
@@ -742,8 +879,8 @@ export function ChatInterface({
         </div>
       </div>
 
-      {/* BOTTOM INPUT BAR WITH GLASSMORPHISM & EMBEDDED MODE SELECTOR */}
-      <footer className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-2xl border-t border-white/[0.08] p-[12px_16px_20px] pb-[max(20px,env(safe-area-inset-bottom))]">
+      {/* BOTTOM INPUT BAR - SIMPLE MINIMALIST AI LAYOUT */}
+      <footer className="fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-t from-black via-black/90 to-transparent pt-4 pb-4 px-3 sm:px-6 pb-[max(16px,env(safe-area-inset-bottom))]">
         <div className="max-w-2xl mx-auto">
           <form 
             onSubmit={(e) => {
@@ -752,87 +889,75 @@ export function ChatInterface({
             }}
             className="relative"
           >
-            {/* Glassmorphic Typing Container Block */}
+            {/* Minimalist Typing Container Card */}
             <div
-              className="relative flex items-center rounded-2xl sm:rounded-3xl border border-white/[0.18] shadow-[0_8px_32px_0_rgba(0,0,0,0.7),inset_0_1px_1px_0_rgba(255,255,255,0.22)] transition-all duration-300 focus-within:border-white/40 focus-within:shadow-[0_8px_36px_0_rgba(0,0,0,0.9),inset_0_1px_1px_0_rgba(255,255,255,0.3)]"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
+              className="relative flex flex-col rounded-2xl sm:rounded-3xl border border-white/[0.12] bg-[#121215] shadow-[0_10px_35px_rgba(0,0,0,0.8)] transition-all duration-200 focus-within:border-white/30 focus-within:bg-[#16161a]"
             >
-              {/* Subtle top light sheen on glass surface */}
-              <div
-                className="absolute inset-0 rounded-2xl sm:rounded-3xl pointer-events-none"
-                style={{
-                  background: "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.12) 0%, transparent 65%)"
-                }}
-              />
-
-              <input
-                ref={inputRef}
-                type="text"
+              {/* Textarea Area */}
+              <textarea
+                ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
+                  // Allow Shift+Enter or Enter without sending accidentally on arrow keys
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    // Standard newline unless explicitly tapping send, or if user wants Enter to send, can be optional. User requested only send button or proper newline handling.
                   }
                 }}
+                rows={1}
                 placeholder={
                   dailyLimitReached 
                     ? "Daily limit reached — upgrade to continue" 
-                    : selectedMode === "challenge"
-                      ? "Paste the copy you want scored…"
-                      : `Describe what you want to write (${CHAT_MODES.find(m => m.mode === selectedMode)?.title || "Email"} Mode)…`
+                    : MODE_PLACEHOLDERS[selectedMode] || "Ask anything or paste copy to analyze…"
                 }
                 disabled={isLoading || dailyLimitReached}
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="sentences"
                 spellCheck="false"
-                className="flex-1 bg-transparent px-4 sm:px-5 py-3.5 text-white/90 text-sm sm:text-base outline-none placeholder:text-white/35 disabled:opacity-50 disabled:cursor-not-allowed relative z-10"
+                className="w-full bg-transparent px-4 sm:px-5 pt-3.5 pb-2 text-white/90 text-sm sm:text-base outline-none placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed resize-none custom-scrollbar leading-relaxed"
                 style={{
                   touchAction: 'manipulation',
                   WebkitTapHighlightColor: 'transparent',
-                  height: '50px'
+                  minHeight: '48px',
+                  maxHeight: '180px',
+                  boxSizing: 'border-box'
                 }}
               />
 
-              {/* Right Controls: Mode Selector Button + Send Button */}
-              <div className="flex items-center gap-1.5 sm:gap-2 pr-2.5 relative z-20 shrink-0">
-                {/* Mode Selector Popover Button */}
+              {/* Bottom Actions Row inside the input container */}
+              <div className="flex items-center justify-between px-3 sm:px-4 pb-3 pt-1">
+                {/* Left: Mode / Model Selector Pill Button */}
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setIsModeSelectorOpen(!isModeSelectorOpen)}
                     disabled={isLoading || dailyLimitReached}
-                    className="h-9 px-2.5 sm:px-3 rounded-xl sm:rounded-2xl flex items-center gap-1.5 border border-white/20 bg-white/[0.08] hover:bg-white/[0.16] text-white transition-all text-xs font-medium backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.5)] cursor-pointer"
-                    title="Change persuasion mode"
+                    className="h-8 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 border border-white/10 bg-white/[0.05] hover:bg-white/[0.1] text-gray-300 hover:text-white transition-all text-xs font-medium cursor-pointer"
+                    title="Select AI Persuasion Mode"
                   >
                     {(() => {
                       const currentMode = CHAT_MODES.find((m) => m.mode === selectedMode) || CHAT_MODES[0];
                       const CurrentIcon = currentMode.icon;
                       return (
                         <>
-                          <CurrentIcon size={14} className="text-white" />
-                          <span className="hidden sm:inline-block font-semibold">{currentMode.title}</span>
+                          <CurrentIcon size={13} className="text-gray-300" />
+                          <span className="font-medium">{currentMode.title}</span>
                           <ChevronDown size={12} className={`text-gray-400 transition-transform ${isModeSelectorOpen ? "rotate-180" : ""}`} />
                         </>
                       );
                     })()}
                   </button>
 
-                  {/* Mode Selector Popup Menu */}
+                  {/* Mode Selector Dropdown Popup */}
                   {isModeSelectorOpen && (
-                    <div className="absolute bottom-full right-0 mb-2.5 w-52 sm:w-56 p-1.5 rounded-2xl border border-white/20 bg-black/95 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.2)] z-50 animate-in fade-in zoom-in-95 duration-150">
-                      <div className="px-2.5 py-1.5 text-[10px] uppercase font-bold tracking-wider text-gray-400 border-b border-white/10 mb-1">
+                    <div className="absolute bottom-full left-0 mb-2 w-56 p-1.5 rounded-2xl border border-white/15 bg-[#141418] shadow-[0_12px_40px_rgba(0,0,0,0.95)] z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider text-gray-400 border-b border-white/10 mb-1">
                         Persuasion Mode
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {CHAT_MODES.map((modeItem) => {
                           const ModeIcon = modeItem.icon;
                           const isSelected = selectedMode === modeItem.mode;
@@ -847,7 +972,7 @@ export function ChatInterface({
                               }}
                               className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
                                 isSelected
-                                  ? "bg-white/20 text-white font-semibold border border-white/20"
+                                  ? "bg-white/15 text-white font-medium border border-white/15"
                                   : "text-gray-300 hover:bg-white/10 hover:text-white"
                               }`}
                             >
@@ -866,19 +991,24 @@ export function ChatInterface({
                   )}
                 </div>
 
-                {/* Send Button */}
+                {/* Right: Circular Up-Arrow Send Button */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  type="submit"
+                  type="button"
+                  onClick={handleSend}
                   disabled={isLoading || !inputValue.trim() || dailyLimitReached}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white text-black hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(255,255,255,0.2)]"
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer ${
+                    inputValue.trim() && !isLoading && !dailyLimitReached
+                      ? "bg-white text-black shadow-md hover:bg-gray-200"
+                      : "bg-white/10 text-white/30 cursor-not-allowed border border-white/5"
+                  }`}
                   aria-label="Send brief"
                 >
                   {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <ArrowUp size={18} className="text-black stroke-[2.5]" />
+                    <ArrowUp size={16} className="stroke-[2.5]" />
                   )}
                 </motion.button>
               </div>

@@ -28,7 +28,7 @@ interface MurgiiNeuralOrbProps {
 export function MurgiiNeuralOrb({
   size = "md",
   interactive = true,
-  showMagicRings = true,
+  showMagicRings = false,
   magicRingsColor = "#EAB308",
   magicRingsColorTwo = "#dfdfdf",
   className = "",

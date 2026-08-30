@@ -31,9 +31,10 @@ export default function App() {
   const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 3 });
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authResolved, setAuthResolved] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState("landing");
+  const [activeTab, setActiveTab] = useState<string>("landing");
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
   const [pendingPrompt, setPendingPrompt] = useState<{ text: string; mode: MurgiiMode; autoSubmit?: boolean } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -71,12 +72,7 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    // Splash Screen Timer (9s - reduced by 4s)
-    const splashTimer = setTimeout(() => {
-      if (isMounted) setShowSplash(false);
-    }, 9000);
-
-    // Initial Supabase Session Check - Fetches user plan and daily credit usage on load
+    // Initial Supabase Session Check - Immediately resolves destination tab to eliminate intermediate render
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
         console.error("Supabase getSession error:", error);
@@ -85,9 +81,13 @@ export default function App() {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          await loadUserData(currentUser);
+          // Immediately set destination to chat workspace before splash finishes
           setActiveTab("chat");
+          loadUserData(currentUser);
+        } else {
+          setActiveTab("landing");
         }
+        setAuthResolved(true);
         setLoading(false);
       }
     });
@@ -98,20 +98,20 @@ export default function App() {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED")) {
-          await loadUserData(currentUser);
           setActiveTab("chat");
+          loadUserData(currentUser);
         } else if (event === "SIGNED_OUT") {
           setUserPlanData({ plan: "none", maxCredits: 3 });
           setRemainingCredits(null);
           setActiveTab("landing");
         }
+        setAuthResolved(true);
       }
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
-      clearTimeout(splashTimer);
     };
   }, []);
 
@@ -201,14 +201,20 @@ export default function App() {
     );
   }
 
-  if (loading || showSplash) {
+  if (loading || showSplash || !authResolved) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
   // Full-screen Landing Page
   if (activeTab === "landing" && !showAdmin) {
     return (
-      <div className="h-screen bg-[#07060B] overflow-y-auto overflow-x-hidden selection:bg-[#8B5CF6]/40 relative">
+      <motion.div 
+        key="landing-view"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="h-screen bg-[#07060B] overflow-y-auto overflow-x-hidden selection:bg-[#8B5CF6]/40 relative"
+      >
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
@@ -246,14 +252,20 @@ export default function App() {
             setActiveTab("chat");
           }}
         />
-      </div>
+      </motion.div>
     );
   }
 
   // If user is not logged in and tries to view private workspace sections, route back to landing / open login modal
   if (!user && (activeTab === "chat" || activeTab === "account" || activeTab === "memory")) {
     return (
-      <div className="h-screen bg-[#07060B] overflow-y-auto overflow-x-hidden selection:bg-[#8B5CF6]/40 relative flex items-center justify-center">
+      <motion.div 
+        key="unauth-view"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="h-screen bg-[#07060B] overflow-y-auto overflow-x-hidden selection:bg-[#8B5CF6]/40 relative flex items-center justify-center"
+      >
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
@@ -287,12 +299,18 @@ export default function App() {
             setActiveTab("chat");
           }}
         />
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#07060B] text-gray-200 overflow-hidden font-sans relative selection:bg-[#8B5CF6]/40">
+    <motion.div 
+      key="workspace-view"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="flex h-screen bg-[#07060B] text-gray-200 overflow-hidden font-sans relative selection:bg-[#8B5CF6]/40"
+    >
       <AmbientBackground />
       <FilmGrainOverlay />
       <SpotlightCursor />
@@ -471,6 +489,6 @@ export default function App() {
           setActiveTab("chat");
         }}
       />
-    </div>
+    </motion.div>
   );
 }

@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { QreatoLogo } from "./QreatoLogo";
 import { AuthModal } from "./AuthModal";
-import { OutcomeNetworkDiagram } from "./OutcomeNetworkDiagram";
 import { Murgii3DChicken } from "./Murgii3DChicken";
 import { TrueFocus } from "./TrueFocus";
 import { ShinyText } from "./ShinyText";
@@ -42,8 +41,7 @@ import {
   TierExpansionVisual,
   BoltEcosystemVisual,
   LinearPipelineVisual,
-  PromptStudioInteractiveDemo,
-  SpecializedModeCard
+  PromptStudioInteractiveDemo
 } from "./FeatureVisuals";
 
 interface LandingPageProps {
@@ -510,7 +508,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center justify-center mb-6"
           >
-            <Murgii3DChicken size="lg" interactive={true} showPedestal={true} showHologram={true} />
+            <Murgii3DChicken size="lg" interactive={true} showPedestal={true} showHologram={true} showMagicRings={false} />
           </motion.div>
           
           {/* Main Hero Headline in Nohemi Bold with Gold Shimmer Wave Effect */}
@@ -604,106 +602,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
           }
         }}
       />
-
-      {/* Built for Every Outcome That Matters - Hub and Spoke Architecture */}
-      <section className="py-28 sm:py-36 relative overflow-hidden contain-paint">
-        {/* Ambient background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#8B5CF6]/10 rounded-full blur-[160px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="text-center mb-16 sm:mb-20 flex flex-col items-center">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.4 }}
-              transition={{ duration: 0.6 }}
-              className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-white font-nohemi"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-            >
-              Built for every outcome <br className="hidden sm:block" />
-              <span>that{" "}
-                <span className="relative inline-block text-white font-bold">
-                  matters
-                  {/* Dynamic Red Underline Animation that triggers whenever scrolled into view */}
-                  <motion.svg
-                    viewBox="0 0 160 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="absolute left-0 -bottom-2.5 sm:-bottom-3.5 w-[105%] h-3 sm:h-4.5 overflow-visible pointer-events-none"
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: false, amount: 0.4 }}
-                  >
-                    {/* Glowing outer aura path */}
-                    <motion.path
-                      d="M 4 12 C 40 4, 110 16, 156 7"
-                      stroke="#EF4444"
-                      strokeWidth="5"
-                      strokeLinecap="round"
-                      filter="drop-shadow(0 0 8px rgba(239, 68, 68, 0.8))"
-                      variants={{
-                        hidden: { pathLength: 0, opacity: 0 },
-                        visible: { 
-                          pathLength: 1, 
-                          opacity: 0.85,
-                          transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.15 }
-                        }
-                      }}
-                    />
-                    {/* Primary sharp red drawn line */}
-                    <motion.path
-                      d="M 4 12 C 40 4, 110 16, 156 7"
-                      stroke="#FF2A2A"
-                      strokeWidth="3.2"
-                      strokeLinecap="round"
-                      variants={{
-                        hidden: { pathLength: 0, opacity: 0 },
-                        visible: { 
-                          pathLength: 1, 
-                          opacity: 1,
-                          transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.15 }
-                        }
-                      }}
-                    />
-                    {/* Secondary accent stroke for authentic handwritten weight */}
-                    <motion.path
-                      d="M 16 16 C 56 10, 105 17, 145 12"
-                      stroke="#DC2626"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      variants={{
-                        hidden: { pathLength: 0, opacity: 0 },
-                        visible: { 
-                          pathLength: 1, 
-                          opacity: 0.8,
-                          transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.3 }
-                        }
-                      }}
-                    />
-                  </motion.svg>
-                </span>
-              </span>
-            </motion.h2>
-
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-gray-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed"
-            >
-              A single persuasion engine connecting your brand voice to high-converting creative across every critical touchpoint.
-            </motion.p>
-            
-            <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent shadow-[0_0_15px_rgba(139,92,246,0.6)] mt-8" />
-          </div>
-
-          {/* Animated Hub and Spoke Network Diagram with White Glassmorphic Badges */}
-          <div className="flex justify-center items-center">
-            <OutcomeNetworkDiagram />
-          </div>
-        </div>
-      </section>
 
       {/* How Murgii AI Engineers Conversion Section */}
       <section id="how-it-works" className="py-36 sm:py-44 px-4 relative overflow-hidden">
@@ -835,7 +733,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
           {/* Interactive Supporting Visual: Clean High-Contrast Glassmorphic Card */}
           <div 
-            className="max-w-5xl mx-auto rounded-[36px] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.85)] p-5 sm:p-9 relative overflow-hidden"
+            className="max-w-4xl mx-auto rounded-[28px] sm:rounded-[32px] border border-white/20 shadow-[0_20px_70px_rgba(0,0,0,0.85)] p-4 sm:p-6 sm:py-6 relative overflow-hidden"
             style={{
               background: "rgba(255, 255, 255, 0.05)",
               backdropFilter: "blur(20px)",
@@ -843,37 +741,36 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             }}
           >
             {/* 3-Step Simple Flow Bar */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-5 mb-5 border-b border-white/10">
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] border border-white/10">
-                <span className="w-6 h-6 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-mono font-bold shrink-0">1</span>
-                <span className="text-xs text-gray-300 font-medium">Select Archetype & Niche</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pb-3.5 mb-3.5 border-b border-white/10">
+              <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+                <span className="w-5 h-5 rounded-lg bg-white/10 text-white flex items-center justify-center text-[10px] font-mono font-bold shrink-0">1</span>
+                <span className="text-[11px] text-gray-300 font-medium truncate">Select Archetype & Niche</span>
               </div>
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] border border-white/10">
-                <span className="w-6 h-6 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-mono font-bold shrink-0">2</span>
-                <span className="text-xs text-gray-300 font-medium">Murgii Compiles Role Frame</span>
+              <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+                <span className="w-5 h-5 rounded-lg bg-white/10 text-white flex items-center justify-center text-[10px] font-mono font-bold shrink-0">2</span>
+                <span className="text-[11px] text-gray-300 font-medium truncate">Murgii Compiles Role Frame</span>
               </div>
-              <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] border border-white/10">
-                <span className="w-6 h-6 rounded-lg bg-white text-black flex items-center justify-center text-xs font-mono font-bold shrink-0">3</span>
-                <span className="text-xs text-white font-bold">Ready-to-Use Master Prompt</span>
+              <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/[0.04] border border-white/10">
+                <span className="w-5 h-5 rounded-lg bg-white text-black flex items-center justify-center text-[10px] font-mono font-bold shrink-0">3</span>
+                <span className="text-[11px] text-white font-bold truncate">Ready-to-Use Master Prompt</span>
               </div>
             </div>
 
             {/* Mode Selection Pills (Emails / Ads / Pages / Persuasion / Content) */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)] shrink-0">
-                  <Wand2 size={16} className="text-white" />
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3.5 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-white/15 border border-white/25 flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.2)] shrink-0">
+                  <Wand2 size={14} className="text-white" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white tracking-tight font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
-                    Select Archetype
+                  <h4 className="text-xs sm:text-sm font-bold text-white tracking-tight font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
+                    Select Mode
                   </h4>
-                  <p className="text-[11px] text-gray-400">See how guided parameters compile instantly</p>
                 </div>
               </div>
 
-              {/* 5 Mode Selection Pills */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10 overflow-x-auto max-w-full">
+              {/* 5 Mode Selection Pills - Auto-fitted responsive flex/grid so user doesn't have to scroll */}
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10 w-full md:w-auto">
                 {[
                   { id: "email", label: "Emails", icon: Mail },
                   { id: "ads", label: "Ads", icon: Target },
@@ -888,13 +785,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveDemoMode(tab.id as any)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                         isActive
                           ? "bg-white text-black font-bold shadow-[0_0_12px_rgba(255,255,255,0.4)]"
                           : "text-gray-300 hover:text-white hover:bg-white/5"
                       }`}
                     >
-                      <Icon size={13} strokeWidth={2.2} />
+                      <Icon size={12} strokeWidth={2.2} />
                       <span>{tab.label}</span>
                     </button>
                   );
@@ -909,12 +806,12 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             />
 
             {/* Bottom CTA Area: Value Contrast & Desirability */}
-            <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-5">
-              <div className="text-left space-y-1">
-                <h5 className="text-sm font-bold text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
+            <div className="mt-5 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-left space-y-0.5">
+                <h5 className="text-xs sm:text-sm font-bold text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
                   Stop Wasting Hours Rewriting AI Prompts
                 </h5>
-                <p className="text-xs text-gray-400 max-w-lg leading-relaxed">
+                <p className="text-[11px] text-gray-400 max-w-lg leading-relaxed">
                   Unlocked on Bolt Core and Max tiers. Get structured, role-framed master prompts synced directly to your generation workspace.
                 </p>
               </div>
@@ -924,11 +821,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCraftPromptClick}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white text-black font-extrabold text-sm tracking-tight shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white text-black font-extrabold text-xs tracking-tight shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
-                <Wand2 size={15} />
+                <Wand2 size={13} />
                 <span>Craft Your First Prompt</span>
-                <ArrowRight size={14} />
+                <ArrowRight size={13} />
               </motion.button>
             </div>
           </div>
@@ -967,91 +864,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
           {/* Live White/Glass Linear 3-Stage Pipeline Demonstration */}
           <LinearPipelineVisual />
-
-          {/* 5 Core Persuasion Engines Capability Strip with Animated Micro-Demo Cards */}
-          <div 
-            className="rounded-[36px] border border-white/15 p-6 sm:p-9 shadow-2xl relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]"
-            style={{
-              background: "rgba(255, 255, 255, 0.04)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)"
-            }}
-          >
-            <div className="text-center max-w-2xl mx-auto mb-8">
-              <h3 
-                className="text-2xl sm:text-3xl font-bold text-white font-nohemi mb-2"
-                style={{ fontFamily: "'Nohemi', sans-serif" }}
-              >
-                5 Specialized Modes. One Unified Workspace.
-              </h3>
-              <p className="text-gray-300 text-sm">
-                Each mode is calibrated with dedicated cognitive prompts, deliverables, and structural outputs.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
-              <SpecializedModeCard 
-                name="Emails Mode"
-                role="Multi-Email Sequences"
-                bullets={[
-                  "Onboarding sequences",
-                  "Launch campaigns",
-                  "Cart recovery"
-                ]}
-                icon={Mail}
-                sampleCopy="Subject: Quick question about scaling [Product]..."
-                delay={0}
-              />
-              <SpecializedModeCard 
-                name="Ads Mode"
-                role="Hooks & Performance"
-                bullets={[
-                  "Pattern interrupts",
-                  "Problem-agitate angles",
-                  "Direct-response scripts"
-                ]}
-                icon={Target}
-                sampleCopy="Hook: Stop losing 64% of qualified clicks on draft 1."
-                delay={150}
-              />
-              <SpecializedModeCard 
-                name="Pages Mode"
-                role="Sales & Landing Copy"
-                bullets={[
-                  "High-converting heroes",
-                  "Proof & trust stacks",
-                  "High-intent CTA blocks"
-                ]}
-                icon={Globe}
-                sampleCopy="Headline: The Persuasion Engine Built for Operators."
-                delay={300}
-              />
-              <SpecializedModeCard 
-                name="Persuasion Mode"
-                role="Conversion Triggers"
-                bullets={[
-                  "Loss-aversion frames",
-                  "Cialdini persuasion levers",
-                  "Objection eliminators"
-                ]}
-                icon={Zap}
-                sampleCopy="Trigger: Loss-aversion framing + micro-commitment CTA."
-                delay={450}
-              />
-              <SpecializedModeCard 
-                name="Content Mode"
-                role="Social, Reels & Scripts"
-                bullets={[
-                  "Reel & TikTok scripts",
-                  "Viral post captions",
-                  "High-retention hooks"
-                ]}
-                icon={Layers}
-                sampleCopy="Script: 3 subtle mistakes killing your organic reach..."
-                delay={600}
-              />
-            </div>
-          </div>
         </div>
       </section>
 
