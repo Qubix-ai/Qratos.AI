@@ -624,6 +624,257 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
   }
 });
 
+// In-memory challenge store for instant public URL lookups & fallbacks
+const challengeStore = new Map<string, {
+  overall_score: number;
+  attention_score: number;
+  clarity_score: number;
+  desire_score: number;
+  persuasion_score: number;
+  action_score: number;
+  biggest_leverage: string;
+  diagnosis?: string;
+  share_slug: string;
+  created_at: string;
+}>();
+
+// Helper to evaluate challenge copy and parse structured scores
+async function evaluateChallengeCopy(brief: string, ai: GoogleGenAI) {
+  const prompt = `You are the chief direct-response copy auditor at Qreato Labs.
+Evaluate the following copy with brutal direct-response standards.
+
+COPY TO EVALUATE:
+"""
+${brief}
+"""
+
+First, score the copy objectively across these 5 dimensions (0 to 20 points each):
+1. Attention & Hook (0-20) - Stopping power, curiosity, pattern interruption in the first 3 seconds.
+2. Clarity & Value (0-20) - Immediate understanding of the value proposition and core transformation.
+3. Desire & Mechanism (0-20) - Visceral emotional pull and distinct reason why this works.
+4. Persuasion & Risk (0-20) - Overcoming subconscious objections, friction, and risk-reversal.
+5. Action & Frictionless CTA (0-20) - Urgent, specific conviction in the call to action.
+
+Calculate the Overall Score (sum of all 5, from 0 to 100).
+Identify the single BIGGEST LEVERAGE point (the weakest dimension, e.g. PERSUASION, HOOK RETENTION, VALUE CLARITY, DESIRE AMPLIFICATION, or ACTION CONVERSION).
+Provide a concise 1-2 sentence DIAGNOSIS explaining why this dimension is bottlenecking conversion.
+
+Output MUST start with this EXACT JSON block on the very first line:
+<!--SCORE_DATA
+{
+  "attention_score": <number 0-20>,
+  "clarity_score": <number 0-20>,
+  "desire_score": <number 0-20>,
+  "persuasion_score": <number 0-20>,
+  "action_score": <number 0-20>,
+  "overall_score": <number 0-100>,
+  "biggest_leverage": "<PERSUASION | HOOK RETENTION | VALUE CLARITY | DESIRE AMPLIFICATION | ACTION CONVERSION>",
+  "diagnosis": "<1-2 sentence precise explanation>"
+}
+SCORE_DATA-->
+
+Followed immediately by a structured, elite direct-response breakdown:
+# 🎯 Copy Score Breakdown: [Overall Score]/100
+
+### ⚡ The Verdict & Biggest Leverage
+[Highlight the weakest point and immediate conversion bottleneck]
+
+### 📊 Score Analysis
+- **Attention & Hook:** [attention_score]/20
+- **Clarity & Value:** [clarity_score]/20
+- **Desire & Mechanism:** [desire_score]/20
+- **Persuasion & Risk Reversal:** [persuasion_score]/20
+- **Action & Conversion Urgency:** [action_score]/20
+
+### 🔍 Critical Bottlenecks
+[2-3 bullet points identifying specific weak spots in the text]
+
+### 🚀 High-Converting Rewrite
+[Provide a punchy, world-class rewritten version of the copy incorporating all missing conversion triggers]`;
+
+  const result = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      systemInstruction: COPYWRITING_SYSTEM_PROMPT,
+      temperature: 0.7,
+      maxOutputTokens: 2048,
+    },
+  });
+
+  const fullText = result.text || "";
+  let jsonMatch = fullText.match(/<!--SCORE_DATA\s*([\s\S]*?)\s*SCORE_DATA-->/);
+  
+  let attention = 12;
+  let clarity = 13;
+  let desire = 11;
+  let persuasion = 10;
+  let action = 12;
+  let overall = 58;
+  let biggestLeverage = "PERSUASION";
+  let diagnosis = "The copy lacks emotional friction and urgent risk-reversal to compel immediate commitment.";
+
+  if (jsonMatch && jsonMatch[1]) {
+    try {
+      const parsed = JSON.parse(jsonMatch[1]);
+      attention = Number(parsed.attention_score) || attention;
+      clarity = Number(parsed.clarity_score) || clarity;
+      desire = Number(parsed.desire_score) || desire;
+      persuasion = Number(parsed.persuasion_score) || persuasion;
+      action = Number(parsed.action_score) || action;
+      overall = Number(parsed.overall_score) || (attention + clarity + desire + persuasion + action);
+      if (parsed.biggest_leverage) biggestLeverage = parsed.biggest_leverage;
+      if (parsed.diagnosis) diagnosis = parsed.diagnosis;
+    } catch (e) {
+      console.warn("Failed to parse SCORE_DATA JSON, using fallback calculation:", e);
+    }
+  }
+
+  const cleanText = fullText.replace(/<!--SCORE_DATA[\s\S]*?SCORE_DATA-->\s*/, "").trim();
+
+  // Generate 8-character hex slug
+  const chars = "abcdef0123456789";
+  let shareSlug = "";
+  for (let i = 0; i < 8; i++) {
+    shareSlug += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  const challengeRecord = {
+    overall_score: overall,
+    attention_score: attention,
+    clarity_score: clarity,
+    desire_score: desire,
+    persuasion_score: persuasion,
+    action_score: action,
+    biggest_leverage: biggestLeverage,
+    diagnosis,
+    share_slug: shareSlug,
+    created_at: new Date().toISOString(),
+  };
+
+  challengeStore.set(shareSlug, challengeRecord);
+
+  return {
+    text: cleanText,
+    challengeResult: {
+      shareSlug,
+      overallScore: overall,
+      attention_score: attention,
+      clarity_score: clarity,
+      desire_score: desire,
+      persuasion_score: persuasion,
+      action_score: action,
+      biggest_leverage: biggestLeverage,
+      diagnosis,
+      dimensions: {
+        attention,
+        clarity,
+        desire,
+        persuasion,
+        action,
+      },
+    },
+  };
+}
+
+// Dedicated Murgii AI Generation Endpoint with mode-specific intelligence & Gemini fallback
+app.post("/api/murgii/generate", authenticateToken, async (req: any, res: any) => {
+  const { mode = "email", brief = "" } = req.body;
+  const uid = req.user?.uid || "guest";
+
+  if (!brief || !brief.trim()) {
+    return res.status(400).json({ error: "Brief is required for generation." });
+  }
+
+  try {
+    const creditStatus = await checkAndDeductCredits(uid);
+    const ai = getGenAI();
+
+    if (mode === "challenge") {
+      const evaluation = await evaluateChallengeCopy(brief, ai);
+      return res.json({
+        text: evaluation.text,
+        remaining: creditStatus.remaining,
+        challengeResult: evaluation.challengeResult,
+      });
+    }
+
+    let modeInstruction = "";
+    switch (mode) {
+      case "ads":
+        modeInstruction = `Create 3 distinct, high-converting ad variations (1 Pain-Led, 1 Outcome-Led, 1 Unique Mechanism-Led).
+For each variation, include 3 scroll-stopping [HOOK] options, persuasive body copy with visceral friction, clear proof, and a high-urgency [CTA].`;
+        break;
+      case "landing":
+        modeInstruction = `Architect a complete, high-converting direct-response landing page copy structure.
+Include:
+- Above-The-Fold: Punchy Headline, Subheadline, Primary CTA
+- The Problem & Agitation: Pinpointing the exact struggle
+- The Mechanism: Why this works where previous attempts failed
+- Proof & Case Studies: Concrete transformation metrics
+- The Offer & Stack: High-value outcomes
+- Risk-Reversal & Guarantee: Inverting hesitation
+- Final Action CTA: Low friction, high conviction`;
+        break;
+      case "psych":
+        modeInstruction = `Perform an in-depth behavioral psychology and direct-response analysis of this brief/copy.
+Identify subconscious resistance points, loss-aversion triggers, status-elevation hooks, and deliver a rewritten version that operates on psychological instinct.`;
+        break;
+      case "content":
+        modeInstruction = `Generate high-retention viral social post / video script copy.
+Include a 3-second pattern-interrupt opening hook, tension building, high-value actionable insight, and an engagement-triggering closing line.`;
+        break;
+      case "email":
+      default:
+        modeInstruction = `Write a high-converting email sequence or broadcast email.
+Include 5 subject line variations (Curiosity, Pain, Self-Interest, Urgency, Story), engaging opening hook, conversational body narrative, mechanism proof, and a single high-conviction CTA with a strategic P.S. line.`;
+        break;
+    }
+
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `${modeInstruction}\n\nUSER BRIEF:\n"""\n${brief}\n"""` }]
+        }
+      ],
+      config: {
+        systemInstruction: COPYWRITING_SYSTEM_PROMPT,
+        temperature: 0.82,
+        maxOutputTokens: 2048,
+      },
+    });
+
+    const generatedText = result.text || "";
+
+    return res.json({
+      text: generatedText,
+      remaining: creditStatus.remaining,
+      challengeResult: null,
+    });
+  } catch (error: any) {
+    console.error("Murgii Generate API Error:", error);
+    const apiErrorMsg = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: `Generation error: ${apiErrorMsg}` });
+  }
+});
+
+// Challenge lookup API route for shareable links
+app.get("/api/challenge/:slug", (req: any, res: any) => {
+  const slug = req.params.slug;
+  if (!slug) {
+    return res.status(400).json({ error: "Slug required" });
+  }
+
+  const record = challengeStore.get(slug);
+  if (record) {
+    return res.json(record);
+  }
+
+  return res.status(404).json({ error: "Challenge not found in local store" });
+});
+
 app.get("/api/user/me", authenticateToken, async (req: any, res: any) => {
   const uid = req.user.uid;
   

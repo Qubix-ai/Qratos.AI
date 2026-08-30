@@ -8,7 +8,7 @@ export function SplashScreen({ onComplete }: { onComplete?: () => void }) {
 
   useEffect(() => {
     const startTime = Date.now();
-    const duration = 13000; // 13.0 seconds duration
+    const duration = 9000; // 9.0 seconds duration (reduced by 4s)
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;

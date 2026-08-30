@@ -21,6 +21,7 @@ import {
 import { motion } from "motion/react";
 import { MurgiiMode } from "../lib/supabase";
 import { FloatingIridescentBlobs } from "./FloatingIridescentBlobs";
+import { copyToClipboard } from "../lib/clipboard";
 
 interface PromptBuilderProps {
   user: any;
@@ -192,12 +193,10 @@ Generate a high-impact social content & video script architecture. Structure the
   const activePromptText = isEditingCustom && customPromptText !== null ? customPromptText : assembledPrompt;
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(activePromptText);
+    const success = await copyToClipboard(activePromptText);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy prompt:", err);
     }
   };
 

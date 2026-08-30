@@ -364,10 +364,10 @@ export function Sidebar({
                   onTabChange("landing");
                   onClose?.();
                 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#8B5CF6]/40 text-gray-300 hover:text-white transition-all cursor-pointer group"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 text-gray-300 hover:text-white transition-all cursor-pointer group"
                 title="Navigate to Landing Page"
               >
-                <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform text-[#E879F9]" />
+                <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform text-white" />
                 <span className="text-xs font-semibold">Back to Home</span>
               </button>
 
@@ -470,15 +470,15 @@ export function Sidebar({
             <div className="p-3 border-t border-white/[0.08] space-y-2 shrink-0">
               <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/05 flex items-center justify-between">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Credits</span>
-                <span className="text-xs font-bold text-[#E879F9] font-mono">
-                  {userData?.remainingCredits ?? 3} / {userData?.totalCredits ?? 3}
+                <span className="text-xs font-bold text-[#FFBE0B] font-mono">
+                  {userData?.remainingCredits ?? 60} / {userData?.totalCredits ?? 60}
                 </span>
               </div>
 
               <div className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/05">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] flex items-center justify-center text-white text-[10px] font-black shrink-0">
-                    {user?.email ? user.email.charAt(0).toUpperCase() : <UserIcon size={12} />}
+                  <div className="w-7 h-7 rounded-full bg-black border border-white/20 flex items-center justify-center text-white text-xs font-black shrink-0 shadow-inner">
+                    {user?.email ? user.email.charAt(0).toUpperCase() : "S"}
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-white truncate max-w-[130px]">

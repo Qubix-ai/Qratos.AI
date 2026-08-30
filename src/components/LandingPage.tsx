@@ -26,6 +26,7 @@ import {
   Shield,
   Crown,
   ExternalLink,
+  Trophy,
 } from "lucide-react";
 import { QreatoLogo } from "./QreatoLogo";
 import { AuthModal } from "./AuthModal";
@@ -34,6 +35,7 @@ import { Murgii3DChicken } from "./Murgii3DChicken";
 import { TrueFocus } from "./TrueFocus";
 import { ShinyText } from "./ShinyText";
 import LightPillar from "./LightPillar";
+import { LandingChallengeSection } from "./LandingChallengeSection";
 import {
   ModesCycleVisual,
   PromptCompilerVisual,
@@ -51,10 +53,11 @@ interface LandingPageProps {
   onLogin?: () => void;
   onOpenBolt?: () => void;
   onNavigate?: (view: string) => void;
+  onStartChallenge?: (initialText?: string) => void;
   userTier?: "free" | "core" | "max";
 }
 
-export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNavigate, userTier }: LandingPageProps) {
+export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNavigate, onStartChallenge, userTier }: LandingPageProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
@@ -138,7 +141,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
           </div>
 
           {/* Center Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-gray-300">
+          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-gray-300">
+            <a href="#challenge" className="hover:text-white transition-colors flex items-center gap-1.5 text-white/90">
+              <Trophy size={13} className="text-[#FFBE0B]" />
+              <span>Copy Challenge</span>
+            </a>
             <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
             <a href="#features" className="hover:text-white transition-colors">Capabilities</a>
             <a href="#prompt-builder" className="hover:text-white transition-colors">Prompt Builder</a>
@@ -585,6 +592,19 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
         </div>
       </section>
 
+      {/* Copy Score Challenge Featured Section - Glassmorphism & Conversion Matrix */}
+      <LandingChallengeSection 
+        onStartChallenge={(txt) => {
+          if (onStartChallenge) {
+            onStartChallenge(txt);
+          } else if (onNavigate) {
+            onNavigate("challenge");
+          } else {
+            handleSignupClick();
+          }
+        }}
+      />
+
       {/* Built for Every Outcome That Matters - Hub and Spoke Architecture */}
       <section className="py-28 sm:py-36 relative overflow-hidden contain-paint">
         {/* Ambient background glow */}
@@ -721,19 +741,20 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             </p>
           </div>
 
-          <div id="features" className="space-y-36 sm:space-y-44">
-            {/* BLOCK 1: 4 Core Modes & Persistent Brand Memory */}
+          <div id="features" className="space-y-40 sm:space-y-48">
+            {/* BLOCK 1: 5 Core Modes & Persistent Brand Memory */}
             <FeatureBlock 
               index={1}
-              title="4 Dedicated Modes Powered by Persistent Memory"
-              description="Stop re-explaining your product to generic AI every morning. Set your business niche, target audience, and brand voice once in Memory & Personalization — then generate high-converting Email sequences, punchy Ad hooks, full Sales Pages, and deep Behavioral Psychology assets that instantly sound like you."
-              trustLine="Memory & Personalization applies automatically across all 4 modes on every generation."
+              title="5 Dedicated Modes Powered by Persistent Memory"
+              description="Save your niche, audience, and brand voice once — generate conversion-ready assets across all 5 modes instantly."
+              trustLine="Memory & Personalization applies automatically across all 5 modes."
               points={[
-                "Emails Mode: Multi-email onboarding, launch, & abandoned cart sequences",
-                "Ads Mode: Pattern-interrupt hooks, scroll-stoppers, & direct angles",
-                "Pages Mode: High-converting landing pages, VSLs, & sales copy",
-                "Psych Mode: Cialdini triggers, loss-aversion frames, & objection crushers",
-                "Zero Context Switching: Your name, tone, and offer stay locked forever"
+                "Multi-email sequence campaigns",
+                "Pattern-interrupt ad hooks",
+                "Sales pages & landing assets",
+                "Conversion triggers & bias frames",
+                "Reels, TikTok & social content",
+                "Zero context loss across sessions"
               ]}
               visual={<ModesCycleVisual />}
             />
@@ -743,14 +764,14 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               index={2}
               reversed
               title="Guided Prompt Architecture That Beats Generic AI"
-              description="One-line prompts produce shallow, robotic fluff you have to rewrite from scratch. Murgii's Prompt Builder (unlocked on Core & Max) compiles guided inputs — niche, conversion vector, tone, and offer mechanics — into role-framed master prompts so your generation hits peak persuasion on draft one."
-              trustLine="Replaces hours of prompt tweaking with a 60-second guided architecture."
+              description="Compile guided inputs into role-framed master prompts for peak persuasion on draft one."
+              trustLine="Replaces hours of prompt tweaking with 60-second guided architecture."
               points={[
-                "Role-Framed Master Prompts: Pre-loaded with direct response methodology",
-                "Targeted Conversion Vectors: Aligned to specific buying temperatures",
-                "Reusable Master Blueprints: Store high-performing prompt frameworks",
-                "1-Click Workspace Sync: Send engineered prompts straight into generation",
-                "Available on Core & Max: Stop settling for generic chatbot answers"
+                "Role-framed master prompts",
+                "Targeted conversion vectors",
+                "Reusable master blueprints",
+                "1-click workspace synchronization",
+                "Unlocked on Core & Max"
               ]}
               visual={<PromptCompilerVisual />}
             />
@@ -759,14 +780,14 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             <FeatureBlock 
               index={3}
               title="Daily Credit Engine Built for Sustainable Volume"
-              description="Start with 3 daily credits on Basic to test all 4 modes with zero risk. When client deadlines and launch schedules hit, scale to Core ($29/mo) for 20 daily credits + full Prompt Builder access, or command Max ($97/mo) with 60 daily credits, AI Blueprint Assist, and priority generation bandwidth."
-              trustLine="Credits refresh every 24 hours so you never face unexpected overage bills."
+              description="Predictable daily quotas engineered for continuous client work and high-volume publishing."
+              trustLine="Quotas refresh every 24 hours with zero surprise overage fees."
               points={[
-                "Basic (Free): 3 credits/day across all 4 modes to write daily assets",
-                "Core ($29/mo): 20 credits/day + unlocked Prompt Builder & Core roadmap",
-                "Max ($97/mo): 60 credits/day + Business Blueprint Studio & Qreato Engine",
-                "No Token Traps: Predictable daily quotas built for agency & founder volume",
-                "Instant Tier Switching: Upgrade in seconds as your publishing demands scale"
+                "Basic: 3 daily credits across all 5 modes",
+                "Core ($29/mo): 20 daily credits + Prompt Builder",
+                "Max ($97/mo): 60 daily credits + Blueprint Studio",
+                "Predictable daily publishing volume",
+                "Instant tier switching anytime"
               ]}
               visual={<TierExpansionVisual />}
             />
@@ -776,14 +797,14 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               index={4}
               reversed
               title="Complete Revenue Infrastructure with Bolt & Blueprint Studio"
-              description="Copy is only one half of the growth equation. Max tier pairs Murgii's 60 daily credits with Bolt Max's 6-category execution roadmap, Business Blueprint Studio, and AI Blueprint Assist — connecting your sales copy directly to product offers, audience growth, and full-funnel monetization."
-              trustLine="The complete unified operating system for high-performing modern operators."
+              description="Connect your sales copy directly to offer roadmaps, audience funnels, and monetization systems."
+              trustLine="The unified growth operating system for modern founders and agencies."
               points={[
-                "Bolt Core & Max Integration: 6-category structured execution roadmap",
-                "Business Blueprint Studio: Map entire offer architectures before writing",
-                "AI Blueprint Assist: Automatic structure recommendations for campaigns",
-                "Qreato AI Engine: Dedicated enterprise-grade model routing",
-                "All-In-One Leverage: From raw concept to deployed revenue system"
+                "6-category execution roadmap",
+                "Business Blueprint Studio",
+                "AI Blueprint Assist",
+                "Dedicated enterprise model routing",
+                "End-to-end revenue deployment"
               ]}
               visual={<BoltEcosystemVisual />}
             />
@@ -792,29 +813,29 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
       </section>
 
       {/* PROMPT BUILDER ARCHITECTURE SECTION */}
-      <section id="prompt-builder" className="py-32 px-4 relative overflow-hidden">
+      <section id="prompt-builder" className="py-36 sm:py-44 px-4 relative overflow-hidden">
         {/* Ambient Pure White/Glass Glows */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
         <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-white/[0.02] rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Section Header */}
-          <div className="text-center mb-16 px-4">
+          <div className="text-center mb-14 px-4">
             <h2 
-              className="text-4xl md:text-7xl font-bold tracking-tight mb-6 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent leading-[1.05] font-nohemi"
+              className="text-4xl md:text-7xl font-bold tracking-tight mb-5 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent leading-[1.05] font-nohemi"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
               Build Custom Prompts, <br className="hidden md:block" /> Engineered for You
             </h2>
-            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-8 shadow-[0_0_20px_rgba(255,255,255,0.2)]" />
+            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-6 shadow-[0_0_20px_rgba(255,255,255,0.2)]" />
             <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Generic one-line prompting forces you into tedious re-prompting loops. Murgii&apos;s Prompt Builder assembles tailored, role-framed master prompts from guided questions — giving you structured persuasion on draft one.
+              Assemble tailored, role-framed master prompts in seconds — structured persuasion on draft one without generic fluff.
             </p>
           </div>
 
           {/* Interactive Supporting Visual: Clean High-Contrast Glassmorphic Card */}
           <div 
-            className="max-w-5xl mx-auto rounded-[36px] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.85)] p-6 sm:p-10 relative overflow-hidden"
+            className="max-w-5xl mx-auto rounded-[36px] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.85)] p-5 sm:p-9 relative overflow-hidden"
             style={{
               background: "rgba(255, 255, 255, 0.05)",
               backdropFilter: "blur(20px)",
@@ -822,7 +843,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             }}
           >
             {/* 3-Step Simple Flow Bar */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-6 mb-6 border-b border-white/10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-5 mb-5 border-b border-white/10">
               <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] border border-white/10">
                 <span className="w-6 h-6 rounded-lg bg-white/10 text-white flex items-center justify-center text-xs font-mono font-bold shrink-0">1</span>
                 <span className="text-xs text-gray-300 font-medium">Select Archetype & Niche</span>
@@ -837,11 +858,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               </div>
             </div>
 
-            {/* Mode Selection Pills (Simple Universal Labels: Emails / Ads / Pages / Psych) */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+            {/* Mode Selection Pills (Emails / Ads / Pages / Persuasion / Content) */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)] shrink-0">
-                  <Wand2 size={18} className="text-white" />
+                <div className="w-8 h-8 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)] shrink-0">
+                  <Wand2 size={16} className="text-white" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-white tracking-tight font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
@@ -851,13 +872,14 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 </div>
               </div>
 
-              {/* Plain 4 Mode Selection Pills */}
+              {/* 5 Mode Selection Pills */}
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10 overflow-x-auto max-w-full">
                 {[
                   { id: "email", label: "Emails", icon: Mail },
                   { id: "ads", label: "Ads", icon: Target },
                   { id: "landing", label: "Pages", icon: Globe },
-                  { id: "psych", label: "Psych", icon: Zap }
+                  { id: "psych", label: "Persuasion", icon: Zap },
+                  { id: "content", label: "Content", icon: Layers }
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeDemoMode === tab.id;
@@ -866,13 +888,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveDemoMode(tab.id as any)}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                         isActive
                           ? "bg-white text-black font-bold shadow-[0_0_12px_rgba(255,255,255,0.4)]"
                           : "text-gray-300 hover:text-white hover:bg-white/5"
                       }`}
                     >
-                      <Icon size={14} strokeWidth={2.2} />
+                      <Icon size={13} strokeWidth={2.2} />
                       <span>{tab.label}</span>
                     </button>
                   );
@@ -887,7 +909,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             />
 
             {/* Bottom CTA Area: Value Contrast & Desirability */}
-            <div className="mt-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-5">
               <div className="text-left space-y-1">
                 <h5 className="text-sm font-bold text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
                   Stop Wasting Hours Rewriting AI Prompts
@@ -902,79 +924,79 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCraftPromptClick}
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-black font-extrabold text-sm tracking-tight shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white text-black font-extrabold text-sm tracking-tight shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
               >
-                <Wand2 size={16} />
+                <Wand2 size={15} />
                 <span>Craft Your First Prompt</span>
-                <ArrowRight size={15} />
+                <ArrowRight size={14} />
               </motion.button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* UPGRADED REPLACEMENT SECTION: Clean, Honest "How Murgii Operates" 3-Step Flow & 4-Mode Capability Grid */}
-      <section id="workflow" className="py-32 px-4 relative overflow-hidden">
+      {/* UPGRADED REPLACEMENT SECTION: Clean, Honest "How Murgii Operates" 3-Step Flow & 5-Mode Capability Grid */}
+      <section id="workflow" className="py-36 sm:py-44 px-4 relative overflow-hidden">
         {/* Cinematic Ambient Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(255,255,255,0.04)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
 
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Section Header */}
-          <div className="text-center mb-16 px-4">
+          <div className="text-center mb-14 px-4">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-black text-white uppercase tracking-[0.25em] mb-6 backdrop-blur-md"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-black text-white uppercase tracking-[0.25em] mb-5 backdrop-blur-md"
             >
               <Compass size={12} className="text-white" />
               THE EXECUTION WORKFLOW
             </motion.div>
             <h2 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white font-nohemi max-w-4xl mx-auto leading-[1.15]"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-5 text-white font-nohemi max-w-4xl mx-auto leading-[1.15]"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
               <span className="inline-block">From Brief to Market-Ready Copy</span>{" "}
               <span className="inline-block text-white/90">in 3 Honest Steps</span>
             </h2>
-            <div className="w-28 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-8" />
+            <div className="w-28 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-6" />
             <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              No complex prompt engineering tricks. Murgii connects your brand voice and offer context directly to high-converting assets in seconds.
+              Connect brand voice and offer context directly to high-converting copy in seconds.
             </p>
           </div>
 
           {/* Live White/Glass Linear 3-Stage Pipeline Demonstration */}
           <LinearPipelineVisual />
 
-          {/* 4 Core Persuasion Engines Capability Strip with Animated Micro-Demo Cards */}
+          {/* 5 Core Persuasion Engines Capability Strip with Animated Micro-Demo Cards */}
           <div 
-            className="rounded-[36px] border border-white/15 p-8 sm:p-10 shadow-2xl relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]"
+            className="rounded-[36px] border border-white/15 p-6 sm:p-9 shadow-2xl relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]"
             style={{
               background: "rgba(255, 255, 255, 0.04)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)"
             }}
           >
-            <div className="text-center max-w-2xl mx-auto mb-10">
+            <div className="text-center max-w-2xl mx-auto mb-8">
               <h3 
-                className="text-2xl sm:text-3xl font-bold text-white font-nohemi mb-3"
+                className="text-2xl sm:text-3xl font-bold text-white font-nohemi mb-2"
                 style={{ fontFamily: "'Nohemi', sans-serif" }}
               >
-                4 Specialized Modes. One Unified Workspace.
+                5 Specialized Modes. One Unified Workspace.
               </h3>
               <p className="text-gray-300 text-sm">
                 Each mode is calibrated with dedicated cognitive prompts, deliverables, and structural outputs.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
               <SpecializedModeCard 
                 name="Emails Mode"
                 role="Multi-Email Sequences"
                 bullets={[
-                  "Nurture sequences",
-                  "Flash sale blasts",
-                  "Cold outbound drips"
+                  "Onboarding sequences",
+                  "Launch campaigns",
+                  "Cart recovery"
                 ]}
                 icon={Mail}
                 sampleCopy="Subject: Quick question about scaling [Product]..."
@@ -990,7 +1012,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 ]}
                 icon={Target}
                 sampleCopy="Hook: Stop losing 64% of qualified clicks on draft 1."
-                delay={200}
+                delay={150}
               />
               <SpecializedModeCard 
                 name="Pages Mode"
@@ -1002,18 +1024,30 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 ]}
                 icon={Globe}
                 sampleCopy="Headline: The Persuasion Engine Built for Operators."
-                delay={400}
+                delay={300}
               />
               <SpecializedModeCard 
-                name="Psych Mode"
-                role="Behavioral Biases"
+                name="Persuasion Mode"
+                role="Conversion Triggers"
                 bullets={[
                   "Loss-aversion frames",
                   "Cialdini persuasion levers",
-                  "Friction elimination"
+                  "Objection eliminators"
                 ]}
                 icon={Zap}
                 sampleCopy="Trigger: Loss-aversion framing + micro-commitment CTA."
+                delay={450}
+              />
+              <SpecializedModeCard 
+                name="Content Mode"
+                role="Social, Reels & Scripts"
+                bullets={[
+                  "Reel & TikTok scripts",
+                  "Viral post captions",
+                  "High-retention hooks"
+                ]}
+                icon={Layers}
+                sampleCopy="Script: 3 subtle mistakes killing your organic reach..."
                 delay={600}
               />
             </div>

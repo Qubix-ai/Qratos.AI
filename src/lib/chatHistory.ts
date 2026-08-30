@@ -6,6 +6,11 @@ export interface ChatMessage {
   timestamp?: string;
   isNew?: boolean;
   isDailyLimit?: boolean;
+  challengeResult?: {
+    shareSlug: string;
+    overallScore: number;
+    [key: string]: any;
+  } | null;
 }
 
 export interface ChatSession {

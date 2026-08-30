@@ -17,7 +17,8 @@ import {
   LogOut, 
   AlertCircle,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  Trophy
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import ReactMarkdown from "react-markdown";
@@ -25,6 +26,8 @@ import { Murgii3DChicken } from "./Murgii3DChicken";
 import { AIProcessingTelemetry } from "./AIProcessingTelemetry";
 import { QreatoLogo } from "./QreatoLogo";
 import { FloatingIridescentBlobs } from "./FloatingIridescentBlobs";
+import { ScoreCard } from "./ScoreCard";
+import { copyToClipboard } from "../lib/clipboard";
 import { 
   callMurgiiGenerateEdgeFunction, 
   DailyLimitError, 
@@ -162,6 +165,11 @@ interface Message {
   timestamp?: string;
   isNew?: boolean;
   isDailyLimit?: boolean;
+  challengeResult?: {
+    shareSlug: string;
+    overallScore: number;
+    [key: string]: any;
+  } | null;
 }
 
 // TYPEWRITER ANIMATION FOR PREMIUM CHAT REVEAL WITH PURPLE-MAGENTA CURSOR
@@ -224,6 +232,7 @@ interface ChatInterfaceProps {
   onGoToPricing?: () => void;
   onGoToAccount?: () => void;
   onLogout?: () => void;
+  onNavigateToPublicChallenge?: (slug: string) => void;
 }
 
 export function ChatInterface({ 
@@ -241,7 +250,8 @@ export function ChatInterface({
   onGoHome,
   onGoToPricing,
   onGoToAccount,
-  onLogout 
+  onLogout,
+  onNavigateToPublicChallenge
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -264,7 +274,8 @@ export function ChatInterface({
     { mode: "ads" as MurgiiMode, icon: Target, title: "Ads", desc: "Hooks & Angles" },
     { mode: "landing" as MurgiiMode, icon: FileText, title: "Pages", desc: "Sales Leads" },
     { mode: "psych" as MurgiiMode, icon: Zap, title: "Psych", desc: "Biases & Triggers" },
-    { mode: "content" as MurgiiMode, icon: Megaphone, title: "Content", desc: "Social Posts & Scripts" }
+    { mode: "content" as MurgiiMode, icon: Megaphone, title: "Content", desc: "Social Posts & Scripts" },
+    { mode: "challenge" as MurgiiMode, icon: Trophy, title: "Challenge", desc: "Score your copy" }
   ];
 
   const ANIMATED_WORDS = ["ignore", "forget", "resist"];
@@ -317,14 +328,12 @@ export function ChatInterface({
   }, []);
 
   const handleCopy = async (text: string, id: string | number) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    const success = await copyToClipboard(text);
+    if (success) {
       setCopiedId(id);
       setTimeout(() => {
         setCopiedId(null);
       }, 2000);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
     }
   };
 
@@ -344,7 +353,11 @@ export function ChatInterface({
   }, [messages, isLoading]);
 
   const detectMode = (text: string, currentSelectedMode: MurgiiMode): MurgiiMode => {
+    if (currentSelectedMode === 'challenge') return 'challenge';
     const lower = text.toLowerCase();
+    if (lower.startsWith('score this') || lower.startsWith('evaluate this copy') || lower.startsWith('score my copy') || lower.includes('copy score challenge') || lower.startsWith('challenge:')) {
+      return 'challenge';
+    }
     if (lower.startsWith('create 5 scroll-stopping') || lower.startsWith('generate 10 viral') || lower.startsWith('brief me on ads') || lower.includes('facebook ad') || lower.includes('ig ad')) {
       return 'ads';
     }
@@ -432,7 +445,8 @@ export function ChatInterface({
         role: 'assistant',
         content: result.text,
         timestamp: new Date().toISOString(),
-        isNew: true
+        isNew: true,
+        challengeResult: result.challengeResult || null,
       };
 
       const finalMessages = [...updatedWithUser, aiMessage];
@@ -506,17 +520,19 @@ export function ChatInterface({
     }
   };
 
-  // Handle incoming pendingPrompt from PromptBuilder
+  // Handle incoming pendingPrompt from Landing, PromptBuilder, etc.
   useEffect(() => {
-    if (pendingPrompt && pendingPrompt.text) {
+    if (pendingPrompt) {
       if (pendingPrompt.mode) {
         setSelectedMode(pendingPrompt.mode);
         setActiveSelectedTile(pendingPrompt.mode);
       }
-      if (pendingPrompt.autoSubmit) {
-        executePrompt(pendingPrompt.text, pendingPrompt.mode);
-      } else {
-        setInputValue(pendingPrompt.text);
+      if (pendingPrompt.text && pendingPrompt.text.trim()) {
+        if (pendingPrompt.autoSubmit) {
+          executePrompt(pendingPrompt.text, pendingPrompt.mode);
+        } else {
+          setInputValue(pendingPrompt.text);
+        }
       }
       onClearPendingPrompt?.();
     }
@@ -686,6 +702,24 @@ export function ChatInterface({
                   <div className="prose prose-invert max-w-none text-white/90 leading-relaxed text-[14px]">
                     <TypewriterMarkdown content={m.content} isNew={m.isNew} />
                   </div>
+
+                  {/* If challengeResult is present on the assistant message, render the distinct Score Card UI */}
+                  {m.challengeResult && typeof m.challengeResult.overallScore === 'number' && (
+                    <ScoreCard 
+                      overallScore={m.challengeResult.overallScore}
+                      shareSlug={m.challengeResult.shareSlug}
+                      onNavigateToPublicChallenge={onNavigateToPublicChallenge}
+                      biggestLeverage={m.challengeResult.biggest_leverage || m.challengeResult.biggestLeverage}
+                      diagnosis={m.challengeResult.diagnosis || m.challengeResult.weakestReason}
+                      dimensions={m.challengeResult.dimensions || {
+                        attention: m.challengeResult.attention_score,
+                        clarity: m.challengeResult.clarity_score,
+                        desire: m.challengeResult.desire_score,
+                        persuasion: m.challengeResult.persuasion_score,
+                        action: m.challengeResult.action_score,
+                      }}
+                    />
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -751,7 +785,9 @@ export function ChatInterface({
                 placeholder={
                   dailyLimitReached 
                     ? "Daily limit reached — upgrade to continue" 
-                    : `Describe what you want to write (${CHAT_MODES.find(m => m.mode === selectedMode)?.title || "Email"} Mode)…`
+                    : selectedMode === "challenge"
+                      ? "Paste the copy you want scored…"
+                      : `Describe what you want to write (${CHAT_MODES.find(m => m.mode === selectedMode)?.title || "Email"} Mode)…`
                 }
                 disabled={isLoading || dailyLimitReached}
                 autoComplete="off"

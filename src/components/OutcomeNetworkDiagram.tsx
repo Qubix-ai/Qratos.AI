@@ -127,38 +127,58 @@ export const OutcomeNetworkDiagram: React.FC = () => {
   return (
     <div className="relative w-full max-w-[780px] mx-auto px-2 select-none">
       <style>{`
-        /* Global Synchronized 3.8-Second Complete Choreography Cycle:
-           - 0.0s (0%): Bullets spawn at the center Qreato logo (400, 400)
-           - 0.0s -> 2.0s (0% -> 52.6%): Bullets travel along the curved paths outward towards elements (takes 2 seconds)
-           - 2.0s (52.6%): Bullets touch the outer element boundary -> INSTANTLY DISSOLVE & trigger glowing effect + splash shockwave
-           - 2.0s -> 3.5s (52.6% -> 92.1%): Glowing effect stays active on the elements for 1.5 seconds
-           - 2.0s -> 3.75s (52.6% -> 98.7%): Bullets remain COMPLETELY ZERO OPACITY / HIDDEN at center origin (preventing any glitch/spawn near element)
-           - 3.5s -> 3.75s (92.1% -> 98.7%): Element glow smoothly fades back to frosted silver
-           - 3.8s (100% / 0%): Central Qreato logo core pulses and all bullets emerge anew from the center logo together!
+        /* Staggered Continuous Intelligence Choreography:
+           - Center Core: Slow, continuous 4.0s breathing pulse & radiant halo
+           - 8 Spoke Nodes: Staggered 5.6s loops (offset by 0.7s each)
+           - Traveling particles stream outwards sequentially along spoke paths
+           - Each outer badge illuminates with its signature color upon particle arrival
         */
 
-        @keyframes badgeIlluminateExact {
-          0%, 51.5% {
+        @keyframes coreBreathingGlow {
+          0%, 100% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.35)) drop-shadow(0 12px 30px rgba(0, 0, 0, 0.85));
+          }
+          50% {
+            transform: scale(1.035);
+            filter: drop-shadow(0 0 32px rgba(255, 255, 255, 0.75)) drop-shadow(0 16px 40px rgba(0, 0, 0, 0.9));
+          }
+        }
+
+        @keyframes coreHaloBreathing {
+          0%, 100% {
+            r: 62px;
+            opacity: 0.25;
+            stroke-width: 1px;
+          }
+          50% {
+            r: 72px;
+            opacity: 0.55;
+            stroke-width: 1.5px;
+          }
+        }
+
+        @keyframes badgeIlluminateStaggered {
+          0%, 31.5% {
             background: rgba(255, 255, 255, 0.07);
             border-color: rgba(255, 255, 255, 0.18);
             box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
             color: #FFFFFF;
             transform: scale(1);
           }
-          52.6% {
-            /* Exact boundary touch at 2.0s */
-            transform: scale(1.08);
+          32.14% {
+            /* Particle contact */
+            transform: scale(1.07);
           }
-          54%, 92.1% {
-            /* 1.5 Seconds Full Glowing Effect (from 2.0s to 3.5s) */
+          33%, 57% {
+            /* Sustained illumination */
             background: var(--node-bg-active);
             border-color: var(--node-color);
-            box-shadow: 0 0 38px var(--node-glow), 0 12px 40px rgba(0, 0, 0, 0.8), inset 0 0 20px var(--node-glow);
+            box-shadow: 0 0 34px var(--node-glow), 0 12px 40px rgba(0, 0, 0, 0.8), inset 0 0 18px var(--node-glow);
             color: var(--node-color);
-            transform: scale(1.04);
+            transform: scale(1.035);
           }
-          97.5%, 100% {
-            /* Return to neutral glass */
+          64%, 100% {
             background: rgba(255, 255, 255, 0.07);
             border-color: rgba(255, 255, 255, 0.18);
             box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
@@ -167,79 +187,60 @@ export const OutcomeNetworkDiagram: React.FC = () => {
           }
         }
 
-        @keyframes iconGlowExact {
-          0%, 51.5% {
+        @keyframes iconGlowStaggered {
+          0%, 31.5% {
             color: #FFFFFF;
             filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
           }
-          54%, 92.1% {
+          33%, 57% {
             color: #FFFFFF;
-            filter: drop-shadow(0 0 14px var(--node-color)) drop-shadow(0 0 26px var(--node-glow));
+            filter: drop-shadow(0 0 14px var(--node-color)) drop-shadow(0 0 24px var(--node-glow));
           }
-          97.5%, 100% {
+          64%, 100% {
             color: #FFFFFF;
             filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
           }
         }
 
-        @keyframes splashShowerExact {
-          0%, 51.5% {
+        @keyframes splashShowerStaggered {
+          0%, 31.5% {
             opacity: 0;
             transform: scale(0.2);
           }
-          52.6% {
+          32.14% {
             opacity: 1;
             transform: scale(0.6);
           }
-          58% {
+          36% {
             opacity: 0.95;
             transform: scale(1.3);
           }
-          72% {
+          45% {
             opacity: 0.45;
             transform: scale(1.6);
           }
-          84%, 100% {
+          54%, 100% {
             opacity: 0;
             transform: scale(1.8);
           }
         }
 
-        @keyframes showerDropletsExact {
-          0%, 51.5% {
+        @keyframes showerDropletsStaggered {
+          0%, 31.5% {
             opacity: 0;
             stroke-dashoffset: 40;
           }
-          52.6% {
+          32.14% {
             opacity: 1;
             stroke-dashoffset: 0;
           }
-          64% {
+          40% {
             opacity: 0.85;
             stroke-dashoffset: -18;
           }
-          78%, 100% {
+          50%, 100% {
             opacity: 0;
             stroke-dashoffset: -36;
-          }
-        }
-
-        @keyframes corePulseExact {
-          0% {
-            transform: scale(1.05);
-            filter: drop-shadow(0 0 35px rgba(255, 255, 255, 0.75)) drop-shadow(0 14px 36px rgba(0, 0, 0, 0.85));
-          }
-          8%, 93% {
-            transform: scale(1);
-            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.35)) drop-shadow(0 14px 36px rgba(0, 0, 0, 0.85));
-          }
-          97% {
-            transform: scale(0.96);
-          }
-          100% {
-            /* Bullets burst out anew at 0s / 3.8s */
-            transform: scale(1.05);
-            filter: drop-shadow(0 0 35px rgba(255, 255, 255, 0.75)) drop-shadow(0 14px 36px rgba(0, 0, 0, 0.85));
           }
         }
       `}</style>
@@ -252,8 +253,8 @@ export const OutcomeNetworkDiagram: React.FC = () => {
         <defs>
           {/* Tight white center radial halo */}
           <radialGradient id="white-center-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.35" />
-            <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.08" />
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.4" />
+            <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.1" />
             <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
           </radialGradient>
 
@@ -333,16 +334,13 @@ export const OutcomeNetworkDiagram: React.FC = () => {
           />
         ))}
 
-        {/* 3. Pure Synchronized SVG Bullets (Zero-glitch animation architecture):
-            - 0.0s (0%): bullets emit simultaneously from the center logo (400, 400)
-            - 0.0s -> 2.0s (0% -> 52.63%): bullets traverse the path outward towards element boxes
-            - 2.0s (52.63%): bullets reach element box boundary and IMMEDIATELY snap back to origin (0) with opacity: 0
-            - 2.0s -> 3.8s (52.63% -> 100%): bullets stay completely invisible (opacity 0) at origin (400, 400)
-            - 3.8s / 0.0s: bullets reappear and shoot out outward again from the center!
+        {/* 3. Staggered Light Particles / Bullets along each spoke:
+            - 5.6s total loop, offset by idx * 0.7s
+            - 0.0s -> 1.8s (0% -> 32.14%): travels from center outward
+            - 1.8s (32.14%): touches outer badge contact point and resets smoothly
         */}
-        {NODES.map((node) => (
+        {NODES.map((node, idx) => (
           <g key={`bullet-${node.id}`}>
-            {/* Pure SVG Animated Bullet Graphic */}
             <g filter="url(#bullet-glow)">
               {/* Beam body */}
               <rect
@@ -369,44 +367,47 @@ export const OutcomeNetworkDiagram: React.FC = () => {
               />
             </g>
 
-            {/* Path Motion: 2.0s outward journey, then snaps to center 0 at impact moment */}
+            {/* Path Motion with Staggered Delays */}
             <animateMotion
               path={node.pathD}
-              dur="3.8s"
+              dur="5.6s"
+              begin={`${idx * 0.7}s`}
               repeatCount="indefinite"
               rotate="auto"
               keyPoints="0; 1; 0; 0"
-              keyTimes="0; 0.5263; 0.5264; 1"
+              keyTimes="0; 0.3214; 0.3215; 1"
               calcMode="spline"
               keySplines="0.25 0.1 0.25 1; 0 0 1 1; 0 0 1 1"
             />
 
-            {/* Opacity Control: Fully visible during 2.0s travel, 0 opacity after impact and waiting at center */}
+            {/* Opacity Control */}
             <animate
               attributeName="opacity"
               values="0; 1; 1; 0; 0; 0"
-              keyTimes="0; 0.04; 0.51; 0.5263; 0.98; 1"
-              dur="3.8s"
+              keyTimes="0; 0.04; 0.31; 0.3214; 0.98; 1"
+              dur="5.6s"
+              begin={`${idx * 0.7}s`}
               repeatCount="indefinite"
             />
 
-            {/* Scale Transform: clean entry from core, impact burst, then resets at center */}
+            {/* Scale Transform */}
             <animateTransform
               attributeName="transform"
               type="scale"
               values="0.6; 1; 1.2; 0.3; 0.3; 0.6"
-              keyTimes="0; 0.06; 0.5263; 0.53; 0.98; 1"
-              dur="3.8s"
+              keyTimes="0; 0.05; 0.3214; 0.325; 0.98; 1"
+              dur="5.6s"
+              begin={`${idx * 0.7}s`}
               repeatCount="indefinite"
               additive="sum"
             />
           </g>
         ))}
 
-        {/* 4. Color Splash & Particle Shower Effect around element boundaries upon bullet impact at 2.0s */}
-        {NODES.map((node) => (
+        {/* 4. Color Splash & Particle Shower Effect around element boundaries upon bullet impact */}
+        {NODES.map((node, idx) => (
           <g key={`splash-group-${node.id}`}>
-            {/* Contact Shockwave Burst at exact touch point */}
+            {/* Contact Shockwave Burst */}
             <circle
               cx={node.contactX}
               cy={node.contactY}
@@ -414,16 +415,18 @@ export const OutcomeNetworkDiagram: React.FC = () => {
               fill={`url(#splash-grad-${node.id})`}
               style={{
                 transformOrigin: `${node.contactX}px ${node.contactY}px`,
-                animation: "splashShowerExact 3.8s infinite cubic-bezier(0.16, 1, 0.3, 1)",
+                animation: `splashShowerStaggered 5.6s infinite cubic-bezier(0.16, 1, 0.3, 1)`,
+                animationDelay: `${idx * 0.7}s`,
                 pointerEvents: "none"
               }}
             />
 
-            {/* Shower Particle Rays spraying over the element box */}
+            {/* Shower Particle Rays */}
             <g
               style={{
                 transformOrigin: `${node.contactX}px ${node.contactY}px`,
-                animation: "showerDropletsExact 3.8s infinite ease-out",
+                animation: `showerDropletsStaggered 5.6s infinite ease-out`,
+                animationDelay: `${idx * 0.7}s`,
                 pointerEvents: "none"
               }}
             >
@@ -475,15 +478,15 @@ export const OutcomeNetworkDiagram: React.FC = () => {
           </g>
         ))}
 
-        {/* 5. Outer Glassmorphic Badges with 1.5-Second Sustained Glowing Effect (from 2.0s to 3.5s) */}
-        {NODES.map((node) => {
+        {/* 5. Outer Glassmorphic Badges with Staggered Illumination */}
+        {NODES.map((node, idx) => {
           const IconComponent = node.icon;
           const boxSize = 78;
           const halfBox = boxSize / 2;
 
           return (
             <g key={`badge-${node.id}`} className="cursor-pointer group">
-              {/* Frosted Glassmorphic Badge with Synchronized Color Glow */}
+              {/* Frosted Glassmorphic Badge */}
               <foreignObject
                 x={node.x - halfBox}
                 y={node.y - halfBox}
@@ -501,10 +504,16 @@ export const OutcomeNetworkDiagram: React.FC = () => {
                     WebkitBackdropFilter: "blur(16px) saturate(1.5)",
                     borderWidth: "1.5px",
                     borderStyle: "solid",
-                    animation: "badgeIlluminateExact 3.8s infinite cubic-bezier(0.16, 1, 0.3, 1)",
+                    animation: `badgeIlluminateStaggered 5.6s infinite cubic-bezier(0.16, 1, 0.3, 1)`,
+                    animationDelay: `${idx * 0.7}s`,
                   }}
                 >
-                  <div style={{ animation: "iconGlowExact 3.8s infinite cubic-bezier(0.16, 1, 0.3, 1)" }}>
+                  <div 
+                    style={{ 
+                      animation: `iconGlowStaggered 5.6s infinite cubic-bezier(0.16, 1, 0.3, 1)`,
+                      animationDelay: `${idx * 0.7}s`
+                    }}
+                  >
                     <IconComponent 
                       size={32} 
                       strokeWidth={2.3}
@@ -517,23 +526,27 @@ export const OutcomeNetworkDiagram: React.FC = () => {
           );
         })}
 
-        {/* 6. Central White/Silver Metallic Sphere with Synchronized Qreato Energy Pulse */}
+        {/* 6. Central White/Silver Metallic Sphere with Continuous Breathing Pulse */}
         <g 
           className="cursor-pointer"
           style={{
             transformOrigin: "400px 400px",
-            animation: "corePulseExact 3.8s infinite ease-in-out",
+            animation: "coreBreathingGlow 4.0s infinite ease-in-out",
           }}
         >
-          {/* Outer halo ring */}
+          {/* Outer breathing halo ring */}
           <circle
             cx="400"
             cy="400"
             r="64"
             fill="none"
-            stroke="rgba(255, 255, 255, 0.35)"
+            stroke="rgba(255, 255, 255, 0.45)"
             strokeWidth="1.2"
             strokeDasharray="4 4"
+            style={{
+              transformOrigin: "400px 400px",
+              animation: "coreHaloBreathing 4.0s infinite ease-in-out",
+            }}
           />
 
           {/* White/Silver Metallic Sphere */}

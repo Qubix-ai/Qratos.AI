@@ -11,6 +11,7 @@ import { AdminDashboard } from "./components/AdminDashboard";
 import { LandingPage } from "./components/LandingPage";
 import { SplashScreen } from "./components/SplashScreen";
 import { AuthModal } from "./components/AuthModal";
+import { ChallengePage } from "./components/ChallengePage";
 import { AnimatePresence, motion } from "motion/react";
 import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
 import { AmbientBackground } from "./components/AmbientBackground";
@@ -18,6 +19,14 @@ import { SpotlightCursor } from "./components/SpotlightCursor";
 import { fetchUserPlan, fetchUserPlanAndCredits, UserPlanData } from "./lib/userAccount";
 
 export default function App() {
+  const getSlugFromPath = () => {
+    if (typeof window === "undefined") return null;
+    const path = window.location.pathname;
+    const match = path.match(/^\/challenge\/([^/?#]+)/i);
+    return match ? match[1] : null;
+  };
+
+  const [challengeSlug, setChallengeSlug] = useState<string | null>(getSlugFromPath());
   const [user, setUser] = useState<any>(null);
   const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 3 });
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
@@ -30,6 +39,14 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("signup");
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setChallengeSlug(getSlugFromPath());
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const loadUserData = async (currentUser: any, knownRemaining?: number) => {
     const uid = currentUser?.id || currentUser?.uid;
@@ -54,10 +71,10 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    // Splash Screen Timer (13s)
+    // Splash Screen Timer (9s - reduced by 4s)
     const splashTimer = setTimeout(() => {
       if (isMounted) setShowSplash(false);
-    }, 13000);
+    }, 9000);
 
     // Initial Supabase Session Check - Fetches user plan and daily credit usage on load
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
@@ -107,6 +124,32 @@ export default function App() {
     }
   };
 
+  const handleStartChallenge = (initialText?: string) => {
+    if (user) {
+      setPendingPrompt({
+        text: initialText || "",
+        mode: "challenge",
+        autoSubmit: !!(initialText && initialText.trim().length > 0)
+      });
+      setActiveTab("chat");
+    } else {
+      if (initialText) {
+        setPendingPrompt({
+          text: initialText,
+          mode: "challenge",
+          autoSubmit: true
+        });
+      } else {
+        setPendingPrompt({
+          text: "",
+          mode: "challenge",
+          autoSubmit: false
+        });
+      }
+      handleStartWriting("signup");
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -116,6 +159,47 @@ export default function App() {
     setSidebarOpen(false);
     setShowAdmin(false);
   };
+
+  if (challengeSlug) {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <ChallengePage 
+          slug={challengeSlug}
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setChallengeSlug(null);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+          onGoToSignup={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setChallengeSlug(null);
+            if (user) {
+              setActiveTab("chat");
+            } else {
+              setActiveTab("landing");
+              handleStartWriting("signup");
+            }
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
 
   if (loading || showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
@@ -133,11 +217,14 @@ export default function App() {
           userData={userPlanData}
           onStart={() => handleStartWriting("signup")}
           onLogin={() => handleStartWriting("login")}
+          onStartChallenge={handleStartChallenge}
           onNavigate={(tab) => {
             if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
               setActiveTab("prompt-builder");
+            } else if (tab === "challenge") {
+              handleStartChallenge();
             } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
               if (user) setActiveTab("chat");
               else handleStartWriting("login");
@@ -175,11 +262,14 @@ export default function App() {
           userData={userPlanData}
           onStart={() => handleStartWriting("signup")}
           onLogin={() => handleStartWriting("login")}
+          onStartChallenge={handleStartChallenge}
           onNavigate={(tab) => {
             if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
               setActiveTab("prompt-builder");
+            } else if (tab === "challenge") {
+              handleStartChallenge();
             } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
               handleStartWriting("login");
             } else if (tab === "account") {
@@ -359,6 +449,12 @@ export default function App() {
                   onGoToPricing={() => setActiveTab("pricing")}
                   onGoToAccount={() => setActiveTab("account")}
                   onLogout={handleLogout}
+                  onNavigateToPublicChallenge={(slug) => {
+                    if (typeof window !== "undefined") {
+                      window.history.pushState({}, "", `/challenge/${slug}`);
+                    }
+                    setChallengeSlug(slug);
+                  }}
                 />
               </motion.div>
             )}

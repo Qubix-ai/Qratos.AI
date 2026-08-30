@@ -17,11 +17,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export type MurgiiMode = "email" | "ads" | "landing" | "psych" | "content";
+export type MurgiiMode = "email" | "ads" | "landing" | "psych" | "content" | "challenge";
+
+export interface ChallengeResult {
+  shareSlug: string;
+  overallScore: number;
+  [key: string]: any;
+}
 
 export interface MurgiiGenerateResponse {
   text: string;
   remaining?: number;
+  challengeResult?: ChallengeResult | null;
 }
 
 export class DailyLimitError extends Error {
@@ -34,68 +41,112 @@ export class DailyLimitError extends Error {
 }
 
 /**
- * Invokes the secure Supabase Edge Function for Murgii AI generation.
- * Edge Function URL: https://omeqbiksjqyeqkxnkflh.supabase.co/functions/v1/murgii-generate
+ * Helper to call the local /api/murgii/generate server route as an immediate fallback
+ */
+async function callLocalGenerateApi(
+  mode: MurgiiMode,
+  brief: string,
+  token?: string
+): Promise<MurgiiGenerateResponse> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch("/api/murgii/generate", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ mode, brief }),
+  });
+
+  if (!res.ok) {
+    let errorDetail = "Something went wrong generating this — please try again in a moment.";
+    try {
+      const errJson = await res.json();
+      if (errJson?.error) errorDetail = errJson.error;
+    } catch {
+      // fallback
+    }
+    throw new Error(errorDetail);
+  }
+
+  const data = await res.json();
+  return {
+    text: data.text || "",
+    remaining: typeof data.remaining === "number" ? data.remaining : undefined,
+    challengeResult: data.challengeResult || null,
+  };
+}
+
+/**
+ * Invokes the secure Murgii AI generation service with automatic fallback.
+ * First tries the Supabase Edge Function; if it returns 502 or is unavailable,
+ * seamlessly falls back to the server-side Gemini Persuasion Engine.
  */
 export async function callMurgiiGenerateEdgeFunction(
   mode: MurgiiMode,
   brief: string
 ): Promise<MurgiiGenerateResponse> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  
-  if (sessionError || !sessionData?.session?.access_token) {
-    throw new Error("Authentication required. Please sign in to your Murgii / Qreato account.");
+  let token: string | undefined;
+
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    token = sessionData?.session?.access_token;
+  } catch {
+    // Guest or uninitialized auth
   }
 
-  const token = sessionData.session.access_token;
   const functionUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/murgii-generate`;
 
-  let response: Response;
-  try {
-    response = await fetch(functionUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        mode,
-        brief,
-      }),
-    });
-  } catch (networkErr) {
-    console.error("Network error invoking Murgii Edge Function:", networkErr);
-    throw new Error("Something went wrong generating this — please try again in a moment.");
-  }
-
-  // Handle 429 Daily Limit Reached
-  if (response.status === 429) {
-    let limitMessage = "You have reached your daily generation limit. Please upgrade or try again tomorrow.";
+  // If we have a token, attempt calling the Supabase Edge Function
+  if (token) {
     try {
-      const errorJson = await response.json();
-      if (errorJson?.message) {
-        limitMessage = errorJson.message;
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mode,
+          brief,
+        }),
+      });
+
+      // Handle 429 Daily Limit Reached
+      if (response.status === 429) {
+        let limitMessage = "You have reached your daily generation limit. Please upgrade or try again tomorrow.";
+        try {
+          const errorJson = await response.json();
+          if (errorJson?.message) {
+            limitMessage = errorJson.message;
+          }
+        } catch {
+          // fallback
+        }
+        throw new DailyLimitError(limitMessage, 0);
       }
-    } catch {
-      // fallback
+
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          text: data.text || "",
+          remaining: typeof data.remaining === "number" ? data.remaining : undefined,
+          challengeResult: data.challengeResult || null,
+        };
+      }
+
+      console.warn(`[Murgii] Supabase Edge function returned HTTP ${response.status}. Falling back to server engine...`);
+    } catch (edgeErr: any) {
+      if (edgeErr instanceof DailyLimitError || edgeErr?.name === "DailyLimitError") {
+        throw edgeErr;
+      }
+      console.warn("[Murgii] Supabase Edge function network issue, falling back to server engine:", edgeErr);
     }
-    throw new DailyLimitError(limitMessage, 0);
   }
 
-  // Handle other non-200 responses
-  if (!response.ok) {
-    console.error(`Edge function error: HTTP ${response.status}`);
-    throw new Error("Something went wrong generating this — please try again in a moment.");
-  }
-
-  try {
-    const data = await response.json();
-    return {
-      text: data.text || "",
-      remaining: typeof data.remaining === "number" ? data.remaining : undefined,
-    };
-  } catch (parseErr) {
-    console.error("Failed to parse Edge Function response:", parseErr);
-    throw new Error("Something went wrong generating this — please try again in a moment.");
-  }
+  // Fallback to local server-side Gemini Persuasion Engine
+  return await callLocalGenerateApi(mode, brief, token);
 }
