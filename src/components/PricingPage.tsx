@@ -240,7 +240,7 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white via-white/95 to-white/70 bg-clip-text text-transparent font-nohemi leading-tight mb-4"
+            className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white font-nohemi leading-tight mb-4 [text-shadow:0_4px_25px_rgba(0,0,0,0.8)]"
           >
             The more you build, the more Murgii gives you.
           </motion.h1>
@@ -593,7 +593,7 @@ export function PricingPage({ user, onGoToChat, onGoToAccount }: PricingPageProp
             <div className="pt-4 border-t border-white/10 max-w-xl mx-auto">
               <p className="text-base sm:text-lg font-bold text-white font-nohemi leading-snug">
                 That's why Murgii isn't just another AI writer.<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-amber-400">
+                <span className="text-amber-300 font-extrabold">
                   It's where your message gets sharper.
                 </span>
               </p>

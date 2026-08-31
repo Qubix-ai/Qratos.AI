@@ -222,7 +222,7 @@ Generate a high-impact social content & video script architecture. Structure the
       {/* 1. HERO SECTION */}
       <div className="text-center space-y-4 relative">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-nohemi tracking-tight text-white leading-[1.15]">
-          Custom <span className="text-white bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">Prompt</span> Builder
+          Custom <span className="text-white font-bold">Prompt</span> Builder
         </h1>
 
         <div className="space-y-1 max-w-2xl mx-auto">

@@ -675,7 +675,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
           {/* Section Header */}
           <div className="text-center mb-14 px-4">
             <h2 
-              className="text-4xl md:text-7xl font-bold tracking-tight mb-5 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent leading-[1.05] font-nohemi"
+              className="text-4xl md:text-7xl font-bold tracking-tight mb-5 text-white leading-[1.05] font-nohemi [text-shadow:0_4px_30px_rgba(0,0,0,0.8)]"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
               Your Strategy. <br className="hidden md:block" /> Built Into Every Prompt.
@@ -919,14 +919,33 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                     { label: "Trust Centre", desc: "Live uptime status, data privacy commitments, and subprocessor transparency." }
                   ].map((item, i) => (
                     <li key={i}>
-                      <button
-                        type="button"
-                        onClick={() => setInfoModal({ title: item.label, content: item.desc })}
-                        className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                        style={{ fontFamily: "'Nohemi', sans-serif" }}
-                      >
-                        {item.label}
-                      </button>
+                      {item.label === "Media" ? (
+                        <a
+                          href="/media"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("media");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/media");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setInfoModal({ title: item.label, content: item.desc })}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -949,14 +968,101 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                     { label: "General Rules", desc: "Standards for acceptable platform behavior, account sharing, and workspace quotas." }
                   ].map((item, i) => (
                     <li key={i}>
-                      <button
-                        type="button"
-                        onClick={() => setInfoModal({ title: item.label, content: item.desc })}
-                        className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                        style={{ fontFamily: "'Nohemi', sans-serif" }}
-                      >
-                        {item.label}
-                      </button>
+                      {item.label === "Terms of Service" ? (
+                        <a
+                          href="/terms"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("terms");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/terms");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : item.label === "Privacy Policy" ? (
+                        <a
+                          href="/privacy"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("privacy");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/privacy");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : item.label === "Refund Policy" ? (
+                        <a
+                          href="/refund-policy"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("refund-policy");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/refund-policy");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : item.label === "Platform Rules" ? (
+                        <a
+                          href="/platform-rules"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("platform-rules");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/platform-rules");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : item.label === "General Rules" ? (
+                        <a
+                          href="/general-rules"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("general-rules");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/general-rules");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setInfoModal({ title: item.label, content: item.desc })}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -1203,7 +1309,7 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
            <motion.span 
              animate={{ opacity: [0.6, 1, 0.6] }}
              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-             className="text-5xl md:text-8xl font-black bg-gradient-to-br from-white via-white/80 to-white/20 bg-clip-text text-transparent tracking-tighter select-none will-change-opacity font-nohemi"
+             className="text-5xl md:text-8xl font-black text-white/90 tracking-tighter select-none will-change-opacity font-nohemi [text-shadow:0_4px_25px_rgba(0,0,0,0.8)]"
              style={{ fontFamily: "'Nohemi', sans-serif" }}
            >
              0{index}

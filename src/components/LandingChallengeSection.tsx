@@ -94,7 +94,7 @@ export const LandingChallengeSection: React.FC<LandingChallengeSectionProps> = (
                 style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
               >
                 Benchmark your copy against{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-100 to-gray-400">
+                <span className="text-white font-bold underline decoration-purple-500/50 underline-offset-4">
                   direct response masters.
                 </span>
               </h2>

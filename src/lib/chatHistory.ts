@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 
 export interface ChatMessage {
+  id?: string;
   role: "user" | "assistant";
   content: string;
   timestamp?: string;
@@ -25,6 +26,28 @@ export interface ChatSession {
 
 const SESSIONS_STORAGE_KEY_PREFIX = "murgii_sessions_v2_";
 export const SESSIONS_UPDATED_EVENT = "murgii_chat_sessions_updated";
+
+/**
+ * Checks if a string is a valid UUID v4
+ */
+export function isUuid(id: string): boolean {
+  if (!id) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+}
+
+/**
+ * Generates a valid UUID v4 string
+ */
+export function generateUuid(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 /**
  * Auto-generates a clean, concise title from the user's first prompt message.
@@ -165,35 +188,88 @@ export async function getSessionById(userId: string, sessionId: string): Promise
 export async function saveSession(userId: string, session: ChatSession): Promise<ChatSession[]> {
   if (!userId || !session.id) return [];
 
+  // Guarantee the session ID is a valid UUID v4 string for PostgreSQL uuid type matching
+  const validSessionId = isUuid(session.id) ? session.id : generateUuid();
+
   const updatedSession: ChatSession = {
     ...session,
+    id: validSessionId,
     userId,
     updatedAt: new Date().toISOString(),
   };
 
   // 1. Insert/upsert row into Supabase chat_sessions table
   try {
-    const { error } = await supabase.from("chat_sessions").upsert({
-      id: session.id,
+    const payloadWithMessages = {
+      id: validSessionId,
       user_id: userId,
-      title: session.title,
-      is_pinned: session.isPinned || false,
-      messages: session.messages,
+      title: session.title || "New Conversation",
+      is_pinned: Boolean(session.isPinned),
+      messages: session.messages || [],
       created_at: session.createdAt || updatedSession.updatedAt,
       updated_at: updatedSession.updatedAt,
-    }, { onConflict: "id" });
+    };
+
+    let { error } = await supabase.from("chat_sessions").upsert(payloadWithMessages, { onConflict: "id" });
 
     if (error) {
-      console.warn("Supabase chat_sessions upsert error:", error);
+      console.error("Supabase chat_sessions upsert error (with messages):", error);
+      // Try upserting without messages column in case table schema expects messages in chat_messages table
+      const payloadWithoutMessages = {
+        id: validSessionId,
+        user_id: userId,
+        title: session.title || "New Conversation",
+        is_pinned: Boolean(session.isPinned),
+        created_at: session.createdAt || updatedSession.updatedAt,
+        updated_at: updatedSession.updatedAt,
+      };
+
+      const { error: retryErr } = await supabase.from("chat_sessions").upsert(payloadWithoutMessages, { onConflict: "id" });
+      if (retryErr) {
+        console.error("Supabase chat_sessions upsert error (without messages):", retryErr);
+      } else {
+        console.log("Successfully saved chat session without messages column to chat_sessions:", validSessionId);
+      }
+    } else {
+      console.log("Successfully saved chat session to chat_sessions table:", validSessionId);
     }
   } catch (err) {
-    console.warn("Network error upserting to chat_sessions table:", err);
+    console.error("Network or execution error upserting to chat_sessions table:", err);
   }
 
-  // 2. Immediately re-fetch the full session list from Supabase
+  // 2. Insert individual messages into chat_messages table if it exists in Supabase
+  if (Array.isArray(session.messages) && session.messages.length > 0) {
+    try {
+      const messageRows = session.messages.map((msg) => {
+        const msgId = msg.id && isUuid(msg.id) ? msg.id : generateUuid();
+        return {
+          id: msgId,
+          session_id: validSessionId,
+          chat_session_id: validSessionId,
+          user_id: userId,
+          role: msg.role,
+          content: msg.content,
+          created_at: msg.timestamp || new Date().toISOString(),
+          timestamp: msg.timestamp || new Date().toISOString(),
+        };
+      });
+
+      const { error: msgErr } = await supabase.from("chat_messages").upsert(messageRows, { onConflict: "id" });
+
+      if (msgErr) {
+        console.warn("Notice syncing to chat_messages table:", msgErr.message || msgErr);
+      } else {
+        console.log("Successfully saved individual messages to chat_messages table for session:", validSessionId);
+      }
+    } catch (err) {
+      console.warn("Could not insert messages into chat_messages table:", err);
+    }
+  }
+
+  // 3. Immediately re-fetch the full session list from Supabase
   const freshSessions = await loadUserSessions(userId);
 
-  // 3. Notify all listeners (such as Sidebar) so the UI updates with true Supabase session list
+  // 4. Notify all listeners (such as Sidebar) so the UI updates with true Supabase session list
   notifySessionsChanged();
 
   return freshSessions;

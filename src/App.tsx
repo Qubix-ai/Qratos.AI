@@ -12,6 +12,12 @@ import { LandingPage } from "./components/LandingPage";
 import { SplashScreen } from "./components/SplashScreen";
 import { AuthModal } from "./components/AuthModal";
 import { ChallengePage } from "./components/ChallengePage";
+import { TermsPage } from "./components/TermsPage";
+import { PrivacyPage } from "./components/PrivacyPage";
+import { RefundPolicyPage } from "./components/RefundPolicyPage";
+import { PlatformRulesPage } from "./components/PlatformRulesPage";
+import { GeneralRulesPage } from "./components/GeneralRulesPage";
+import { MediaPage } from "./components/MediaPage";
 import { AnimatePresence, motion } from "motion/react";
 import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
 import { AmbientBackground } from "./components/AmbientBackground";
@@ -26,7 +32,47 @@ export default function App() {
     return match ? match[1] : null;
   };
 
+  const checkIsTermsPath = () => {
+    if (typeof window === "undefined") return false;
+    return window.location.pathname.toLowerCase() === "/terms";
+  };
+
+  const checkIsPrivacyPath = () => {
+    if (typeof window === "undefined") return false;
+    return window.location.pathname.toLowerCase() === "/privacy";
+  };
+
+  const checkIsRefundPolicyPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/refund-policy" || p === "/refund";
+  };
+
+  const checkIsPlatformRulesPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/platform-rules" || p === "/rules";
+  };
+
+  const checkIsGeneralRulesPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/general-rules" || p === "/general";
+  };
+
+  const checkIsMediaPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/media" || p === "/press";
+  };
+
   const [challengeSlug, setChallengeSlug] = useState<string | null>(getSlugFromPath());
+  const [isTermsPage, setIsTermsPage] = useState<boolean>(checkIsTermsPath());
+  const [isPrivacyPage, setIsPrivacyPage] = useState<boolean>(checkIsPrivacyPath());
+  const [isRefundPolicyPage, setIsRefundPolicyPage] = useState<boolean>(checkIsRefundPolicyPath());
+  const [isPlatformRulesPage, setIsPlatformRulesPage] = useState<boolean>(checkIsPlatformRulesPath());
+  const [isGeneralRulesPage, setIsGeneralRulesPage] = useState<boolean>(checkIsGeneralRulesPath());
+  const [isMediaPage, setIsMediaPage] = useState<boolean>(checkIsMediaPath());
   const [user, setUser] = useState<any>(null);
   const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 3 });
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
@@ -44,6 +90,12 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       setChallengeSlug(getSlugFromPath());
+      setIsTermsPage(checkIsTermsPath());
+      setIsPrivacyPage(checkIsPrivacyPath());
+      setIsRefundPolicyPage(checkIsRefundPolicyPath());
+      setIsPlatformRulesPage(checkIsPlatformRulesPath());
+      setIsGeneralRulesPage(checkIsGeneralRulesPath());
+      setIsMediaPage(checkIsMediaPath());
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -201,6 +253,216 @@ export default function App() {
     );
   }
 
+  if (isTermsPage || activeTab === "terms") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <TermsPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsTermsPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsTermsPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isPrivacyPage || activeTab === "privacy") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <PrivacyPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsPrivacyPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsPrivacyPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isRefundPolicyPage || activeTab === "refund-policy" || activeTab === "refund") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <RefundPolicyPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsRefundPolicyPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsRefundPolicyPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isPlatformRulesPage || activeTab === "platform-rules" || activeTab === "rules") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <PlatformRulesPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsPlatformRulesPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsPlatformRulesPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isGeneralRulesPage || activeTab === "general-rules" || activeTab === "general") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <GeneralRulesPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsGeneralRulesPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsGeneralRulesPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isMediaPage || activeTab === "media" || activeTab === "press") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <MediaPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsMediaPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsMediaPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
   if (loading || showSplash || !authResolved) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
@@ -225,7 +487,43 @@ export default function App() {
           onLogin={() => handleStartWriting("login")}
           onStartChallenge={handleStartChallenge}
           onNavigate={(tab) => {
-            if (tab === "pricing") {
+            if (tab === "terms") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/terms");
+              }
+              setIsTermsPage(true);
+              setActiveTab("terms");
+            } else if (tab === "privacy") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/privacy");
+              }
+              setIsPrivacyPage(true);
+              setActiveTab("privacy");
+            } else if (tab === "refund-policy" || tab === "refund") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/refund-policy");
+              }
+              setIsRefundPolicyPage(true);
+              setActiveTab("refund-policy");
+            } else if (tab === "platform-rules" || tab === "rules") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/platform-rules");
+              }
+              setIsPlatformRulesPage(true);
+              setActiveTab("platform-rules");
+            } else if (tab === "general-rules" || tab === "general") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/general-rules");
+              }
+              setIsGeneralRulesPage(true);
+              setActiveTab("general-rules");
+            } else if (tab === "media" || tab === "press") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/media");
+              }
+              setIsMediaPage(true);
+              setActiveTab("media");
+            } else if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
               setActiveTab("prompt-builder");
@@ -276,7 +574,43 @@ export default function App() {
           onLogin={() => handleStartWriting("login")}
           onStartChallenge={handleStartChallenge}
           onNavigate={(tab) => {
-            if (tab === "pricing") {
+            if (tab === "terms") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/terms");
+              }
+              setIsTermsPage(true);
+              setActiveTab("terms");
+            } else if (tab === "privacy") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/privacy");
+              }
+              setIsPrivacyPage(true);
+              setActiveTab("privacy");
+            } else if (tab === "refund-policy" || tab === "refund") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/refund-policy");
+              }
+              setIsRefundPolicyPage(true);
+              setActiveTab("refund-policy");
+            } else if (tab === "platform-rules" || tab === "rules") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/platform-rules");
+              }
+              setIsPlatformRulesPage(true);
+              setActiveTab("platform-rules");
+            } else if (tab === "general-rules" || tab === "general") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/general-rules");
+              }
+              setIsGeneralRulesPage(true);
+              setActiveTab("general-rules");
+            } else if (tab === "media" || tab === "press") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/media");
+              }
+              setIsMediaPage(true);
+              setActiveTab("media");
+            } else if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
               setActiveTab("prompt-builder");

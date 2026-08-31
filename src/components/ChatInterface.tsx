@@ -38,6 +38,8 @@ import {
   saveSession, 
   getSessionById, 
   generateTitleFromMessage, 
+  generateUuid,
+  isUuid,
   ChatSession 
 } from "../lib/chatHistory";
 import { fetchUserPlanAndCredits, UserPlanData } from "../lib/userAccount";
@@ -509,10 +511,10 @@ export function ChatInterface({
     const targetMode = modeToUse || detectMode(text, selectedMode);
     setSelectedMode(targetMode);
 
-    // Determine target session ID or generate new session
+    // Determine target session ID or generate new valid UUID session
     let targetSessionId = currentSessionIdRef.current;
-    if (!targetSessionId) {
-      targetSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    if (!targetSessionId || !isUuid(targetSessionId)) {
+      targetSessionId = generateUuid();
       currentSessionIdRef.current = targetSessionId;
       loadedSessionIdRef.current = targetSessionId;
       onSessionChange?.(targetSessionId);

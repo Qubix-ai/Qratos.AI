@@ -159,27 +159,57 @@ export async function fetchTodayUsageCount(userId: string): Promise<number> {
   if (!userId) return 0;
 
   try {
+    const now = new Date();
+    const todayUtc = now.toISOString().split("T")[0]; // YYYY-MM-DD (UTC)
+    const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
-    const todayIso = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-    // 1. Try querying by date column if the table stores daily aggregates
-    const { data: dateData, error: dateErr } = await supabase
+    // 1. Fetch rows from murgii_usage for this user
+    const { data: rows, error } = await supabase
       .from("murgii_usage")
       .select("*")
-      .eq("user_id", userId)
-      .eq("date", todayIso)
-      .maybeSingle();
+      .eq("user_id", userId);
 
-    if (!dateErr && dateData) {
-      if (typeof dateData.count === "number") return dateData.count;
-      if (typeof dateData.usage_count === "number") return dateData.usage_count;
-      if (typeof dateData.generations === "number") return dateData.generations;
-      return 1;
+    if (error) {
+      console.warn("Error querying murgii_usage table from Supabase:", error);
     }
 
-    // 2. Query event rows with created_at >= start of today (UTC)
-    const { count, data: rows, error: countErr } = await supabase
+    if (rows && Array.isArray(rows) && rows.length > 0) {
+      let totalUsage = 0;
+      let matchedCount = 0;
+
+      for (const row of rows) {
+        const rowDate = String(row.date || "").trim();
+        const rowCreatedAt = String(row.created_at || row.updated_at || row.timestamp || "").trim();
+
+        // Check if row belongs to today (UTC or Local date boundary)
+        const isTodayDate = rowDate === todayUtc || rowDate === todayLocal;
+        const isTodayCreatedAt = rowCreatedAt.startsWith(todayUtc) || rowCreatedAt.startsWith(todayLocal) || (rowCreatedAt && new Date(rowCreatedAt) >= todayStart);
+
+        if (isTodayDate || isTodayCreatedAt) {
+          matchedCount++;
+          // Check any numeric property holding usage count
+          const rawCount = row.count ?? row.usage_count ?? row.usage ?? row.used ?? row.generations ?? row.amount ?? row.total ?? row.num_generations ?? row.credits_used ?? row.credit_used;
+          
+          if (typeof rawCount === "number" && !isNaN(rawCount)) {
+            totalUsage += rawCount;
+          } else if (typeof rawCount === "string" && !isNaN(Number(rawCount))) {
+            totalUsage += Number(rawCount);
+          } else {
+            // If row exists without numeric count column, each row represents 1 generation
+            totalUsage += 1;
+          }
+        }
+      }
+
+      if (matchedCount > 0) {
+        return totalUsage;
+      }
+    }
+
+    // 2. Secondary check: count query for event rows with created_at >= start of today (UTC)
+    const { count, error: countErr } = await supabase
       .from("murgii_usage")
       .select("id", { count: "exact" })
       .eq("user_id", userId)
@@ -187,9 +217,6 @@ export async function fetchTodayUsageCount(userId: string): Promise<number> {
 
     if (!countErr && typeof count === "number") {
       return count;
-    }
-    if (rows && Array.isArray(rows)) {
-      return rows.length;
     }
   } catch (err) {
     console.warn("Could not query murgii_usage table from Supabase:", err);
