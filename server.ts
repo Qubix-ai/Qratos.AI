@@ -640,17 +640,59 @@ const challengeStore = new Map<string, {
   created_at: string;
 }>();
 
+// Helper to extract clean copy from user brief by stripping instructions & quotes
+function extractCleanCopyFromBrief(brief: string): string {
+  if (!brief) return "";
+  let cleaned = brief.trim();
+
+  // 1. Check if copy is enclosed in quotes (e.g. score my bio "xyz")
+  const quoteMatches = Array.from(cleaned.matchAll(/["'“«]([^"'”»]+)["'”»]/g));
+  if (quoteMatches.length > 0) {
+    // Pick the longest quoted substring if multiple exist
+    const longest = quoteMatches.reduce((acc, curr) => 
+      curr[1] && curr[1].trim().length > acc.length ? curr[1].trim() : acc
+    , "");
+    if (longest.length > 2) {
+      return longest;
+    }
+  }
+
+  // 2. Strip leading instruction phrases/verbs (e.g. "score my bio", "evaluate this copy:", "check my headline")
+  cleaned = cleaned.replace(
+    /^(?:can\s+you\s+|please\s+)?(?:score|evaluate|check|rate|analyze|grade|test|review|audit)\s+(?:my|this|the)?\s*(?:copy|headline|bio|ad|email|landing\s+page|text|hook|offer|message)?\s*[:\-–—]?\s*/i,
+    ""
+  );
+
+  // 3. Strip trailing or surrounding quotes if left over
+  cleaned = cleaned.replace(/^["'“«]+|["'”»]+$/g, "").trim();
+
+  return cleaned || brief.trim();
+}
+
 // Helper to evaluate challenge copy and parse structured scores
 async function evaluateChallengeCopy(brief: string, ai: GoogleGenAI) {
-  const prompt = `You are the chief direct-response copy auditor at Qreato Labs.
-Evaluate the following copy with brutal direct-response standards.
+  const fallbackCopy = extractCleanCopyFromBrief(brief);
 
-COPY TO EVALUATE:
+  const prompt = `You are the chief direct-response copy auditor at Qreato Labs.
+Evaluate the following input with brutal direct-response standards.
+
+CRITICAL FIRST STEP:
+You MUST identify and extract ONLY the actual copy text intended to be evaluated from the user's input.
+Separate the copy from any meta-instructions, commands, preambles, or requests.
+Examples:
+- User input: 'score my bio "I help SaaS founders build $10k MRR businesses"' -> Extracted copy: "I help SaaS founders build $10k MRR businesses"
+- User input: 'Check this copy: Fast 24 hour delivery or it is free.' -> Extracted copy: "Fast 24 hour delivery or it is free."
+- User input: 'Evaluate my headline: Stop wasting 10 hours a week on manual spreadsheets' -> Extracted copy: "Stop wasting 10 hours a week on manual spreadsheets"
+- User input: 'Buy now and get 50% off today!' -> Extracted copy: "Buy now and get 50% off today!"
+
+Return this clean extracted copy in the "extracted_copy" field of the JSON output.
+
+USER INPUT:
 """
 ${brief}
 """
 
-First, score the copy objectively across these 5 dimensions (0 to 20 points each):
+Evaluate the EXTRACTED COPY objectively across these 5 dimensions (0 to 20 points each):
 1. Attention & Hook (0-20) - Stopping power, curiosity, pattern interruption in the first 3 seconds.
 2. Clarity & Value (0-20) - Immediate understanding of the value proposition and core transformation.
 3. Desire & Mechanism (0-20) - Visceral emotional pull and distinct reason why this works.
@@ -664,6 +706,7 @@ Provide a concise 1-2 sentence DIAGNOSIS explaining why this dimension is bottle
 Output MUST start with this EXACT JSON block on the very first line:
 <!--SCORE_DATA
 {
+  "extracted_copy": "<The clean copy extracted from user input without any meta-instructions or preamble>",
   "attention_score": <number 0-20>,
   "clarity_score": <number 0-20>,
   "desire_score": <number 0-20>,
@@ -715,6 +758,7 @@ Followed immediately by a structured, elite direct-response breakdown:
   let overall = 58;
   let biggestLeverage = "PERSUASION";
   let diagnosis = "The copy lacks emotional friction and urgent risk-reversal to compel immediate commitment.";
+  let extractedCopy = fallbackCopy;
 
   if (jsonMatch && jsonMatch[1]) {
     try {
@@ -727,6 +771,9 @@ Followed immediately by a structured, elite direct-response breakdown:
       overall = Number(parsed.overall_score) || (attention + clarity + desire + persuasion + action);
       if (parsed.biggest_leverage) biggestLeverage = parsed.biggest_leverage;
       if (parsed.diagnosis) diagnosis = parsed.diagnosis;
+      if (parsed.extracted_copy && typeof parsed.extracted_copy === "string" && parsed.extracted_copy.trim().length > 0) {
+        extractedCopy = extractCleanCopyFromBrief(parsed.extracted_copy.trim());
+      }
     } catch (e) {
       console.warn("Failed to parse SCORE_DATA JSON, using fallback calculation:", e);
     }
@@ -751,8 +798,8 @@ Followed immediately by a structured, elite direct-response breakdown:
     biggest_leverage: biggestLeverage,
     diagnosis,
     share_slug: shareSlug,
-    copy: brief,
-    user_copy: brief,
+    copy: extractedCopy,
+    user_copy: extractedCopy,
     created_at: new Date().toISOString(),
   };
 
@@ -770,8 +817,8 @@ Followed immediately by a structured, elite direct-response breakdown:
       action_score: action,
       biggest_leverage: biggestLeverage,
       diagnosis,
-      userCopy: brief,
-      copy: brief,
+      userCopy: extractedCopy,
+      copy: extractedCopy,
       dimensions: {
         attention,
         clarity,

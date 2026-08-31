@@ -162,7 +162,30 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     ? `${window.location.origin}/challenge/${cleanSlug}`
     : `https://murgii.vercel.app/challenge/${cleanSlug}`;
 
-  const cleanUserCopy = userCopy ? userCopy.trim().replace(/^["']|["']$/g, "") : "";
+  const sanitizeUserCopy = (text?: string) => {
+    if (!text) return "";
+    let cleaned = text.trim();
+    // 1. Extract quoted text if present
+    const quoteMatches = Array.from(cleaned.matchAll(/["'“«]([^"'”»]+)["'”»]/g));
+    if (quoteMatches.length > 0) {
+      const longest = quoteMatches.reduce((acc, curr) => 
+        curr[1] && curr[1].trim().length > acc.length ? curr[1].trim() : acc
+      , "");
+      if (longest.length > 2) {
+        return longest;
+      }
+    }
+    // 2. Strip leading instruction verbs
+    cleaned = cleaned.replace(
+      /^(?:can\s+you\s+|please\s+)?(?:score|evaluate|check|rate|analyze|grade|test|review|audit)\s+(?:my|this|the)?\s*(?:copy|headline|bio|ad|email|landing\s+page|text|hook|offer|message)?\s*[:\-–—]?\s*/i,
+      ""
+    );
+    // 3. Strip surrounding quotes
+    cleaned = cleaned.replace(/^["'“«]+|["'”»]+$/g, "").trim();
+    return cleaned || text.trim();
+  };
+
+  const cleanUserCopy = sanitizeUserCopy(userCopy);
   const copySnippet = cleanUserCopy 
     ? (cleanUserCopy.length > 55 ? cleanUserCopy.slice(0, 52) + "..." : cleanUserCopy)
     : "";

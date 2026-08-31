@@ -158,7 +158,24 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   const overallScore = result?.overall_score ?? 0;
   const shareUrl = typeof window !== "undefined" ? window.location.href : `https://murgii.vercel.app/challenge/${slug}`;
   
-  const evaluatedUserCopy = (result?.user_copy || result?.copy || result?.prompt || result?.brief || "").trim();
+  const rawUserCopy = (result?.user_copy || result?.copy || result?.prompt || result?.brief || "").trim();
+  const evaluatedUserCopy = (() => {
+    if (!rawUserCopy) return "";
+    let cleaned = rawUserCopy;
+    const quoteMatches = Array.from(cleaned.matchAll(/["'“«]([^"'”»]+)["'”»]/g));
+    if (quoteMatches.length > 0) {
+      const longest = quoteMatches.reduce((acc, curr) => 
+        curr[1] && curr[1].trim().length > acc.length ? curr[1].trim() : acc
+      , "");
+      if (longest.length > 2) return longest;
+    }
+    cleaned = cleaned.replace(
+      /^(?:can\s+you\s+|please\s+)?(?:score|evaluate|check|rate|analyze|grade|test|review|audit)\s+(?:my|this|the)?\s*(?:copy|headline|bio|ad|email|landing\s+page|text|hook|offer|message)?\s*[:\-–—]?\s*/i,
+      ""
+    );
+    cleaned = cleaned.replace(/^["'“«]+|["'”»]+$/g, "").trim();
+    return cleaned || rawUserCopy;
+  })();
   const copySnippet = evaluatedUserCopy 
     ? (evaluatedUserCopy.length > 55 ? evaluatedUserCopy.slice(0, 52) + "..." : evaluatedUserCopy)
     : "";

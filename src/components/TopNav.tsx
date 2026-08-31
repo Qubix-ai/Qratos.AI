@@ -66,7 +66,6 @@ export function TopNav({
 
         {/* Small Brand Title for Clean Context */}
         <div className="flex items-center gap-2 pl-1">
-          <QreatoLogo size={20} className="text-white" dotClassName="text-white fill-white" />
           <span className="text-xs sm:text-sm font-bold tracking-tight text-white font-nohemi hidden xs:inline-block">
             Qreato AI
           </span>

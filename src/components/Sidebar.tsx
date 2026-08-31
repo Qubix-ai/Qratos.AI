@@ -119,12 +119,6 @@ export function Sidebar({
     }
   }, [editingId]);
 
-  // Focus search input when toggled
-  useEffect(() => {
-    if (showSearchInput && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [showSearchInput]);
 
   const handleStartRename = (e: React.MouseEvent, session: ChatSession) => {
     e.stopPropagation();
@@ -355,29 +349,22 @@ export function Sidebar({
               flex flex-col lg:relative lg:translate-x-0
             `}
           >
-            {/* Top Bar: Back to Landing Page Arrow + Brand Logo on Left | Sidebar Toggle Icon on Right */}
+            {/* Top Bar: Back to Landing Page Arrow on Left | Sidebar Toggle Icon on Right */}
             <div className="p-3.5 px-4 flex items-center justify-between shrink-0 border-b border-white/[0.06]">
               <div className="flex items-center gap-2">
-                {/* Arrow to go back to landing page */}
+                {/* Button to go back to landing page */}
                 <button
                   type="button"
                   onClick={() => {
                     onTabChange("landing");
                     onClose?.();
                   }}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className="p-2.5 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 transition-all cursor-pointer bg-white/[0.04] border border-white/10 flex items-center gap-2"
                   title="Back to Landing Page"
                   aria-label="Back to Landing Page"
                 >
-                  <ArrowLeft size={16} />
+                  <ArrowLeft size={18} />
                 </button>
-                
-                <div className="flex items-center gap-2" title="Qreato">
-                  <QreatoLogo size={20} className="text-white" dotClassName="text-white fill-white" />
-                  <span className="text-xs font-bold text-white tracking-tight font-nohemi">
-                    Qreato
-                  </span>
-                </div>
               </div>
 
               <div className="flex items-center gap-1">

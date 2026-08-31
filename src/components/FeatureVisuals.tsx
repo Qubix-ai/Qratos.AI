@@ -120,7 +120,7 @@ export const ModesCycleVisual: React.FC = () => {
   }, [activeIdx]);
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-white/[0.05] backdrop-blur-2xl rounded-[30px] border border-white/12 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.1)]">
+    <div className="relative w-full flex flex-col gap-2.5 p-4 sm:p-5 bg-[#0b0c10] rounded-[24px] border border-white/20 overflow-hidden shadow-2xl subpixel-antialiased">
       <style>{`
         @keyframes synthWaveShimmer {
           0% { transform: translateX(-100%); }
@@ -133,22 +133,22 @@ export const ModesCycleVisual: React.FC = () => {
         }
       `}</style>
 
-      {/* Top Header */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-white/10">
+      {/* Top Header - Removed "5 DEDICATED WORKSPACES", Closed Top Gap */}
+      <div className="flex items-center justify-between pb-2 border-b border-white/15">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-white animate-ping opacity-75" />
-          <span className="text-[10px] font-mono uppercase tracking-widest text-white/90 font-bold">
-            5 DEDICATED WORKSPACES
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+          <span className="text-xs font-mono text-white font-bold tracking-wider">
+            WORKSPACE READY
           </span>
         </div>
-        <span className="text-[10px] font-mono text-white/90 bg-white/10 px-2 py-0.5 rounded-full border border-white/20 flex items-center gap-1.5">
+        <span className="text-[11px] font-mono text-white bg-white/10 px-2.5 py-0.5 rounded-full border border-white/25 flex items-center gap-1.5 font-semibold">
           <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_white]" />
           Memory Locked
         </span>
       </div>
 
-      {/* 5 Mode Chips Grid with Smooth Layout Motion Transitions */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 my-2.5">
+      {/* 5 Mode Chips Grid - Compact & Crystal Clear */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 my-1">
         {modes.map((mode, idx) => {
           const Icon = mode.icon;
           const isActive = activeIdx === idx;
@@ -156,92 +156,76 @@ export const ModesCycleVisual: React.FC = () => {
             <div
               key={mode.id}
               onClick={() => setActiveIdx(idx)}
-              className={`p-2.5 rounded-xl cursor-pointer flex items-center gap-2 relative overflow-hidden transition-colors duration-500 border ${
+              className={`p-2.5 rounded-xl cursor-pointer flex items-center gap-2 relative overflow-hidden transition-all duration-300 border ${
                 isActive
-                  ? "border-white/50 bg-white/15"
-                  : "bg-white/[0.03] border-white/10 opacity-70 hover:opacity-100 hover:bg-white/[0.06]"
+                  ? "border-white/60 bg-white/15 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+                  : "bg-white/[0.04] border-white/15 hover:border-white/30 hover:bg-white/[0.08]"
               } ${idx === 4 ? "col-span-2 sm:col-span-1" : ""}`}
             >
-              {/* Smooth Animated Layout Glow Gliding between Active Mode Buttons */}
+              {/* Smooth Active Mode Pill Background */}
               {isActive && (
                 <motion.div
                   layoutId="activeModeGlowPill"
-                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  className="absolute inset-0 bg-gradient-to-r from-white/[0.18] via-white/[0.08] to-transparent shadow-[0_0_24px_rgba(255,255,255,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] pointer-events-none rounded-xl"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-transparent pointer-events-none rounded-xl"
                 />
               )}
 
               <div 
                 className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 relative z-10 transition-all duration-300 ${
-                  isActive ? "bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.6)] scale-105" : "bg-white/10 text-white"
+                  isActive ? "bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.8)] scale-105" : "bg-white/10 text-white"
                 }`}
               >
-                <Icon size={14} strokeWidth={2.2} />
+                <Icon size={14} strokeWidth={2.4} />
               </div>
               <div className="min-w-0 relative z-10">
                 <span className="block text-xs font-bold text-white tracking-tight leading-tight">{mode.label}</span>
-                <span className="block text-[9px] text-gray-400 truncate">{mode.sub}</span>
+                <span className="block text-[10px] text-gray-300 truncate font-medium">{mode.sub}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Live Animated Output Snippet Card with Real-time Shimmer & Blinking Typewriter Cursor */}
-      <div className="p-3 rounded-xl bg-black/60 border border-white/15 min-h-[58px] flex items-center justify-between gap-2.5 shadow-inner relative overflow-hidden">
-        {/* Soft Background Shimmer Wave when Synthesizing */}
+      {/* Live Animated Output Snippet Card - Positioned immediately after mode buttons without gap */}
+      <div className="p-3 sm:p-3.5 rounded-xl bg-black/80 border border-white/20 flex items-center justify-between gap-3 shadow-inner relative overflow-hidden">
+        {/* Background Shimmer Wave when Synthesizing */}
         {isTyping && (
           <div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent pointer-events-none"
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"
             style={{ animation: "synthWaveShimmer 1.8s infinite linear" }}
           />
         )}
 
         <div className="min-w-0 flex-1 relative z-10">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
+            <span className="text-[10px] font-mono text-gray-300 font-semibold uppercase tracking-wider">
               Active Generation Preview ({modes[activeIdx].label})
             </span>
             {isTyping ? (
-              <span className="text-[8px] font-mono text-white/90 flex items-center gap-1.5 bg-white/10 px-1.5 py-0.5 rounded border border-white/20">
+              <span className="text-[9px] font-mono text-white font-bold flex items-center gap-1.5 bg-white/15 px-2 py-0.5 rounded border border-white/25">
                 <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_white] animate-ping" />
                 Synthesizing
               </span>
             ) : (
-              <span className="text-[8px] font-mono text-white/60 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
+              <span className="text-[9px] font-mono text-white/80 font-bold flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded border border-white/15">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 Ready
               </span>
             )}
           </div>
-          <p className="text-xs text-white font-mono truncate transition-all duration-200">
+          <p className="text-xs text-white font-mono truncate font-medium">
             {typedText}
             {/* Authentic Typewriter Cursor */}
             <span 
-              className="inline-block w-1.5 h-3 bg-white ml-0.5 align-middle shadow-[0_0_8px_white]"
+              className="inline-block w-1.5 h-3.5 bg-white ml-0.5 align-middle shadow-[0_0_8px_white]"
               style={{ animation: "cursorBlinkKeyframe 0.9s infinite steps(1)" }}
             />
           </p>
         </div>
-        <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center shrink-0 border border-white/15 relative z-10">
-          <Check size={11} className="text-white" />
+        <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center shrink-0 border border-white/25 relative z-10">
+          <Check size={12} className="text-white stroke-[2.5]" />
         </div>
-      </div>
-
-      {/* Bottom Memory Context Flow */}
-      <div className="mt-2.5 p-3 rounded-xl bg-white/[0.05] border border-white/20 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-lg bg-white/15 flex items-center justify-center text-white shrink-0">
-            <Database size={12} />
-          </div>
-          <div>
-            <span className="block text-xs font-bold text-white leading-tight">Persistent Memory & Context</span>
-            <span className="block text-[9px] text-gray-400 font-mono">B2B SaaS • High-Ticket • Direct Tone</span>
-          </div>
-        </div>
-        <span className="text-[8px] font-mono text-white uppercase font-bold tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded border border-white/15">
-          Sync 100%
-        </span>
       </div>
     </div>
   );
@@ -659,37 +643,37 @@ export const LinearPipelineVisual: React.FC = () => {
   const steps = [
     {
       num: "01",
-      title: "Define Brief & Lock Memory",
-      desc: "Niche, audience, and tone load instantly from memory.",
+      title: "01 — CONTEXT",
+      desc: "Your audience, offer, voice & objective.",
       icon: Sliders,
-      badge: "Memory-Linked"
+      badge: "CONTEXT"
     },
     {
       num: "02",
-      title: "Cognitive Synthesis",
-      desc: "Direct-response formulas and behavioral triggers compile seamlessly.",
+      title: "02 — INTELLIGENCE",
+      desc: "Psychology, proven frameworks & conversion strategy.",
       icon: Cpu,
-      badge: "Psych-Optimized"
+      badge: "INTELLIGENCE"
     },
     {
       num: "03",
-      title: "Conversion-Ready Copy",
-      desc: "Multi-angle hook variants and body copy ready for instant deployment.",
+      title: "03 — EXECUTION",
+      desc: "High-impact hooks, persuasive messaging & ready-to-use copy.",
       icon: Send,
-      badge: "Conversion-Ready"
+      badge: "EXECUTION"
     }
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 3);
-    }, 3400);
+    }, 3200);
     return () => clearInterval(timer);
   }, []);
 
   return (
     <div className="w-full max-w-5xl mx-auto rounded-[32px] border border-white/15 p-5 sm:p-8 bg-white/[0.04] backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.4)] [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12)] relative overflow-hidden mb-10">
-      {/* Sleek Top Connected Progress Tracker Line (Cleanly positioned BEHIND step nodes) */}
+      {/* Sleek Top Connected Progress Tracker Line */}
       <div className="hidden md:flex items-center justify-between mb-7 px-6 relative">
         {/* Background Tracker Track sitting behind the badge circles */}
         <div className="absolute top-1/2 left-10 right-10 -translate-y-1/2 h-[2px] bg-white/10 z-0 pointer-events-none">
@@ -728,7 +712,7 @@ export const LinearPipelineVisual: React.FC = () => {
         })}
       </div>
 
-      {/* 3 Step Cards with Distinct Sequential Fade-and-Slide Animation */}
+      {/* 3 Step Cards - Rigid in place with 1, 2, 3 glowing one by one */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
         {steps.map((step, idx) => {
           const Icon = step.icon;
@@ -738,23 +722,22 @@ export const LinearPipelineVisual: React.FC = () => {
           return (
             <motion.div
               key={step.num}
-              initial={{ opacity: 0, y: 16, x: idx === 0 ? -12 : idx === 2 ? 12 : 0 }}
-              whileInView={{ opacity: 1, y: 0, x: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, delay: idx * 0.12, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -3, scale: 1.01 }}
+              transition={{ duration: 0.4, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
               onClick={() => setActiveStep(idx)}
-              className={`p-4 sm:p-5 rounded-2xl border transition-all duration-400 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
+              className={`p-5 rounded-2xl border transition-all duration-500 cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
                 isActive
-                  ? "bg-white/12 border-white/40 shadow-[0_0_30px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.3)]"
+                  ? "bg-white/12 border-white/40 shadow-[0_0_30px_rgba(255,255,255,0.2),inset_0_1px_0_rgba(255,255,255,0.4)]"
                   : isPassed
                   ? "bg-white/[0.04] border-white/15 hover:border-white/30 shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
                   : "bg-white/[0.02] border-white/10 opacity-70 hover:opacity-100 hover:border-white/20"
               }`}
             >
-              {/* Subtle Active Highlight */}
+              {/* Active Step Glow Backlight */}
               {isActive && (
-                <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/[0.1] rounded-full blur-[28px] pointer-events-none" />
+                <div className="absolute -top-10 -left-10 w-36 h-36 bg-white/[0.15] rounded-full blur-[30px] pointer-events-none" />
               )}
 
               <div className="relative z-10">
@@ -762,19 +745,19 @@ export const LinearPipelineVisual: React.FC = () => {
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
                       isActive 
-                        ? "bg-white text-black shadow-[0_0_18px_rgba(255,255,255,0.4)] scale-105" 
+                        ? "bg-white text-black shadow-[0_0_18px_rgba(255,255,255,0.5)] scale-105" 
                         : "bg-white/10 text-white group-hover:scale-105 group-hover:bg-white/15"
                     }`}
                   >
                     <Icon size={17} strokeWidth={2.2} />
                   </div>
                   <span className={`text-2xl font-black font-nohemi transition-colors ${
-                    isActive ? "text-white/80" : "text-white/20 group-hover:text-white/40"
+                    isActive ? "text-white" : "text-white/20 group-hover:text-white/40"
                   }`}>
                     {step.num}
                   </span>
                 </div>
-                <h4 className="text-sm sm:text-base font-bold text-white mb-1 font-nohemi tracking-tight">
+                <h4 className="text-sm sm:text-base font-bold text-white mb-1.5 font-nohemi tracking-tight">
                   {step.title}
                 </h4>
                 <p className="text-xs text-neutral-300 leading-relaxed font-normal">
@@ -794,6 +777,13 @@ export const LinearPipelineVisual: React.FC = () => {
             </motion.div>
           );
         })}
+      </div>
+
+      {/* Bottom Punchline */}
+      <div className="mt-6 pt-4 border-t border-white/10 text-center relative z-10">
+        <p className="text-xs sm:text-sm font-mono text-white/90 font-bold tracking-wider">
+          One brief. One system. Copy built for action.
+        </p>
       </div>
     </div>
   );
@@ -945,9 +935,9 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
             </div>
           )}
 
-          {/* Field 1: Target Niche */}
+          {/* Field 1: 01 — Define */}
           <div 
-            className={`py-2.5 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
+            className={`py-3 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
               field1Locked
                 ? "bg-white/[0.14] border-white/60 shadow-[0_0_24px_rgba(255,255,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.015]"
                 : "bg-white/[0.03] border-white/10 opacity-75"
@@ -957,8 +947,8 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
               <div className="absolute inset-0 bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-transparent pointer-events-none" />
             )}
             <div className="flex items-center justify-between mb-1 relative z-10">
-              <label className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
-                Target Niche & Audience
+              <label className="text-[10px] font-mono text-white font-bold tracking-wider">
+                01 — Define
               </label>
               {field1Locked ? (
                 <span className="text-[9px] font-mono text-white font-bold flex items-center gap-1">
@@ -968,22 +958,22 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
                 <span className="text-[9px] font-mono text-gray-500">Ready</span>
               )}
             </div>
-            <div className="text-xs sm:text-[13px] font-semibold text-white truncate relative z-10">
-              {activeArchetype === "email" 
-                ? "B2B SaaS & High-Ticket Operators" 
-                : activeArchetype === "ads" 
-                ? "Performance E-Commerce & DTC" 
-                : activeArchetype === "landing" 
-                ? "Enterprise Software Platforms" 
+            <div className="text-xs sm:text-[13px] font-semibold text-white leading-snug relative z-10">
+              {activeArchetype === "email"
+                ? "B2B SaaS & Cold Outreach Leads"
+                : activeArchetype === "ads"
+                ? "Performance E-Commerce & DTC Brands"
+                : activeArchetype === "landing"
+                ? "Enterprise Software Platforms & SaaS"
                 : activeArchetype === "content"
-                ? "Creators & Personal Brands"
-                : "High-Ticket Decision-Makers"}
+                ? "Creators, Thought Leaders & Media Brands"
+                : "High-Ticket Buyers & Decision-Makers"}
             </div>
           </div>
 
-          {/* Field 2: Primary Goal */}
+          {/* Field 2: 02 — Build */}
           <div 
-            className={`py-2.5 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
+            className={`py-3 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
               field2Locked
                 ? "bg-white/[0.14] border-white/60 shadow-[0_0_24px_rgba(255,255,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.015]"
                 : "bg-white/[0.03] border-white/10 opacity-75"
@@ -993,33 +983,33 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
               <div className="absolute inset-0 bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-transparent pointer-events-none" />
             )}
             <div className="flex items-center justify-between mb-1 relative z-10">
-              <label className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
-                Primary Conversion Goal
+              <label className="text-[10px] font-mono text-white font-bold tracking-wider">
+                02 — Build
               </label>
               {field2Locked ? (
                 <span className="text-[9px] font-mono text-white font-bold flex items-center gap-1">
-                  <Check size={10} className="text-white" /> Locked
+                  <Check size={10} className="text-white" /> Compiled
                 </span>
               ) : (
                 <span className="text-[9px] font-mono text-gray-500">Ready</span>
               )}
             </div>
-            <div className="text-xs sm:text-[13px] font-semibold text-white truncate relative z-10">
-              {activeArchetype === "email" 
-                ? "Drive demo bookings before launch" 
-                : activeArchetype === "ads" 
-                ? "Pattern-interrupt scroll fatigue" 
-                : activeArchetype === "landing" 
-                ? "Convert cold traffic with proof" 
+            <div className="text-xs sm:text-[13px] font-semibold text-white leading-snug relative z-10">
+              {activeArchetype === "email"
+                ? "Demo Bookings + Scarcity Framework"
+                : activeArchetype === "ads"
+                ? "Scroll-Stopping Hook + Loss Aversion"
+                : activeArchetype === "landing"
+                ? "Cold Traffic Conversion + Proof Stacking"
                 : activeArchetype === "content"
-                ? "High-retention hooks and engagement"
-                : "Overcome buying friction"}
+                ? "High-Retention Hook + Curiosity Gap"
+                : "Friction Removal & Commitment Pacing"}
             </div>
           </div>
 
-          {/* Field 3: Psychological Framing */}
+          {/* Field 3: 03 — Create */}
           <div 
-            className={`py-2.5 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
+            className={`py-3 px-3.5 rounded-xl transition-all duration-400 border flex flex-col justify-center relative overflow-hidden ${
               field3Locked
                 ? "bg-white/[0.14] border-white/60 shadow-[0_0_24px_rgba(255,255,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.015]"
                 : "bg-white/[0.03] border-white/10 opacity-75"
@@ -1029,27 +1019,27 @@ export const PromptStudioInteractiveDemo: React.FC<{ activeArchetype: string; on
               <div className="absolute inset-0 bg-gradient-to-r from-white/[0.08] via-white/[0.03] to-transparent pointer-events-none" />
             )}
             <div className="flex items-center justify-between mb-1 relative z-10">
-              <label className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
-                Psychological Framing
+              <label className="text-[10px] font-mono text-white font-bold tracking-wider">
+                03 — Create
               </label>
               {field3Locked ? (
                 <span className="text-[9px] font-mono text-white font-bold flex items-center gap-1">
-                  <Check size={10} className="text-white" /> Locked
+                  <Check size={10} className="text-white" /> Active
                 </span>
               ) : (
                 <span className="text-[9px] font-mono text-gray-500">Ready</span>
               )}
             </div>
-            <div className="text-xs sm:text-[13px] font-semibold text-white truncate relative z-10">
-              {activeArchetype === "email" 
-                ? "Cialdini Scarcity + Authority" 
-                : activeArchetype === "ads" 
-                ? "Problem-Agitate-Solve + Loss Aversion" 
-                : activeArchetype === "landing" 
-                ? "Proof Stacking + Risk Inversion" 
+            <div className="text-xs sm:text-[13px] font-semibold text-white leading-snug relative z-10">
+              {activeArchetype === "email"
+                ? "Cold Email Campaign Master Prompt"
+                : activeArchetype === "ads"
+                ? "Direct-Response Ad Copy Master Prompt"
+                : activeArchetype === "landing"
+                ? "Sales Page & Landing Master Prompt"
                 : activeArchetype === "content"
-                ? "Curiosity Gap + Value Stacking"
-                : "Commitment Pacing"}
+                ? "Viral Hook & Content Engine Prompt"
+                : "Persuasion Vector & Objection Prompt"}
             </div>
           </div>
         </div>

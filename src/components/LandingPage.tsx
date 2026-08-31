@@ -520,36 +520,19 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[5.75rem] 2xl:text-[6.5rem] font-bold font-nohemi tracking-[-0.02em] leading-[1.05] text-white [text-shadow:0_4px_35px_rgba(0,0,0,0.9)] select-none text-center"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              <span className="block whitespace-nowrap">
-                <ShinyText
-                  text="Your only unfair"
-                  speed={2.4}
-                  delay={0.1}
-                  color="#ffffff"
-                  shineColor="#FFBE0B"
-                  spread={120}
-                  direction="left"
-                  yoyo={false}
-                  pauseOnHover={false}
-                  disabled={false}
-                  className="font-nohemi font-bold"
-                />
-              </span>
-              <span className="block whitespace-nowrap">
-                <ShinyText
-                  text="COPYWRITING advantage"
-                  speed={2.4}
-                  delay={0.1}
-                  color="#ffffff"
-                  shineColor="#FFBE0B"
-                  spread={120}
-                  direction="left"
-                  yoyo={false}
-                  pauseOnHover={false}
-                  disabled={false}
-                  className="font-nohemi font-bold"
-                />
-              </span>
+              <ShinyText
+                text="Say Less. Make It Land."
+                speed={2.4}
+                delay={0.1}
+                color="#ffffff"
+                shineColor="#FFBE0B"
+                spread={120}
+                direction="left"
+                yoyo={false}
+                pauseOnHover={false}
+                disabled={false}
+                className="font-nohemi font-bold"
+              />
             </motion.h1>
           </div>
           
@@ -561,7 +544,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             className="text-base sm:text-lg md:text-xl text-neutral-200 max-w-2xl mx-auto mb-10 leading-relaxed font-normal px-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]"
             style={{ textWrap: "balance" }}
           >
-            The AI copywriting engine that turns any brief into hooks, emails, and sales pages that convert — built for founders and creators who need results, not busywork.
+            Give murgii the idea, offer or message. It finds the strongest angle &amp; turns it into clear, persuasive copy your audience can understand &amp; act on.
           </motion.p>
 
           {/* Primary Call to Action Button */}
@@ -583,8 +566,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 border: "1px solid rgba(255, 255, 255, 0.25)",
               }}
             >
-              <span className="font-bold text-white tracking-tight">Start Writing with Murgii Free</span>
-              <ArrowRight size={20} className="text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+              <span className="font-bold text-white tracking-tight">Try murgii free →</span>
             </motion.button>
           </motion.div>
         </div>
@@ -605,10 +587,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
       {/* How Murgii AI Engineers Conversion Section */}
       <section id="how-it-works" className="py-36 sm:py-44 px-4 relative overflow-hidden">
-        {/* Cinematic Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/8 rounded-full blur-[180px] pointer-events-none" />
-        
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-28 relative">
@@ -633,78 +611,55 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 />
               </span>
             </h2>
-            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-[#8B5CF6] via-[#D946EF] to-transparent mx-auto mb-10 shadow-[0_0_20px_#8B5CF6]" />
+            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mb-10" />
             <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-6">
-              Murgii AI combines behavioral psychology, conversion intelligence, and strategic AI systems to generate persuasive assets engineered for measurable business growth.
+              Murgii AI combines psychology, conversion insights & AI to create persuasive content that gets attention, drives action & turns ideas into growth.
             </p>
           </div>
 
           <div id="features" className="space-y-40 sm:space-y-48">
-            {/* BLOCK 1: 5 Core Modes & Persistent Brand Memory */}
+            {/* BLOCK 1: 5 Dedicated Modes */}
             <FeatureBlock 
               index={1}
-              title="5 Dedicated Modes Powered by Persistent Memory"
-              description="Save your niche, audience, and brand voice once — generate conversion-ready assets across all 5 modes instantly."
-              trustLine="Memory & Personalization applies automatically across all 5 modes."
+              title="5 Dedicated Modes"
+              description="Save your niche, audience & brand voice once. Generate conversion-ready assets across all 5 modes instantly."
               points={[
                 "Multi-email sequence campaigns",
                 "Pattern-interrupt ad hooks",
                 "Sales pages & landing assets",
                 "Conversion triggers & bias frames",
-                "Reels, TikTok & social content",
-                "Zero context loss across sessions"
+                "Instagram, TikTok & social content"
               ]}
               visual={<ModesCycleVisual />}
             />
 
-            {/* BLOCK 2: Guided Prompt Builder Advantage */}
+            {/* BLOCK 2: Don't Just Write. Build the Machine. */}
             <FeatureBlock 
               index={2}
-              reversed
-              title="Guided Prompt Architecture That Beats Generic AI"
-              description="Compile guided inputs into role-framed master prompts for peak persuasion on draft one."
-              trustLine="Replaces hours of prompt tweaking with 60-second guided architecture."
+              reversed={false}
+              title={
+                <>
+                  Don't Just Write.<br />Build the Machine.
+                </>
+              }
+              description={
+                <div className="space-y-3.5 text-gray-300 text-base md:text-lg leading-relaxed">
+                  <p className="font-medium text-white/90">
+                    Murgii makes your message persuasive. Bolt turns that persuasion into a business.
+                  </p>
+                  <p className="text-gray-300/90 text-sm sm:text-base">
+                    Blueprint your offer. Engineer your funnel. Build your monetization system. Then execute it through a single connected operating system.
+                  </p>
+                </div>
+              }
+              trustLine="Strategy → Systems → Execution → Revenue"
               points={[
-                "Role-framed master prompts",
-                "Targeted conversion vectors",
-                "Reusable master blueprints",
-                "1-click workspace synchronization",
-                "Unlocked on Core & Max"
-              ]}
-              visual={<PromptCompilerVisual />}
-            />
-
-            {/* BLOCK 3: Tiered Daily Credits Engineered for Scaling */}
-            <FeatureBlock 
-              index={3}
-              title="Daily Credit Engine Built for Sustainable Volume"
-              description="Predictable daily quotas engineered for continuous client work and high-volume publishing."
-              trustLine="Quotas refresh every 24 hours with zero surprise overage fees."
-              points={[
-                "Basic: 3 daily credits across all 5 modes",
-                "Core ($29/mo): 20 daily credits + Prompt Builder",
-                "Max ($97/mo): 60 daily credits + Blueprint Studio",
-                "Predictable daily publishing volume",
-                "Instant tier switching anytime"
-              ]}
-              visual={<TierExpansionVisual />}
-            />
-
-            {/* BLOCK 4: Full Bolt Max Ecosystem & Business Blueprint Studio */}
-            <FeatureBlock 
-              index={4}
-              reversed
-              title="Complete Revenue Infrastructure with Bolt & Blueprint Studio"
-              description="Connect your sales copy directly to offer roadmaps, audience funnels, and monetization systems."
-              trustLine="The unified growth operating system for modern founders and agencies."
-              points={[
-                "6-category execution roadmap",
-                "Business Blueprint Studio",
+                "Blueprint Studio",
+                "6-Category Revenue Roadmap",
                 "AI Blueprint Assist",
-                "Dedicated enterprise model routing",
-                "End-to-end revenue deployment"
+                "Connected Revenue Infrastructure"
               ]}
-              visual={<BoltEcosystemVisual />}
+              visual={null}
             />
           </div>
         </div>
@@ -723,11 +678,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               className="text-4xl md:text-7xl font-bold tracking-tight mb-5 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent leading-[1.05] font-nohemi"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              Build Custom Prompts, <br className="hidden md:block" /> Engineered for You
+              Your Strategy. <br className="hidden md:block" /> Built Into Every Prompt.
             </h2>
             <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-6 shadow-[0_0_20px_rgba(255,255,255,0.2)]" />
             <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Assemble tailored, role-framed master prompts in seconds — structured persuasion on draft one without generic fluff.
+              Create powerful, reusable prompts tailored to your business, audience, goals & voice.
             </p>
           </div>
 
@@ -740,22 +695,6 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               WebkitBackdropFilter: "blur(20px)"
             }}
           >
-            {/* 3-Step Simple Flow Bar */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pb-3.5 mb-3.5 border-b border-white/10">
-              <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/[0.04] border border-white/10">
-                <span className="w-5 h-5 rounded-lg bg-white/10 text-white flex items-center justify-center text-[10px] font-mono font-bold shrink-0">1</span>
-                <span className="text-[11px] text-gray-300 font-medium truncate">Select Archetype & Niche</span>
-              </div>
-              <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/[0.04] border border-white/10">
-                <span className="w-5 h-5 rounded-lg bg-white/10 text-white flex items-center justify-center text-[10px] font-mono font-bold shrink-0">2</span>
-                <span className="text-[11px] text-gray-300 font-medium truncate">Murgii Compiles Role Frame</span>
-              </div>
-              <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/[0.04] border border-white/10">
-                <span className="w-5 h-5 rounded-lg bg-white text-black flex items-center justify-center text-[10px] font-mono font-bold shrink-0">3</span>
-                <span className="text-[11px] text-white font-bold truncate">Ready-to-Use Master Prompt</span>
-              </div>
-            </div>
-
             {/* Mode Selection Pills (Emails / Ads / Pages / Persuasion / Content) */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3.5 border-b border-white/10">
               <div className="flex items-center gap-2.5">
@@ -769,7 +708,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 </div>
               </div>
 
-              {/* 5 Mode Selection Pills - Auto-fitted responsive flex/grid so user doesn't have to scroll */}
+              {/* 5 Mode Selection Pills */}
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10 w-full md:w-auto">
                 {[
                   { id: "email", label: "Emails", icon: Mail },
@@ -805,27 +744,16 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               onSelectArchetype={(m) => setActiveDemoMode(m as any)} 
             />
 
-            {/* Bottom CTA Area: Value Contrast & Desirability */}
-            <div className="mt-5 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-left space-y-0.5">
-                <h5 className="text-xs sm:text-sm font-bold text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
-                  Stop Wasting Hours Rewriting AI Prompts
-                </h5>
-                <p className="text-[11px] text-gray-400 max-w-lg leading-relaxed">
-                  Unlocked on Bolt Core and Max tiers. Get structured, role-framed master prompts synced directly to your generation workspace.
-                </p>
-              </div>
-
+            {/* Bottom CTA Area */}
+            <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-center">
               {/* Primary CTA Button */}
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCraftPromptClick}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white text-black font-extrabold text-xs tracking-tight shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                className="px-6 py-3 rounded-xl bg-white text-black font-extrabold text-sm tracking-tight shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Wand2 size={13} />
-                <span>Craft Your First Prompt</span>
-                <ArrowRight size={13} />
+                <span>Build Your First Prompt →</span>
               </motion.button>
             </div>
           </div>
@@ -850,16 +778,12 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               THE EXECUTION WORKFLOW
             </motion.div>
             <h2 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-5 text-white font-nohemi max-w-4xl mx-auto leading-[1.15]"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white font-nohemi max-w-4xl mx-auto leading-[1.15]"
               style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
             >
-              <span className="inline-block">From Brief to Market-Ready Copy</span>{" "}
-              <span className="inline-block text-white/90">in 3 Honest Steps</span>
+              Strategy In. Better Copy Out.
             </h2>
-            <div className="w-28 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-6" />
-            <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Connect brand voice and offer context directly to high-converting copy in seconds.
-            </p>
+            <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mt-5" />
           </div>
 
           {/* Live White/Glass Linear 3-Stage Pipeline Demonstration */}
@@ -868,68 +792,78 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
       </section>
 
       {/* Affiliate Partner Section (Positioned Directly Above Footer) */}
-      <section className="relative py-12 sm:py-16 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <section className="relative py-10 sm:py-14 overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 relative z-10">
           <motion.div 
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-[36px] border border-white/15 p-8 sm:p-12 shadow-2xl relative overflow-hidden [box-shadow:0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12)]"
+            className="rounded-[24px] border border-white/20 p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.7)] relative overflow-hidden [box-shadow:inset_0_1px_0_rgba(255,255,255,0.15)]"
             style={{
               background: "rgba(255, 255, 255, 0.04)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)"
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)"
             }}
           >
             {/* Subtle Ambient Backlight Glow */}
-            <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/[0.06] rounded-full blur-[70px] pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-white/[0.04] rounded-full blur-[70px] pointer-events-none" />
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/[0.05] rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/[0.03] rounded-full blur-[60px] pointer-events-none" />
 
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 md:gap-12 relative z-10">
-              <div className="max-w-2xl space-y-4">
+            <div className="space-y-6 relative z-10">
+              {/* Header Info */}
+              <div className="space-y-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md">
                   <Sparkles size={12} className="text-white" />
                   <span className="text-[10px] font-mono uppercase tracking-widest text-white/90 font-bold">
-                    Partner Program
+                    Qreato partner program
                   </span>
                 </div>
 
                 <h3 
-                  className="text-2xl sm:text-3xl md:text-4xl font-bold text-white font-nohemi leading-tight"
+                  className="text-2xl sm:text-3xl font-bold text-white font-nohemi tracking-tight leading-tight"
                   style={{ fontFamily: "'Nohemi', sans-serif" }}
                 >
-                  Earn 50% Referring Murgii
+                  Your Audience. Your Link. 50% Yours.
                 </h3>
 
-                <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-normal">
-                  Affiliates earn a 50% commission on each customer referred to Murgii. Get your unique tracked affiliate link and monitor your clicks, signups, and earnings seamlessly through Whop’s built-in affiliate engine — with no separate dashboard needed.
+                <p className="text-gray-300 text-xs sm:text-sm leading-relaxed font-normal max-w-2xl">
+                  Recommend murgii to people who can benefit from it & earn 50% of their first paid month when they become a customer.
                 </p>
+              </div>
 
-                {/* Honest Subscription Disclosure */}
-                <div className="pt-1 flex items-start gap-2.5 text-xs text-gray-400">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/60 mt-1.5 shrink-0" />
-                  <p className="leading-relaxed">
-                    <span className="text-white/80 font-semibold">Subscription Disclosure:</span> Since Core and Max are recurring monthly subscriptions, the 50% commission applies to the customer’s first month payment only, not to ongoing renewal payments.
-                  </p>
+              {/* 3 Highlight Metric Cards - Compact & Clean */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/12 flex flex-col justify-between space-y-1">
+                  <span className="text-lg sm:text-xl font-bold text-white font-mono">50%</span>
+                  <span className="text-[11px] text-gray-300 font-normal">First-month commission</span>
+                </div>
+
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/12 flex flex-col justify-between space-y-1">
+                  <span className="text-lg sm:text-xl font-bold text-white font-mono">1 Link</span>
+                  <span className="text-[11px] text-gray-300 font-normal">Everything tracked automatically</span>
+                </div>
+
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/12 flex flex-col justify-between space-y-1">
+                  <span className="text-lg sm:text-xl font-bold text-white font-mono">0 Extra Dashboards</span>
+                  <span className="text-[11px] text-gray-300 font-normal">Clicks, signups & earnings in Whop</span>
                 </div>
               </div>
 
-              {/* Action Button & Tracking Note */}
-              <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-3">
-                {/* PLACEHOLDER: Whop Affiliate Portal URL - update with dedicated Whop link when live */}
+              {/* Call to Action Footer Row */}
+              <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs sm:text-sm font-semibold text-white/90 font-nohemi">
+                  Turn Your Influence Into Income
+                </span>
+
                 <a
                   href="https://whop.com/qreato/ai-leverage"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all duration-300 shadow-[0_0_25px_rgba(255,255,255,0.25)] hover:scale-[1.02] cursor-pointer group"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-gray-100 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-1.5 group"
                 >
-                  <span>Become an Affiliate</span>
-                  <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                  <span>Become a Murgii Partner →</span>
                 </a>
-                <span className="text-[11px] font-mono text-gray-400 text-center lg:text-left">
-                  Tracked via Whop &bull; 50% payout
-                </span>
               </div>
             </div>
           </motion.div>
@@ -1224,11 +1158,11 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
 interface FeatureBlockProps {
   index: number;
-  title: string;
-  description: string;
+  title: React.ReactNode;
+  description: React.ReactNode;
   trustLine?: string;
   points: string[];
-  visual: React.ReactNode;
+  visual?: React.ReactNode;
   reversed?: boolean;
 }
 
@@ -1257,13 +1191,13 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
   }
 
   return (
-    <div className={`flex flex-col lg:flex-row items-center gap-16 md:gap-32 ${reversed ? 'lg:flex-row-reverse' : ''}`}>
+    <div className={`flex flex-col ${visual ? 'lg:flex-row items-center gap-16 md:gap-32' : 'max-w-4xl mx-auto'} ${reversed && visual ? 'lg:flex-row-reverse' : ''}`}>
       <motion.div 
         initial={{ opacity: 0, x: reversed ? 50 : -50 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="flex-1 space-y-8"
+        className="flex-1 space-y-8 w-full"
       >
         <div className="inline-flex items-center gap-4">
            <motion.span 
@@ -1283,9 +1217,23 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
           {title}
         </h3>
         <div className="space-y-4">
-          <p className="text-gray-300 text-base md:text-lg leading-relaxed">{description}</p>
+          {typeof description === "string" ? (
+            <p className="text-gray-300 text-base md:text-lg leading-relaxed">{description}</p>
+          ) : (
+            description
+          )}
           {trustLine && (
-            <p className="text-white/70 text-xs font-mono tracking-wider uppercase font-bold">{trustLine}</p>
+            <div className="relative inline-flex items-center overflow-hidden rounded-xl bg-white/[0.04] border border-white/15 px-4 py-2.5 shadow-[0_0_20px_rgba(255,255,255,0.03)]">
+              <span className="text-xs sm:text-sm font-mono tracking-wider font-extrabold text-white relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
+                {trustLine}
+              </span>
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none"
+                initial={{ x: "-100%" }}
+                animate={{ x: "200%" }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.8 }}
+              />
+            </div>
           )}
         </div>
         <div className="space-y-3.5 pt-2">
@@ -1298,30 +1246,31 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
         </div>
       </motion.div>
 
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9, y: 30 }}
-        whileInView={{ opacity: 1, scale: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        className="flex-1 w-full min-h-[470px] sm:min-h-[510px] md:min-h-0 md:h-[540px] relative group cursor-crosshair"
-      >
-        <div 
-          className="absolute inset-0 rounded-[36px] sm:rounded-[48px] bg-white/[0.03] border border-white/15 backdrop-blur-xl overflow-hidden group-hover:border-white/30 transition-all duration-700 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)]"
-          style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }}
+      {visual && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          style={{ rotateX, rotateY }}
+          className="flex-1 w-full relative group cursor-crosshair"
         >
-           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-transparent" />
-           <div className="relative w-full h-full flex items-center justify-center p-3.5 sm:p-4" style={{ transform: "translateZ(80px)" }}>
-             {visual}
-           </div>
-        </div>
-        
-        {/* Floating Ambient Accents */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-      </motion.div>
+          <div 
+            className="w-full rounded-[30px] sm:rounded-[36px] bg-[#0c0d12] border border-white/20 overflow-hidden group-hover:border-white/35 transition-all duration-500 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.8)] p-3 sm:p-4 relative"
+          >
+             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent pointer-events-none" />
+             <div className="relative w-full flex items-center justify-center">
+               {visual}
+             </div>
+          </div>
+          
+          {/* Floating Ambient Accents */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        </motion.div>
+      )}
     </div>
   );
 }

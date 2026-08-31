@@ -76,39 +76,6 @@ export function SplashScreen({ onComplete }: { onComplete?: () => void }) {
             }}
           />
 
-          {/* Primary High-Precision Glass Shear Wave */}
-          <motion.div
-            className="absolute inset-y-0 w-[60%] pointer-events-none z-20"
-            style={{
-              background: "linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.03) 15%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.03) 85%, transparent 100%)",
-              transform: "skewX(-28deg)",
-            }}
-            initial={{ left: "-110%" }}
-            animate={{ left: "210%" }}
-            transition={{
-              repeat: Infinity,
-              duration: 1.25,
-              ease: "easeInOut",
-            }}
-          />
-
-          {/* Secondary Delicate Luster Beam */}
-          <motion.div
-            className="absolute inset-y-0 w-[30%] pointer-events-none z-20"
-            style={{
-              background: "linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.95) 50%, transparent 100%)",
-              transform: "skewX(-28deg)",
-            }}
-            initial={{ left: "-90%" }}
-            animate={{ left: "230%" }}
-            transition={{
-              repeat: Infinity,
-              duration: 1.25,
-              delay: 0.08,
-              ease: "easeInOut",
-            }}
-          />
-
           {/* Qreato Brand Mark with Multi-Depth Drop Shadow */}
           <QreatoLogo 
             size={58} 
