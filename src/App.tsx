@@ -18,6 +18,9 @@ import { RefundPolicyPage } from "./components/RefundPolicyPage";
 import { PlatformRulesPage } from "./components/PlatformRulesPage";
 import { GeneralRulesPage } from "./components/GeneralRulesPage";
 import { MediaPage } from "./components/MediaPage";
+import { EnterprisePage } from "./components/EnterprisePage";
+import { SecurityPage } from "./components/SecurityPage";
+import { TrustCentrePage } from "./components/TrustCentrePage";
 import { AnimatePresence, motion } from "motion/react";
 import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
 import { AmbientBackground } from "./components/AmbientBackground";
@@ -66,6 +69,24 @@ export default function App() {
     return p === "/media" || p === "/press";
   };
 
+  const checkIsEnterprisePath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/enterprise" || p === "/teams";
+  };
+
+  const checkIsSecurityPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/security";
+  };
+
+  const checkIsTrustCentrePath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/trust-centre" || p === "/trust-center" || p === "/trust";
+  };
+
   const [challengeSlug, setChallengeSlug] = useState<string | null>(getSlugFromPath());
   const [isTermsPage, setIsTermsPage] = useState<boolean>(checkIsTermsPath());
   const [isPrivacyPage, setIsPrivacyPage] = useState<boolean>(checkIsPrivacyPath());
@@ -73,6 +94,9 @@ export default function App() {
   const [isPlatformRulesPage, setIsPlatformRulesPage] = useState<boolean>(checkIsPlatformRulesPath());
   const [isGeneralRulesPage, setIsGeneralRulesPage] = useState<boolean>(checkIsGeneralRulesPath());
   const [isMediaPage, setIsMediaPage] = useState<boolean>(checkIsMediaPath());
+  const [isEnterprisePage, setIsEnterprisePage] = useState<boolean>(checkIsEnterprisePath());
+  const [isSecurityPage, setIsSecurityPage] = useState<boolean>(checkIsSecurityPath());
+  const [isTrustCentrePage, setIsTrustCentrePage] = useState<boolean>(checkIsTrustCentrePath());
   const [user, setUser] = useState<any>(null);
   const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 3 });
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
@@ -96,6 +120,9 @@ export default function App() {
       setIsPlatformRulesPage(checkIsPlatformRulesPath());
       setIsGeneralRulesPage(checkIsGeneralRulesPath());
       setIsMediaPage(checkIsMediaPath());
+      setIsEnterprisePage(checkIsEnterprisePath());
+      setIsSecurityPage(checkIsSecurityPath());
+      setIsTrustCentrePage(checkIsTrustCentrePath());
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -463,6 +490,139 @@ export default function App() {
     );
   }
 
+  if (isEnterprisePage || activeTab === "enterprise" || activeTab === "teams") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <EnterprisePage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsEnterprisePage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsEnterprisePage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isSecurityPage || activeTab === "security") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <SecurityPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsSecurityPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsSecurityPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isTrustCentrePage || activeTab === "trust-centre" || activeTab === "trust-center" || activeTab === "trust") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <TrustCentrePage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsTrustCentrePage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsTrustCentrePage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+          onNavigatePolicy={(key) => {
+            setIsTrustCentrePage(false);
+            if (key === "terms") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/terms");
+              setIsTermsPage(true);
+              setActiveTab("terms");
+            } else if (key === "privacy") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/privacy");
+              setIsPrivacyPage(true);
+              setActiveTab("privacy");
+            } else if (key === "security") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/security");
+              setIsSecurityPage(true);
+              setActiveTab("security");
+            } else if (key === "refund") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/refund-policy");
+              setIsRefundPolicyPage(true);
+              setActiveTab("refund-policy");
+            } else if (key === "platform-rules") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/platform-rules");
+              setIsPlatformRulesPage(true);
+              setActiveTab("platform-rules");
+            } else if (key === "general-rules") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/general-rules");
+              setIsGeneralRulesPage(true);
+              setActiveTab("general-rules");
+            }
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
   if (loading || showSplash || !authResolved) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
@@ -523,6 +683,24 @@ export default function App() {
               }
               setIsMediaPage(true);
               setActiveTab("media");
+            } else if (tab === "enterprise" || tab === "teams") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/enterprise");
+              }
+              setIsEnterprisePage(true);
+              setActiveTab("enterprise");
+            } else if (tab === "security") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/security");
+              }
+              setIsSecurityPage(true);
+              setActiveTab("security");
+            } else if (tab === "trust-centre" || tab === "trust-center" || tab === "trust") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/trust-centre");
+              }
+              setIsTrustCentrePage(true);
+              setActiveTab("trust-centre");
             } else if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
@@ -610,6 +788,24 @@ export default function App() {
               }
               setIsMediaPage(true);
               setActiveTab("media");
+            } else if (tab === "enterprise" || tab === "teams") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/enterprise");
+              }
+              setIsEnterprisePage(true);
+              setActiveTab("enterprise");
+            } else if (tab === "security") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/security");
+              }
+              setIsSecurityPage(true);
+              setActiveTab("security");
+            } else if (tab === "trust-centre" || tab === "trust-center" || tab === "trust") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/trust-centre");
+              }
+              setIsTrustCentrePage(true);
+              setActiveTab("trust-centre");
             } else if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {

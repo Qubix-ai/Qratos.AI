@@ -111,26 +111,29 @@ export const TermsPage: React.FC<TermsPageProps> = ({ onGoToHome, onGoToChat }) 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="lg:col-span-4 sticky top-6 rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] space-y-3"
+            className="lg:col-span-4 sticky top-6 rounded-3xl border border-white/30 bg-gradient-to-b from-white/[0.12] via-white/[0.05] to-white/[0.02] backdrop-blur-3xl p-6 shadow-[0_25px_60px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.45),0_0_35px_rgba(255,255,255,0.08)] space-y-4"
           >
-            <h3 className="text-xs font-bold text-white uppercase tracking-[0.15em] font-mono border-b border-white/10 pb-2.5 flex items-center justify-between">
-              <span>Table of Contents</span>
+            <h3 className="text-xs font-bold text-white uppercase tracking-[0.15em] font-mono border-b border-white/15 pb-3 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+                Table of Contents
+              </span>
               <span className="text-[10px] text-gray-400 font-normal">13 Sections</span>
             </h3>
 
-            <nav className="space-y-1 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+            <nav className="space-y-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
               {TOC_SECTIONS.map((sec) => (
                 <button
                   key={sec.id}
                   type="button"
                   onClick={() => scrollToSection(sec.id)}
-                  className="w-full text-left flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors group cursor-pointer"
+                  className="w-full text-left flex items-center justify-between py-2 px-3 rounded-xl text-xs font-medium text-gray-200 hover:text-white bg-white/[0.04] hover:bg-white/[0.15] border border-white/15 hover:border-white/40 backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.25)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] transition-all group cursor-pointer"
                 >
                   <span className="truncate pr-2">
                     <span className="font-mono text-purple-400 font-bold mr-2">{sec.number}.</span>
                     {sec.title}
                   </span>
-                  <ChevronRight size={12} className="text-gray-500 group-hover:text-white shrink-0 group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight size={12} className="text-gray-400 group-hover:text-white shrink-0 group-hover:translate-x-0.5 transition-all" />
                 </button>
               ))}
             </nav>
@@ -141,8 +144,10 @@ export const TermsPage: React.FC<TermsPageProps> = ({ onGoToHome, onGoToChat }) 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-8 rounded-3xl border border-white/20 bg-gradient-to-br from-white/[0.06] via-white/[0.02] to-black/80 backdrop-blur-3xl p-6 sm:p-10 lg:p-12 shadow-[0_30px_90px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.2)] space-y-8 text-gray-200 text-sm sm:text-base leading-relaxed"
+            className="lg:col-span-8 rounded-[32px] border border-white/30 bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-black/95 backdrop-blur-3xl p-6 sm:p-10 lg:p-12 shadow-[0_30px_100px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.45),0_0_50px_rgba(255,255,255,0.06)] space-y-8 text-gray-200 text-sm sm:text-base leading-relaxed relative overflow-hidden"
           >
+            {/* Specular White Glow Accent */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_70%)] pointer-events-none blur-[60px]" />
             {/* Preamble */}
             <div className="space-y-4 pb-6 border-b border-white/10 text-gray-300">
               <p>

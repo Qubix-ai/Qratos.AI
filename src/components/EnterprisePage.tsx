@@ -1,23 +1,21 @@
 import React from "react";
-import { ArrowLeft, RefreshCw, Lock, ChevronRight } from "lucide-react";
+import { ArrowLeft, Building2, Lock, ChevronRight, Mail, MessageCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import LightPillar from "./LightPillar";
 
-interface RefundPolicyPageProps {
+interface EnterprisePageProps {
   onGoToHome?: () => void;
   onGoToChat?: () => void;
 }
 
 const TOC_SECTIONS = [
-  { id: "sec-overview", number: "•", title: "Overview" },
-  { id: "sec-1", number: "1", title: "No Refunds" },
-  { id: "sec-2", number: "2", title: "Cancel Anytime, No Future Charges" },
-  { id: "sec-3", number: "3", title: "Billing Errors" },
-  { id: "sec-4", number: "4", title: "Legal Requirements" },
-  { id: "sec-5", number: "5", title: "Contact" },
+  { id: "sec-scaling", number: "1", title: "Scaling Across Teams" },
+  { id: "sec-discuss", number: "2", title: "What We Can Discuss" },
+  { id: "sec-works", number: "3", title: "How It Works" },
+  { id: "sec-contact", number: "4", title: "Get In Touch" },
 ];
 
-export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onGoToHome, onGoToChat }) => {
+export const EnterprisePage: React.FC<EnterprisePageProps> = ({ onGoToHome, onGoToChat }) => {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -70,8 +68,8 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onGoToHome, 
           </button>
 
           <div className="flex items-center gap-2 text-xs font-mono text-white/60 bg-white/[0.03] border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
-            <RefreshCw size={14} className="text-purple-400" />
-            <span>Refund Policy</span>
+            <Building2 size={14} className="text-purple-400" />
+            <span>Enterprise & Teams</span>
           </div>
         </div>
 
@@ -80,7 +78,7 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onGoToHome, 
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-4 shadow-sm">
             <Lock size={13} className="text-purple-400" />
             <span className="text-[11px] font-mono uppercase tracking-widest text-white font-bold">
-              Qreato Labs Legal
+              Qreato Labs Solutions
             </span>
           </div>
 
@@ -88,11 +86,11 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onGoToHome, 
             className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white font-nohemi leading-tight mb-4"
             style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
           >
-            REFUND POLICY
+            ENTERPRISE & TEAMS
           </h1>
 
           <p className="text-xs sm:text-sm font-mono text-gray-400 bg-white/[0.03] inline-block px-4 py-1.5 rounded-full border border-white/10">
-            Last updated: August 31, 2026
+            Custom Team & Agency Inquiries
           </p>
         </div>
 
@@ -108,10 +106,10 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onGoToHome, 
           >
             <h3 className="text-xs font-bold text-white uppercase tracking-[0.15em] font-mono border-b border-white/15 pb-3 flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                Table of Contents
+                <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                Navigation
               </span>
-              <span className="text-[10px] text-gray-400 font-normal">5 Sections</span>
+              <span className="text-[10px] text-gray-400 font-normal">4 Sections</span>
             </h3>
 
             <nav className="space-y-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
@@ -132,7 +130,7 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onGoToHome, 
             </nav>
           </motion.div>
 
-          {/* Legal Document Content Body */}
+          {/* Document Content Body */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -141,79 +139,94 @@ export const RefundPolicyPage: React.FC<RefundPolicyPageProps> = ({ onGoToHome, 
           >
             {/* Specular White Glow Accent */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_70%)] pointer-events-none blur-[60px]" />
-            {/* Overview / Preamble */}
-            <section id="sec-overview" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
-              <div className="space-y-3.5 pl-2 sm:pl-4 text-gray-300">
-                <p>
-                  This Refund Policy applies to all subscription purchases made for Murgii AI, Qreato Bolt, and related services offered by Qreato Labs (collectively, the "Service"), and forms part of our Terms of Service.
-                </p>
-              </div>
-            </section>
-
-            {/* Section 1: No Refunds */}
-            <section id="sec-1" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+            {/* Section 1: Scaling copy and execution across your organization */}
+            <section id="sec-scaling" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
                 <span className="font-mono text-purple-400 text-lg">1.</span>
-                <span>No Refunds</span>
+                <span>Scaling Copy and Execution Across Your Organization</span>
               </h2>
-              <div className="pl-2 sm:pl-4">
+              <div className="pl-2 sm:pl-4 text-gray-300">
                 <p>
-                  All payments for Core and Max subscription plans, and any other paid feature or add-on of the Service, are final and non-refundable once processed. This applies regardless of whether you have used the Service during the billing period, and regardless of the reason for cancellation, including but not limited to change of mind, dissatisfaction with Outputs, or discontinued use.
+                  If you're an agency, marketing team, or growing company that needs Murgii AI and Qreato Bolt across multiple people, we'd like to talk. We work directly with teams to figure out what setup actually fits — rather than forcing you into a rigid, one-size-fits-all plan.
                 </p>
               </div>
             </section>
 
-            {/* Section 2: Cancel Anytime, No Future Charges */}
-            <section id="sec-2" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+            {/* Section 2: What we can discuss */}
+            <section id="sec-discuss" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
                 <span className="font-mono text-purple-400 text-lg">2.</span>
-                <span>Cancel Anytime, No Future Charges</span>
+                <span>What We Can Discuss</span>
               </h2>
               <div className="pl-2 sm:pl-4">
-                <p>
-                  You may cancel your subscription at any time through your account settings or through Whop's customer portal. Cancelling stops all future billing, but does not entitle you to a refund for the current or any prior billing period. Your access to paid features will continue until the end of your current billing period, after which your account will revert to the free Basic plan.
-                </p>
+                <ul className="space-y-3 text-gray-300">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 size={16} className="text-purple-400 shrink-0 mt-1" />
+                    <span>Multi-seat access for your team</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 size={16} className="text-purple-400 shrink-0 mt-1" />
+                    <span>Custom daily generation volume based on your needs</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 size={16} className="text-purple-400 shrink-0 mt-1" />
+                    <span>Onboarding support to get your brand voice and workflows set up correctly</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 size={16} className="text-purple-400 shrink-0 mt-1" />
+                    <span>Priority support access</span>
+                  </li>
+                </ul>
               </div>
             </section>
 
-            {/* Section 3: Billing Errors */}
-            <section id="sec-3" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+            {/* Section 3: How it works */}
+            <section id="sec-works" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
                 <span className="font-mono text-purple-400 text-lg">3.</span>
-                <span>Billing Errors</span>
+                <span>How It Works</span>
               </h2>
-              <div className="pl-2 sm:pl-4">
+              <div className="pl-2 sm:pl-4 text-gray-300">
                 <p>
-                  If you believe you were charged in error — for example, a duplicate charge, an incorrect amount, or a charge after you properly cancelled before your renewal date — contact us within 14 days of the charge at the details in Section 5 below. We will investigate and, where a genuine billing error on our part is confirmed, issue a corrective refund or credit for that specific charge.
+                  There's no separate self-serve enterprise plan today — every team engagement starts with a conversation so we can understand your actual usage and needs, and quote something fair for your situation.
                 </p>
               </div>
             </section>
 
-            {/* Section 4: Legal Requirements */}
-            <section id="sec-4" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+            {/* Section 4: Get in touch */}
+            <section id="sec-contact" className="space-y-4 scroll-mt-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
                 <span className="font-mono text-purple-400 text-lg">4.</span>
-                <span>Legal Requirements</span>
+                <span>Get In Touch</span>
               </h2>
-              <div className="pl-2 sm:pl-4">
-                <p>
-                  Where applicable law in your jurisdiction grants you a non-waivable right to a refund or cancellation period, this Policy does not limit those rights. Nothing in this Policy is intended to override any statutory consumer protection you may be legally entitled to.
+              <div className="pl-2 sm:pl-4 space-y-4 text-gray-300">
+                <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3 font-mono text-xs sm:text-sm">
+                  <div className="flex items-center gap-3">
+                    <Mail size={16} className="text-purple-400 shrink-0" />
+                    <span>Email: <a href="mailto:salmanhossain75313@gmail.com" className="text-purple-300 underline hover:text-white transition-colors">salmanhossain75313@gmail.com</a></span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <MessageCircle size={16} className="text-purple-400 shrink-0" />
+                    <span>WhatsApp: <a href="https://wa.me/8801975230313" target="_blank" rel="noreferrer" className="text-purple-300 underline hover:text-white transition-colors">+880 1975-230313</a></span>
+                  </div>
+                </div>
+
+                <p className="text-gray-400 text-xs sm:text-sm italic">
+                  We typically respond within 1-2 business days.
                 </p>
               </div>
             </section>
 
-            {/* Section 5: Contact */}
-            <section id="sec-5" className="space-y-4 scroll-mt-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
-                <span className="font-mono text-purple-400 text-lg">5.</span>
-                <span>Contact</span>
-              </h2>
-              <div className="pl-2 sm:pl-4">
-                <p>
-                  Questions about this Refund Policy, or a billing error to report, can be sent to <a href="mailto:salmanhossain75313@gmail.com" className="text-purple-300 underline hover:text-white transition-colors">salmanhossain75313@gmail.com</a>, via WhatsApp at <a href="https://wa.me/8801975230313" target="_blank" rel="noreferrer" className="text-purple-300 underline hover:text-white transition-colors">+880 1975-230313</a>, or through Whop's support chat.
-                </p>
-              </div>
-            </section>
+            {/* Contact Call-To-Action Button */}
+            <div className="pt-4 text-center border-t border-white/10">
+              <a
+                href="mailto:salmanhossain75313@gmail.com"
+                className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-purple-900/30 hover:shadow-purple-700/50 transition-all cursor-pointer group"
+              >
+                <Mail size={16} className="group-hover:scale-110 transition-transform" />
+                <span>Contact Team Sales</span>
+              </a>
+            </div>
 
           </motion.div>
         </div>

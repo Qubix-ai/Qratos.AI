@@ -1,21 +1,40 @@
 import React from "react";
-import { ArrowLeft, Newspaper, Lock, ChevronRight, Mail, ExternalLink, MessageCircle } from "lucide-react";
+import { ArrowLeft, Shield, Lock, ChevronRight, Mail, MessageCircle, ExternalLink, CheckCircle2, FileText, Database, Server, Cpu, CreditCard } from "lucide-react";
 import { motion } from "motion/react";
 import LightPillar from "./LightPillar";
 
-interface MediaPageProps {
+interface TrustCentrePageProps {
   onGoToHome?: () => void;
   onGoToChat?: () => void;
+  onNavigatePolicy?: (policyKey: string) => void;
 }
 
 const TOC_SECTIONS = [
-  { id: "sec-about", number: "1", title: "About Qreato Labs" },
-  { id: "sec-facts", number: "2", title: "Company Facts" },
-  { id: "sec-assets", number: "3", title: "Brand Assets" },
-  { id: "sec-inquiries", number: "4", title: "Media Inquiries" },
+  { id: "sec-transparency", number: "1", title: "Transparency, by Design" },
+  { id: "sec-subprocessors", number: "2", title: "Our Subprocessors" },
+  { id: "sec-control", number: "3", title: "Data You Control" },
+  { id: "sec-policies", number: "4", title: "Our Policies" },
+  { id: "sec-status", number: "5", title: "Service Status" },
+  { id: "sec-questions", number: "6", title: "Questions & Contact" },
 ];
 
-export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) => {
+const SUBPROCESSORS = [
+  { provider: "Supabase", purpose: "Database, authentication, data storage", icon: Database },
+  { provider: "Vercel", purpose: "Application hosting", icon: Server },
+  { provider: "Google (Gemini API)", purpose: "AI-powered copy and content generation", icon: Cpu },
+  { provider: "Whop, Inc.", purpose: "Payment processing and subscription billing", icon: CreditCard },
+];
+
+const POLICY_LINKS = [
+  { name: "Terms of Service", path: "/terms", key: "terms" },
+  { name: "Privacy Policy", path: "/privacy", key: "privacy" },
+  { name: "Security", path: "/security", key: "security" },
+  { name: "Refund Policy", path: "/refund-policy", key: "refund" },
+  { name: "Platform Rules", path: "/platform-rules", key: "platform-rules" },
+  { name: "General Rules", path: "/general-rules", key: "general-rules" },
+];
+
+export const TrustCentrePage: React.FC<TrustCentrePageProps> = ({ onGoToHome, onGoToChat, onNavigatePolicy }) => {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -30,6 +49,16 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
       onGoToChat();
     } else if (typeof window !== "undefined") {
       window.history.pushState({}, "", "/");
+      window.dispatchEvent(new Event("popstate"));
+    }
+  };
+
+  const handlePolicyClick = (e: React.MouseEvent, path: string, key: string) => {
+    e.preventDefault();
+    if (onNavigatePolicy) {
+      onNavigatePolicy(key);
+    } else if (typeof window !== "undefined") {
+      window.history.pushState({}, "", path);
       window.dispatchEvent(new Event("popstate"));
     }
   };
@@ -68,8 +97,8 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
           </button>
 
           <div className="flex items-center gap-2 text-xs font-mono text-white/60 bg-white/[0.03] border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
-            <Newspaper size={14} className="text-purple-400" />
-            <span>Media & Press</span>
+            <Shield size={14} className="text-purple-400" />
+            <span>Trust & Compliance Hub</span>
           </div>
         </div>
 
@@ -78,7 +107,7 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-4 shadow-sm">
             <Lock size={13} className="text-purple-400" />
             <span className="text-[11px] font-mono uppercase tracking-widest text-white font-bold">
-              Qreato Labs Press Room
+              Qreato Labs Transparency
             </span>
           </div>
 
@@ -86,7 +115,7 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
             className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white font-nohemi leading-tight mb-4"
             style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
           >
-            MEDIA
+            TRUST CENTRE
           </h1>
 
           <p className="text-xs sm:text-sm font-mono text-gray-400 bg-white/[0.03] inline-block px-4 py-1.5 rounded-full border border-white/10">
@@ -106,10 +135,10 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
           >
             <h3 className="text-xs font-bold text-white uppercase tracking-[0.15em] font-mono border-b border-white/15 pb-3 flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-pink-400 shadow-[0_0_8px_rgba(244,114,182,0.8)]" />
+                <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
                 Navigation
               </span>
-              <span className="text-[10px] text-gray-400 font-normal">4 Sections</span>
+              <span className="text-[10px] text-gray-400 font-normal">6 Sections</span>
             </h3>
 
             <nav className="space-y-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
@@ -139,70 +168,136 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
           >
             {/* Specular White Glow Accent */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_70%)] pointer-events-none blur-[60px]" />
-            {/* Section 1: About Qreato Labs */}
-            <section id="sec-about" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+            {/* Section 1: Transparency, by design */}
+            <section id="sec-transparency" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
                 <span className="font-mono text-purple-400 text-lg">1.</span>
-                <span>About Qreato Labs</span>
+                <span>Transparency, by Design</span>
               </h2>
               <div className="pl-2 sm:pl-4 text-gray-300">
                 <p>
-                  Qreato Labs is the studio behind Murgii AI and Qreato Bolt — a connected system helping creators and founders turn ideas into persuasive marketing copy and executable business growth. Murgii AI is a dedicated copywriting engine trained specifically for direct-response marketing; Qreato Bolt is a structured execution roadmap for building and scaling a digital product business.
+                  This page is a central place to understand how Qreato Labs handles your data, who we work with to run the Service, and where to find our full policies.
                 </p>
               </div>
             </section>
 
-            {/* Section 2: Company Facts */}
-            <section id="sec-facts" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+            {/* Section 2: Our Subprocessors */}
+            <section id="sec-subprocessors" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
                 <span className="font-mono text-purple-400 text-lg">2.</span>
-                <span>Company Facts</span>
+                <span>Our Subprocessors</span>
+              </h2>
+              <div className="pl-2 sm:pl-4 space-y-4 text-gray-300">
+                <p>
+                  We work with the following third-party providers to operate Murgii AI and Qreato Bolt:
+                </p>
+
+                {/* Subprocessors Table / Clean Cards */}
+                <div className="overflow-hidden rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 bg-white/[0.05] font-mono text-xs uppercase text-white font-bold">
+                        <th className="py-3.5 px-4 sm:px-6">Provider</th>
+                        <th className="py-3.5 px-4 sm:px-6">Purpose</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10 text-xs sm:text-sm">
+                      {SUBPROCESSORS.map((item, idx) => {
+                        const IconComp = item.icon;
+                        return (
+                          <tr key={idx} className="hover:bg-white/[0.04] transition-colors">
+                            <td className="py-3.5 px-4 sm:px-6 font-semibold text-white flex items-center gap-2.5">
+                              <IconComp size={15} className="text-purple-400 shrink-0" />
+                              <span>{item.provider}</span>
+                            </td>
+                            <td className="py-3.5 px-4 sm:px-6 text-gray-300">{item.purpose}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <p className="text-xs sm:text-sm text-gray-400 italic">
+                  We do not sell your data to any of these providers or any other third party, and we do not use your Inputs or Outputs to train AI models beyond what's described in our Privacy Policy.
+                </p>
+              </div>
+            </section>
+
+            {/* Section 3: Data You Control */}
+            <section id="sec-control" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
+                <span className="font-mono text-purple-400 text-lg">3.</span>
+                <span>Data You Control</span>
               </h2>
               <div className="pl-2 sm:pl-4">
-                <ul className="space-y-2 list-disc list-inside text-gray-300">
-                  <li><strong className="text-white font-semibold">Founded:</strong> 2026</li>
-                  <li><strong className="text-white font-semibold">Products:</strong> Murgii AI, Qreato Bolt</li>
-                  <li><strong className="text-white font-semibold">Headquarters:</strong> Remote-first</li>
-                  <li>
-                    <strong className="text-white font-semibold">Website:</strong>{" "}
-                    <a 
-                      href="https://murgii.vercel.app" 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="text-purple-300 underline hover:text-white transition-colors inline-flex items-center gap-1"
-                    >
-                      murgii.vercel.app
-                      <ExternalLink size={12} className="inline opacity-70" />
-                    </a>
+                <ul className="space-y-3 text-gray-300">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 size={16} className="text-purple-400 shrink-0 mt-1" />
+                    <span>You can delete your saved Memory & Personalization data at any time from your account settings.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 size={16} className="text-purple-400 shrink-0 mt-1" />
+                    <span>You can request a copy or deletion of your account data by contacting us directly.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 size={16} className="text-purple-400 shrink-0 mt-1" />
+                    <span>Copy Score Challenge results you generate are only made public if you choose to share them.</span>
                   </li>
                 </ul>
               </div>
             </section>
 
-            {/* Section 3: Brand Assets */}
-            <section id="sec-assets" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+            {/* Section 4: Our Policies */}
+            <section id="sec-policies" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
-                <span className="font-mono text-purple-400 text-lg">3.</span>
-                <span>Brand Assets</span>
+                <span className="font-mono text-purple-400 text-lg">4.</span>
+                <span>Our Policies</span>
+              </h2>
+              <div className="pl-2 sm:pl-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {POLICY_LINKS.map((policy) => (
+                    <a
+                      key={policy.key}
+                      href={policy.path}
+                      onClick={(e) => handlePolicyClick(e, policy.path, policy.key)}
+                      className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-white/20 text-gray-200 hover:text-white transition-all group cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+                        <FileText size={15} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                        <span>{policy.name}</span>
+                      </span>
+                      <ExternalLink size={13} className="text-gray-400 group-hover:text-white transition-colors" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Section 5: Service Status */}
+            <section id="sec-status" className="space-y-4 scroll-mt-8 border-b border-white/10 pb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
+                <span className="font-mono text-purple-400 text-lg">5.</span>
+                <span>Service Status</span>
               </h2>
               <div className="pl-2 sm:pl-4 text-gray-300">
                 <p>
-                  For logo files, brand colors, and usage guidelines, contact us directly using the details below. We're happy to provide high-resolution assets for approved press or partnership use.
+                  We do not currently operate a public status/uptime monitoring page. If you're experiencing an issue with the Service, please contact us directly and we'll investigate promptly.
                 </p>
               </div>
             </section>
 
-            {/* Section 4: Media Inquiries */}
-            <section id="sec-inquiries" className="space-y-4 scroll-mt-8">
+            {/* Section 6: Questions */}
+            <section id="sec-questions" className="space-y-4 scroll-mt-8">
               <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight font-nohemi flex items-center gap-2">
-                <span className="font-mono text-purple-400 text-lg">4.</span>
-                <span>Media Inquiries</span>
+                <span className="font-mono text-purple-400 text-lg">6.</span>
+                <span>Questions</span>
               </h2>
               <div className="pl-2 sm:pl-4 space-y-4 text-gray-300">
                 <p>
-                  For interview requests, press inquiries, or partnership coverage, reach out to:
+                  If you have questions about how we handle data or operate the Service, reach out:
                 </p>
-                
+
                 <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3 font-mono text-xs sm:text-sm">
                   <div className="flex items-center gap-3">
                     <Mail size={16} className="text-purple-400 shrink-0" />
@@ -213,10 +308,6 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
                     <span>WhatsApp: <a href="https://wa.me/8801975230313" target="_blank" rel="noreferrer" className="text-purple-300 underline hover:text-white transition-colors">+880 1975-230313</a></span>
                   </div>
                 </div>
-
-                <p className="text-gray-400 text-xs sm:text-sm italic">
-                  We aim to respond to media inquiries within 2-3 business days.
-                </p>
               </div>
             </section>
 
@@ -227,7 +318,7 @@ export const MediaPage: React.FC<MediaPageProps> = ({ onGoToHome, onGoToChat }) 
                 className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-purple-900/30 hover:shadow-purple-700/50 transition-all cursor-pointer group"
               >
                 <Mail size={16} className="group-hover:scale-110 transition-transform" />
-                <span>Contact Media Team</span>
+                <span>Contact Support</span>
               </a>
             </div>
 

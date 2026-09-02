@@ -936,6 +936,57 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                         >
                           {item.label}
                         </a>
+                      ) : item.label === "Enterprise" ? (
+                        <a
+                          href="/enterprise"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("enterprise");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/enterprise");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : item.label === "Security" ? (
+                        <a
+                          href="/security"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("security");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/security");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : item.label === "Trust Centre" || item.label === "Trust Center" ? (
+                        <a
+                          href="/trust-centre"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate) {
+                              onNavigate("trust-centre");
+                            } else if (typeof window !== "undefined") {
+                              window.history.pushState({}, "", "/trust-centre");
+                              window.dispatchEvent(new Event("popstate"));
+                            }
+                          }}
+                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                          style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        >
+                          {item.label}
+                        </a>
                       ) : (
                         <button
                           type="button"
