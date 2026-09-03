@@ -21,6 +21,11 @@ import { MediaPage } from "./components/MediaPage";
 import { EnterprisePage } from "./components/EnterprisePage";
 import { SecurityPage } from "./components/SecurityPage";
 import { TrustCentrePage } from "./components/TrustCentrePage";
+import { LearnPage } from "./components/LearnPage";
+import { GuidesPage } from "./components/GuidesPage";
+import { AffiliatesPage } from "./components/AffiliatesPage";
+import { SupportPage } from "./components/SupportPage";
+import { ReviewsPage } from "./components/ReviewsPage";
 import { AnimatePresence, motion } from "motion/react";
 import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
 import { AmbientBackground } from "./components/AmbientBackground";
@@ -87,6 +92,36 @@ export default function App() {
     return p === "/trust-centre" || p === "/trust-center" || p === "/trust";
   };
 
+  const checkIsLearnPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/learn" || p === "/getting-started" || p === "/help";
+  };
+
+  const checkIsGuidesPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/guides" || p === "/guide";
+  };
+
+  const checkIsAffiliatesPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/affiliates" || p === "/affiliate" || p === "/partner" || p === "/partners";
+  };
+
+  const checkIsSupportPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/support" || p === "/help" || p === "/contact";
+  };
+
+  const checkIsReviewsPath = () => {
+    if (typeof window === "undefined") return false;
+    const p = window.location.pathname.toLowerCase();
+    return p === "/reviews" || p === "/testimonials";
+  };
+
   const [challengeSlug, setChallengeSlug] = useState<string | null>(getSlugFromPath());
   const [isTermsPage, setIsTermsPage] = useState<boolean>(checkIsTermsPath());
   const [isPrivacyPage, setIsPrivacyPage] = useState<boolean>(checkIsPrivacyPath());
@@ -97,6 +132,11 @@ export default function App() {
   const [isEnterprisePage, setIsEnterprisePage] = useState<boolean>(checkIsEnterprisePath());
   const [isSecurityPage, setIsSecurityPage] = useState<boolean>(checkIsSecurityPath());
   const [isTrustCentrePage, setIsTrustCentrePage] = useState<boolean>(checkIsTrustCentrePath());
+  const [isLearnPage, setIsLearnPage] = useState<boolean>(checkIsLearnPath());
+  const [isGuidesPage, setIsGuidesPage] = useState<boolean>(checkIsGuidesPath());
+  const [isAffiliatesPage, setIsAffiliatesPage] = useState<boolean>(checkIsAffiliatesPath());
+  const [isSupportPage, setIsSupportPage] = useState<boolean>(checkIsSupportPath());
+  const [isReviewsPage, setIsReviewsPage] = useState<boolean>(checkIsReviewsPath());
   const [user, setUser] = useState<any>(null);
   const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 3 });
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
@@ -123,6 +163,11 @@ export default function App() {
       setIsEnterprisePage(checkIsEnterprisePath());
       setIsSecurityPage(checkIsSecurityPath());
       setIsTrustCentrePage(checkIsTrustCentrePath());
+      setIsLearnPage(checkIsLearnPath());
+      setIsGuidesPage(checkIsGuidesPath());
+      setIsAffiliatesPage(checkIsAffiliatesPath());
+      setIsSupportPage(checkIsSupportPath());
+      setIsReviewsPage(checkIsReviewsPath());
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -623,6 +668,257 @@ export default function App() {
     );
   }
 
+  if (isLearnPage || activeTab === "learn") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <LearnPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsLearnPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsLearnPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+          onNavigate={(tab) => {
+            setIsLearnPage(false);
+            if (tab === "guides") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/guides");
+              setIsGuidesPage(true);
+              setActiveTab("guides");
+            } else if (tab === "memory") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/memory");
+              if (user) setActiveTab("memory");
+              else handleStartWriting("login");
+            } else if (tab === "challenge") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/challenge");
+              handleStartChallenge();
+            } else if (tab === "prompt-builder") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/prompt-builder");
+              setActiveTab("prompt-builder");
+            } else if (tab === "pricing") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/pricing");
+              setActiveTab("pricing");
+            } else if (tab === "chat") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              if (user) setActiveTab("chat");
+              else handleStartWriting("login");
+            } else {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              setActiveTab("landing");
+            }
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isGuidesPage || activeTab === "guides") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <GuidesPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsGuidesPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsGuidesPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+          onNavigate={(tab) => {
+            setIsGuidesPage(false);
+            if (tab === "learn") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/learn");
+              setIsLearnPage(true);
+              setActiveTab("learn");
+            } else if (tab === "chat") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              if (user) setActiveTab("chat");
+              else handleStartWriting("login");
+            } else {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              setActiveTab("landing");
+            }
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isSupportPage || activeTab === "support") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <SupportPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsSupportPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsSupportPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+          onNavigate={(tab) => {
+            setIsSupportPage(false);
+            if (tab === "chat") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              if (user) setActiveTab("chat");
+              else handleStartWriting("login");
+            } else {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              setActiveTab("landing");
+            }
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isReviewsPage || activeTab === "reviews") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <ReviewsPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsReviewsPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsReviewsPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+          onNavigate={(tab) => {
+            setIsReviewsPage(false);
+            if (tab === "chat") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              if (user) setActiveTab("chat");
+              else handleStartWriting("login");
+            } else {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              setActiveTab("landing");
+            }
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isAffiliatesPage || activeTab === "affiliates") {
+    return (
+      <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
+        <AmbientBackground />
+        <FilmGrainOverlay />
+        <SpotlightCursor />
+        <AffiliatesPage 
+          onGoToHome={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsAffiliatesPage(false);
+            setActiveTab("landing");
+          }}
+          onGoToChat={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+            }
+            setIsAffiliatesPage(false);
+            setActiveTab(user ? "chat" : "landing");
+          }}
+          onNavigate={(tab) => {
+            setIsAffiliatesPage(false);
+            if (tab === "chat") {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              if (user) setActiveTab("chat");
+              else handleStartWriting("login");
+            } else {
+              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
+              setActiveTab("landing");
+            }
+          }}
+        />
+        <AuthModal 
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onSuccess={() => {
+            setAuthModalOpen(false);
+            setActiveTab("chat");
+          }}
+        />
+      </div>
+    );
+  }
+
   if (loading || showSplash || !authResolved) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
@@ -701,6 +997,24 @@ export default function App() {
               }
               setIsTrustCentrePage(true);
               setActiveTab("trust-centre");
+            } else if (tab === "learn" || tab === "getting-started") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/learn");
+              }
+              setIsLearnPage(true);
+              setActiveTab("learn");
+            } else if (tab === "guides" || tab === "guide") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/guides");
+              }
+              setIsGuidesPage(true);
+              setActiveTab("guides");
+            } else if (tab === "affiliates" || tab === "affiliate" || tab === "partner") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/affiliates");
+              }
+              setIsAffiliatesPage(true);
+              setActiveTab("affiliates");
             } else if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {
@@ -806,6 +1120,24 @@ export default function App() {
               }
               setIsTrustCentrePage(true);
               setActiveTab("trust-centre");
+            } else if (tab === "learn" || tab === "getting-started") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/learn");
+              }
+              setIsLearnPage(true);
+              setActiveTab("learn");
+            } else if (tab === "guides" || tab === "guide") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/guides");
+              }
+              setIsGuidesPage(true);
+              setActiveTab("guides");
+            } else if (tab === "affiliates" || tab === "affiliate" || tab === "partner") {
+              if (typeof window !== "undefined") {
+                window.history.pushState({}, "", "/affiliates");
+              }
+              setIsAffiliatesPage(true);
+              setActiveTab("affiliates");
             } else if (tab === "pricing") {
               setActiveTab("pricing");
             } else if (tab === "prompt-builder") {

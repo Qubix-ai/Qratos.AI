@@ -902,7 +902,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             </div>
 
             {/* CATEGORIZED FOOTER SECTIONS */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-10 xl:gap-12 w-full xl:w-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 sm:gap-6 lg:gap-8 flex-1 w-full">
               {/* 1. COMPANY */}
               <div className="space-y-4">
                 <h4 
@@ -913,90 +913,28 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 </h4>
                 <ul className="space-y-2.5">
                   {[
-                    { label: "Media", desc: "Press inquiries, brand assets, and media releases for Murgii AI & Qreato Labs." },
-                    { label: "Enterprise", desc: "Custom AI deployment, bespoke compliance, and tailored SLAs for enterprise teams." },
-                    { label: "Security", desc: "End-to-end data encryption, private token routing, and rigorous isolation controls." },
-                    { label: "Trust Centre", desc: "Live uptime status, data privacy commitments, and subprocessor transparency." }
+                    { label: "Media", href: "/media", key: "media" },
+                    { label: "Enterprise", href: "/enterprise", key: "enterprise" },
+                    { label: "Security", href: "/security", key: "security" },
+                    { label: "Trust Centre", href: "/trust-centre", key: "trust-centre" }
                   ].map((item, i) => (
                     <li key={i}>
-                      {item.label === "Media" ? (
-                        <a
-                          href="/media"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("media");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/media");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.label === "Enterprise" ? (
-                        <a
-                          href="/enterprise"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("enterprise");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/enterprise");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.label === "Security" ? (
-                        <a
-                          href="/security"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("security");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/security");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.label === "Trust Centre" || item.label === "Trust Center" ? (
-                        <a
-                          href="/trust-centre"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("trust-centre");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/trust-centre");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setInfoModal({ title: item.label, content: item.desc })}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </button>
-                      )}
+                      <a
+                        href={item.href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (onNavigate) {
+                            onNavigate(item.key);
+                          } else if (typeof window !== "undefined") {
+                            window.history.pushState({}, "", item.href);
+                            window.dispatchEvent(new Event("popstate"));
+                          }
+                        }}
+                        className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                        style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      >
+                        {item.label}
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -1012,108 +950,29 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 </h4>
                 <ul className="space-y-2.5">
                   {[
-                    { label: "Terms of Service", desc: "Terms governing use of Murgii AI services, software, and APIs by Qreato Labs." },
-                    { label: "Privacy Policy", desc: "How we securely handle, protect, and process user workspace information." },
-                    { label: "Refund Policy", desc: "Subscription billing, refund qualifications, and cancellation procedures." },
-                    { label: "Platform Rules", desc: "Guidelines ensuring safe, responsible, and compliant copy generation across channels." },
-                    { label: "General Rules", desc: "Standards for acceptable platform behavior, account sharing, and workspace quotas." }
+                    { label: "Terms of Service", href: "/terms", key: "terms" },
+                    { label: "Privacy Policy", href: "/privacy", key: "privacy" },
+                    { label: "Refund Policy", href: "/refund-policy", key: "refund-policy" },
+                    { label: "Platform Rules", href: "/platform-rules", key: "platform-rules" },
+                    { label: "General Rules", href: "/general-rules", key: "general-rules" }
                   ].map((item, i) => (
                     <li key={i}>
-                      {item.label === "Terms of Service" ? (
-                        <a
-                          href="/terms"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("terms");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/terms");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.label === "Privacy Policy" ? (
-                        <a
-                          href="/privacy"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("privacy");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/privacy");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.label === "Refund Policy" ? (
-                        <a
-                          href="/refund-policy"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("refund-policy");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/refund-policy");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.label === "Platform Rules" ? (
-                        <a
-                          href="/platform-rules"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("platform-rules");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/platform-rules");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : item.label === "General Rules" ? (
-                        <a
-                          href="/general-rules"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (onNavigate) {
-                              onNavigate("general-rules");
-                            } else if (typeof window !== "undefined") {
-                              window.history.pushState({}, "", "/general-rules");
-                              window.dispatchEvent(new Event("popstate"));
-                            }
-                          }}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setInfoModal({ title: item.label, content: item.desc })}
-                          className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                          style={{ fontFamily: "'Nohemi', sans-serif" }}
-                        >
-                          {item.label}
-                        </button>
-                      )}
+                      <a
+                        href={item.href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (onNavigate) {
+                            onNavigate(item.key);
+                          } else if (typeof window !== "undefined") {
+                            window.history.pushState({}, "", item.href);
+                            window.dispatchEvent(new Event("popstate"));
+                          }
+                        }}
+                        className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
+                        style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      >
+                        {item.label}
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -1146,9 +1005,16 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                   </li>
                   <li>
                     <a
-                      href="https://whop.com/qreato/ai-leverage"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href="/affiliates"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (onNavigate) {
+                          onNavigate("affiliates");
+                        } else if (typeof window !== "undefined") {
+                          window.history.pushState({}, "", "/affiliates");
+                          window.dispatchEvent(new Event("popstate"));
+                        }
+                      }}
                       className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
                       style={{ fontFamily: "'Nohemi', sans-serif" }}
                     >
@@ -1178,20 +1044,28 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 </h4>
                 <ul className="space-y-2.5">
                   {[
-                    { label: "Learn", desc: "Tutorials on persuasion psychology, conversion copy models, and prompt engineering." },
-                    { label: "Guides", desc: "Step-by-step master blueprints for scaling cold emails, video ad scripts, and sales pages." },
-                    { label: "Support", desc: "24/7 dedicated assistance via our priority community desk and direct engineer support." },
-                    { label: "Reviews", desc: "Verified testimonials from founders and agencies generating scalable copy revenue." }
+                    { label: "Learn", href: "/learn", key: "learn" },
+                    { label: "Guides", href: "/guides", key: "guides" },
+                    { label: "Support", href: "/support", key: "support" },
+                    { label: "Reviews", href: "/reviews", key: "reviews" }
                   ].map((item, i) => (
                     <li key={i}>
-                      <button
-                        type="button"
-                        onClick={() => setInfoModal({ title: item.label, content: item.desc })}
+                      <a
+                        href={item.href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (onNavigate) {
+                            onNavigate(item.key);
+                          } else if (typeof window !== "undefined") {
+                            window.history.pushState({}, "", item.href);
+                            window.dispatchEvent(new Event("popstate"));
+                          }
+                        }}
                         className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
                         style={{ fontFamily: "'Nohemi', sans-serif" }}
                       >
                         {item.label}
-                      </button>
+                      </a>
                     </li>
                   ))}
                 </ul>
