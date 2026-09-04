@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Trophy, 
-  Sparkles, 
   ArrowRight, 
   ArrowLeft, 
   Share2, 
   Copy, 
   Check, 
-  ExternalLink,
   Target,
   Zap,
   Flame,
@@ -20,10 +18,11 @@ import {
   Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toPng } from "html-to-image";
 import { supabase } from "../lib/supabase";
 import { copyToClipboard } from "../lib/clipboard";
 import { QreatoLogo } from "./QreatoLogo";
+import { StoryScoreCard, getScoreTierConfig } from "./StoryScoreCard";
+import { captureStoryImage, executeUnifiedShare } from "../lib/storyCapture";
 
 interface ChallengeRecord {
   overall_score: number;
@@ -76,12 +75,16 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   onGoToSignup,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const storyCardRef = useRef<HTMLDivElement>(null);
+  const pregeneratedFileRef = useRef<File | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<ChallengeRecord | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [instagramToast, setInstagramToast] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -142,7 +145,6 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
           // fallback
         }
 
-        // Not found in database
         setNotFound(true);
       } catch (err) {
         console.error("Error fetching challenge result:", err);
@@ -156,6 +158,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   }, [slug]);
 
   const overallScore = result?.overall_score ?? 0;
+  const config = getScoreTierConfig(overallScore);
   const shareUrl = typeof window !== "undefined" ? window.location.href : `https://murgii.vercel.app/challenge/${slug}`;
   
   const rawUserCopy = (result?.user_copy || result?.copy || result?.prompt || result?.brief || "").trim();
@@ -176,6 +179,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
     cleaned = cleaned.replace(/^["'“«]+|["'”»]+$/g, "").trim();
     return cleaned || rawUserCopy;
   })();
+
   const copySnippet = evaluatedUserCopy 
     ? (evaluatedUserCopy.length > 55 ? evaluatedUserCopy.slice(0, 52) + "..." : evaluatedUserCopy)
     : "";
@@ -184,19 +188,23 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
     ? `I scored ${overallScore}/100 on Qreato Copy Challenge for: "${copySnippet}" — Can you beat me?`
     : `I scored ${overallScore}/100 on Qreato Copy Challenge. Can you beat me?`;
 
-  const pregeneratedFileRef = useRef<File | null>(null);
+  const generateStoryFile = async (): Promise<File | null> => {
+    if (!storyCardRef.current) return null;
+    const filename = `qreato-challenge-${slug || overallScore}.png`;
+    return await captureStoryImage(storyCardRef.current, filename);
+  };
 
   useEffect(() => {
     let isMounted = true;
     const timer = setTimeout(async () => {
-      if (cardRef.current && isMounted && !pregeneratedFileRef.current) {
+      if (storyCardRef.current && isMounted && !pregeneratedFileRef.current) {
         try {
-          const file = await generateScorecardFile();
+          const file = await generateStoryFile();
           if (file && isMounted) {
             pregeneratedFileRef.current = file;
           }
         } catch (e) {
-          console.warn("Background challenge pregeneration:", e);
+          console.warn("Background challenge pregeneration error:", e);
         }
       }
     }, 350);
@@ -205,45 +213,6 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
       clearTimeout(timer);
     };
   }, [overallScore, slug, evaluatedUserCopy]);
-
-  const generateScorecardFile = async (): Promise<File | null> => {
-    if (!cardRef.current) return null;
-    try {
-      // Pass 1: Warm up SVG layout & font engine in html-to-image
-      await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 1.5,
-        backgroundColor: "#0B0813",
-        filter: (node) => {
-          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
-            return false;
-          }
-          return true;
-        },
-      });
-
-      // Pass 2: High-DPI final capture
-      const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: "#0B0813",
-        filter: (node) => {
-          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
-            return false;
-          }
-          return true;
-        },
-      });
-
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const filename = `qreato-challenge-${slug || overallScore}.png`;
-      return new File([blob], filename, { type: "image/png" });
-    } catch (err) {
-      console.warn("Failed to generate scorecard file:", err);
-      return null;
-    }
-  };
 
   const handleCopyLink = async () => {
     const success = await copyToClipboard(shareUrl);
@@ -254,20 +223,42 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
     }
   };
 
-  const handleShareX = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+  const handleUnifiedShare = async () => {
+    if (isSharing) return;
+    setIsSharing(true);
+
+    try {
+      let imageFile = pregeneratedFileRef.current;
+      if (!imageFile) {
+        setIsGenerating(true);
+        showToast("Generating 1080x1920 Story card...");
+        imageFile = await generateStoryFile();
+        setIsGenerating(false);
+        if (imageFile) {
+          pregeneratedFileRef.current = imageFile;
+        } else {
+          showToast("Failed to generate card image. Tap to retry.");
+          setIsSharing(false);
+          return;
+        }
+      }
+
+      await executeUnifiedShare({
+        imageFile,
+        shareText,
+        shareUrl,
+        onShowToast: showToast,
+      });
+    } catch (err) {
+      console.error("Share error:", err);
+      showToast("Failed to share card. Retrying...");
+    } finally {
+      setIsSharing(false);
+    }
   };
 
-  const handleShareFacebook = () => {
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-    window.open(fbUrl, "_blank", "noopener,noreferrer");
-  };
-
-  const handleShareInstagram = async () => {
+  const handleShareX = async () => {
     let imageFile = pregeneratedFileRef.current;
-
-    // Direct synchronous navigator.share if file is pre-generated
     if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
       if (navigator.canShare({ files: [imageFile] })) {
         try {
@@ -276,80 +267,58 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
             title: "Qreato Copy Score",
             text: `${shareText} ${shareUrl}`,
           });
-          showToast("Scorecard shared to Instagram / Story!");
           return;
-        } catch (shareErr: any) {
-          if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
-            return;
-          }
+        } catch (e: any) {
+          if (e && e.name === "AbortError") return;
         }
       }
     }
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+  };
 
-    if (!imageFile) {
-      showToast("Preparing scorecard image...");
-      imageFile = await generateScorecardFile();
-      if (imageFile) pregeneratedFileRef.current = imageFile;
-    }
-
-    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
+  const handleShareFacebook = async () => {
+    let imageFile = pregeneratedFileRef.current;
+    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+      if (navigator.canShare({ files: [imageFile] })) {
+        try {
           await navigator.share({
             files: [imageFile],
             title: "Qreato Copy Score",
             text: `${shareText} ${shareUrl}`,
           });
-          showToast("Scorecard image shared!");
           return;
-        } else {
-          await navigator.share({
-            title: "Qreato Copy Score",
-            text: shareText,
-            url: shareUrl,
-          });
-          return;
-        }
-      } catch (shareErr: any) {
-        if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
-          return;
+        } catch (e: any) {
+          if (e && e.name === "AbortError") return;
         }
       }
     }
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+    window.open(fbUrl, "_blank", "noopener,noreferrer");
+  };
 
-    if (imageFile) {
-      const objectUrl = URL.createObjectURL(imageFile);
-      const downloadLink = document.createElement("a");
-      downloadLink.download = imageFile.name;
-      downloadLink.href = objectUrl;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    }
-    await copyToClipboard(`${shareText} ${shareUrl}`);
-    setInstagramToast(true);
-    setTimeout(() => setInstagramToast(false), 3500);
-    showToast("Scorecard saved to photos & link copied! Opening Instagram...");
-
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.location.href = "instagram://story-camera";
-      setTimeout(() => {
-        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-      }, 1000);
-    } else {
-      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-    }
+  const handleShareInstagram = async () => {
+    await handleUnifiedShare();
   };
 
   const handleDownloadCard = async () => {
-    if (!cardRef.current || isDownloading) return;
+    if (isDownloading) return;
     setIsDownloading(true);
 
     try {
-      const imageFile = await generateScorecardFile();
-      if (!imageFile) throw new Error("Could not generate image file");
+      let imageFile = pregeneratedFileRef.current;
+      if (!imageFile) {
+        setIsGenerating(true);
+        showToast("Generating 1080x1920 Story image...");
+        imageFile = await generateStoryFile();
+        setIsGenerating(false);
+        if (imageFile) pregeneratedFileRef.current = imageFile;
+      }
+
+      if (!imageFile) {
+        showToast("Failed to generate image. Tap to retry.");
+        return;
+      }
 
       const objectUrl = URL.createObjectURL(imageFile);
       const downloadLink = document.createElement("a");
@@ -360,103 +329,113 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
       document.body.removeChild(downloadLink);
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
-      showToast("Scorecard image downloaded!");
+      showToast("Scorecard saved to gallery!");
     } catch (err) {
-      console.error("Failed to download scorecard image:", err);
+      console.error("Failed to save scorecard:", err);
       showToast("Failed to save image. Please try again.");
     } finally {
       setIsDownloading(false);
     }
   };
 
-  // Determine score color badge & tier
-  const getScoreTier = (score: number) => {
-    if (score >= 90) return { label: "ELITE PERSUASION", color: "text-[#10B981]", glow: "rgba(16, 185, 129, 0.4)", bg: "bg-[#10B981]/15 border-[#10B981]/30", border: "border-[#10B981]/40" };
-    if (score >= 80) return { label: "HIGH CONVERTING", color: "text-[#3B82F6]", glow: "rgba(59, 130, 246, 0.4)", bg: "bg-[#3B82F6]/15 border-[#3B82F6]/30", border: "border-[#3B82F6]/40" };
-    if (score >= 70) return { label: "SOLID PERSUASION", color: "text-[#8B5CF6]", glow: "rgba(139, 92, 246, 0.4)", bg: "bg-[#8B5CF6]/15 border-[#8B5CF6]/30", border: "border-[#8B5CF6]/40" };
-    if (score >= 60) return { label: "PROMISING DRAFT", color: "text-[#F59E0B]", glow: "rgba(245, 158, 11, 0.4)", bg: "bg-[#F59E0B]/15 border-[#F59E0B]/30", border: "border-[#F59E0B]/40" };
-    return { label: "NEEDS OPTIMIZATION", color: "text-[#EF4444]", glow: "rgba(239, 68, 68, 0.4)", bg: "bg-[#EF4444]/15 border-[#EF4444]/30", border: "border-[#EF4444]/40" };
-  };
-
-  const tier = getScoreTier(overallScore);
-
-  const dimensions = [
+  const dimensionsList = [
     {
       id: "attention",
-      label: "Attention",
-      score: result?.attention_score ?? Math.round(overallScore * 0.98),
-      desc: "Hook velocity & pattern interrupt",
+      label: "Hook Retention",
+      score: result?.attention_score ?? Math.round(overallScore * 0.95),
+      color: "from-amber-400 to-amber-600",
+      textColor: "text-amber-400",
+      desc: "Captures scroll attention in 3 seconds",
       icon: Flame,
-      color: "from-amber-500 to-orange-500",
-      textColor: "text-orange-400"
     },
     {
       id: "clarity",
-      label: "Clarity",
+      label: "Value Clarity",
       score: result?.clarity_score ?? Math.round(overallScore * 1.02),
-      desc: "Value proposition & zero cognitive drag",
-      icon: Sparkles,
-      color: "from-blue-500 to-cyan-500",
-      textColor: "text-cyan-400"
+      color: "from-sky-400 to-blue-600",
+      textColor: "text-sky-400",
+      desc: "Communicates zero-ambiguity value proposition",
+      icon: Brain,
     },
     {
       id: "desire",
-      label: "Desire",
-      score: result?.desire_score ?? Math.round(overallScore * 0.95),
-      desc: "Emotional tension & mechanism pull",
-      icon: Zap,
-      color: "from-purple-500 to-pink-500",
-      textColor: "text-purple-400"
+      label: "Desire Building",
+      score: result?.desire_score ?? Math.round(overallScore * 0.98),
+      color: "from-purple-400 to-indigo-600",
+      textColor: "text-purple-400",
+      desc: "Triggers visceral emotional aspiration",
+      icon: Target,
     },
     {
       id: "persuasion",
-      label: "Persuasion",
-      score: result?.persuasion_score ?? Math.round(overallScore * 1.01),
-      desc: "Objection inversion & conviction stack",
-      icon: Brain,
-      color: "from-emerald-500 to-teal-500",
-      textColor: "text-emerald-400"
+      label: "Persuasion Force",
+      score: result?.persuasion_score ?? overallScore,
+      color: "from-emerald-400 to-teal-600",
+      textColor: "text-emerald-400",
+      desc: "Overcomes cognitive friction and objections",
+      icon: ShieldCheck,
     },
     {
       id: "action",
-      label: "Action",
-      score: result?.action_score ?? Math.round(overallScore * 0.97),
-      desc: "Frictionless CTA & outcome specificity",
-      icon: Target,
-      color: "from-rose-500 to-red-500",
-      textColor: "text-rose-400"
+      label: "Action Urgency",
+      score: result?.action_score ?? Math.round(overallScore * 0.92),
+      color: "from-rose-400 to-red-600",
+      textColor: "text-rose-400",
+      desc: "Compels immediate commitment and conversion",
+      icon: Zap,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#07060B] text-white flex flex-col font-sans selection:bg-white/20 selection:text-white relative overflow-x-hidden w-full max-w-full">
-      {/* Ambient background accents */}
-      <div 
-        className="fixed top-0 left-1/2 -translate-x-1/2 w-[90vw] max-w-[700px] h-[500px] rounded-full blur-[140px] pointer-events-none opacity-20"
-        style={{ background: tier.glow }}
-      />
-      <div className="fixed -bottom-40 right-0 sm:right-10 w-[80vw] max-w-[500px] h-[500px] bg-purple-900/15 rounded-full blur-[160px] pointer-events-none" />
-
-      {/* Header Bar */}
-      <header className="relative z-20 border-b border-white/10 bg-black/40 backdrop-blur-xl px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div 
-          onClick={onGoToHome}
-          className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
-        >
-          <div className="w-8 h-8 rounded-xl bg-black border border-white/20 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-            <QreatoLogo size={18} className="text-white" dotClassName="text-white fill-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-black tracking-tight text-white font-['Nohemi',sans-serif]">QREATO</span>
-            <span className="text-[9px] uppercase font-mono tracking-widest text-white/50">Copy Persuasion Engine</span>
-          </div>
+    <div className="min-h-screen bg-[#07050E] text-white flex flex-col font-sans selection:bg-white/20 relative overflow-x-hidden">
+      {/* 
+        OFF-SCREEN FIXED 1080x1920 INSTAGRAM STORY CANVAS CAPTURE NODE
+      */}
+      <div
+        style={{
+          position: "fixed",
+          top: "-9999px",
+          left: "-9999px",
+          width: "1080px",
+          height: "1920px",
+          overflow: "hidden",
+          pointerEvents: "none",
+          zIndex: -9999,
+        }}
+        aria-hidden="true"
+      >
+        <div ref={storyCardRef} style={{ width: "1080px", height: "1920px" }}>
+          <StoryScoreCard
+            overallScore={overallScore}
+            shareSlug={slug}
+            userCopy={evaluatedUserCopy}
+            biggestLeverage={result?.biggest_leverage}
+            diagnosis={result?.diagnosis}
+          />
         </div>
+      </div>
 
-        <div className="flex items-center gap-3">
+      {/* Top Header */}
+      <header className="relative z-10 w-full border-b border-white/10 bg-black/40 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onGoToHome}
+          className="flex items-center gap-2 group cursor-pointer"
+        >
+          <QreatoLogo size={28} className="text-white group-hover:scale-105 transition-transform" />
+          <span 
+            className="text-base sm:text-lg font-bold tracking-tight text-white font-nohemi"
+            style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+          >
+            Qreato
+          </span>
+        </button>
+
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onGoToHome}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.12] text-xs font-semibold text-white/80 hover:text-white transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.12] text-xs font-medium text-white/80 hover:text-white transition-all cursor-pointer"
           >
             <ArrowLeft size={13} />
             <span>Home</span>
@@ -529,23 +508,27 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                 Can you beat this score?
               </h1>
               <p className="text-sm sm:text-base text-white/60 max-w-lg mx-auto">
-                An operator put their copy against Qreato's rigorous persuasion evaluation engine. Here is how it scored:
+                An operator put their copy against Qreato's persuasion evaluation engine. Here is how it scored:
               </p>
             </div>
 
             {/* Primary Score Card Frame */}
             <div 
               ref={cardRef}
-              className={`relative rounded-3xl border ${tier.border} ring-1 ring-white/10 bg-[#0B0813] p-6 sm:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden`}
+              className="relative rounded-3xl border p-6 sm:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden"
+              style={{
+                backgroundColor: config.cardBg,
+                borderColor: config.cardBorder,
+              }}
             >
               {/* Internal ambient glow */}
               <div 
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none opacity-25"
-                style={{ background: tier.glow }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[100px] pointer-events-none opacity-30"
+                style={{ background: config.radialGlow }}
               />
 
               <div className="relative z-10 flex flex-col items-center text-center">
-                {/* Top Header Bar: Qreato Brand Mark on Left | "Test your own copy" & "murgii.vercel.app" on Right */}
+                {/* Top Header Bar */}
                 <div className="w-full flex items-center justify-between mb-4 pb-2 border-b border-white/[0.08]">
                   <div className="flex items-center" title="Qreato">
                     <QreatoLogo size={32} className="text-white" dotClassName="text-white fill-white" />
@@ -575,7 +558,10 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                     Overall Persuasion Rating
                   </div>
                   <div className="flex items-baseline justify-center gap-1.5 my-1">
-                    <span className="text-6xl sm:text-8xl font-black font-['Nohemi',sans-serif] tracking-tight text-white drop-shadow-[0_0_35px_rgba(255,255,255,0.45)]">
+                    <span 
+                      className="text-6xl sm:text-8xl font-black font-['Nohemi',sans-serif] tracking-tight text-white"
+                      style={{ filter: config.scoreGlow }}
+                    >
                       {overallScore}
                     </span>
                     <span className="text-3xl sm:text-4xl font-bold text-white/40 font-mono">
@@ -583,14 +569,27 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                     </span>
                   </div>
                   
-                  <div className={`mt-2 px-4 py-1 rounded-full border text-xs font-bold font-mono tracking-wider uppercase ${tier.bg} ${tier.color} shadow-sm`}>
-                    {tier.label}
+                  <div 
+                    className="mt-2 px-4 py-1 rounded-full border text-xs font-bold font-mono tracking-wider uppercase shadow-sm"
+                    style={{
+                      backgroundColor: config.badgeBg,
+                      borderColor: config.badgeBorder,
+                      color: config.badgeText,
+                    }}
+                  >
+                    {config.tierLabel}
                   </div>
                 </div>
 
-                {/* Evaluated Copy Box (The exact copy given by user) */}
+                {/* Evaluated Copy Box */}
                 {evaluatedUserCopy && (
-                  <div className="w-full mt-6 p-4 rounded-2xl bg-[#141021] bg-white/[0.05] border border-white/[0.15] text-left relative overflow-hidden">
+                  <div 
+                    className="w-full mt-6 p-4 rounded-2xl border text-left relative overflow-hidden"
+                    style={{
+                      backgroundColor: config.boxBg,
+                      borderColor: "rgba(255, 255, 255, 0.15)",
+                    }}
+                  >
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-white/70" />
@@ -613,7 +612,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
-                    {dimensions.map((dim) => {
+                    {dimensionsList.map((dim) => {
                       const DimIcon = dim.icon;
                       const clampedScore = Math.min(100, Math.max(0, dim.score));
                       return (
@@ -631,7 +630,6 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                             </span>
                           </div>
 
-                          {/* Progress bar */}
                           <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-1.5">
                             <div 
                               className={`h-full rounded-full bg-gradient-to-r ${dim.color}`}
@@ -646,7 +644,6 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                       );
                     })}
 
-                    {/* Overall Summary Mini Tile */}
                     <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col justify-between">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <ShieldCheck size={14} className="text-emerald-400" />
@@ -659,7 +656,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                   </div>
                 </div>
 
-                {/* Biggest Leverage Point (if present) */}
+                {/* Biggest Leverage Point */}
                 {result?.biggest_leverage && (
                   <div className="w-full mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left flex items-start gap-3">
                     <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
@@ -690,13 +687,33 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
               </div>
             </div>
 
-            {/* Share & Challenge Controls Bar (Positioned outside cardRef to guarantee pristine card borders on export) */}
+            {/* Share & Challenge Controls Bar */}
             <div className="w-full rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-4 sm:p-6 flex flex-col gap-3 shadow-lg">
               <div className="text-[10px] uppercase font-mono tracking-widest text-white/40 text-center">
-                Share or Challenge A Colleague
+                Share 1080x1920 Story Card or Challenge a Colleague
               </div>
 
-              <div className="grid grid-cols-1 xs:grid-cols-4 gap-2 sm:gap-3 w-full">
+              {/* Primary Full Width Share Button */}
+              <button
+                type="button"
+                onClick={handleUnifiedShare}
+                disabled={isSharing || isGenerating}
+                className="w-full py-3 px-4 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_2px_15px_rgba(255,255,255,0.25)] cursor-pointer"
+              >
+                {isSharing || isGenerating ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin text-black" />
+                    <span>{isGenerating ? "Generating 1080x1920 Card..." : "Preparing Share Sheet..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={16} className="stroke-[2.5]" />
+                    <span>Share 1080x1920 Instagram Story Card</span>
+                  </>
+                )}
+              </button>
+
+              <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-3 w-full">
                 {/* Share to X */}
                 <button
                   type="button"
@@ -704,7 +721,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                   className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] border border-white/10 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <XIcon size={14} />
-                  <span className="truncate">Share to X</span>
+                  <span className="truncate">Share X</span>
                 </button>
 
                 {/* Share to Instagram */}
@@ -731,11 +748,11 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                 <button
                   type="button"
                   onClick={handleDownloadCard}
-                  disabled={isDownloading}
+                  disabled={isDownloading || isGenerating}
                   className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] border border-white/20 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  {isDownloading ? <Loader2 size={14} className="animate-spin text-white" /> : <Download size={14} />}
-                  <span className="truncate">Save Image</span>
+                  {isDownloading || isGenerating ? <Loader2 size={14} className="animate-spin text-white" /> : <Download size={14} />}
+                  <span className="truncate">Save Card</span>
                 </button>
               </div>
 
@@ -762,15 +779,8 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
                 )}
               </button>
 
-              {/* Instagram Toast */}
-              {instagramToast && (
-                <div className="p-2.5 rounded-xl bg-[#833AB4]/20 border border-[#833AB4]/40 text-xs text-[#E0AAFF] text-center">
-                  ✨ Caption copied & scorecard image saved! Add the link sticker 'murgii.vercel.app' in your story.
-                </div>
-              )}
-
-              {toastMessage && !instagramToast && (
-                <div className="p-2 rounded-xl bg-white/10 border border-white/20 text-xs text-white text-center">
+              {toastMessage && (
+                <div className="p-2 rounded-xl bg-white/10 border border-white/20 text-xs text-[#E0AAFF] font-mono text-center">
                   {toastMessage}
                 </div>
               )}
