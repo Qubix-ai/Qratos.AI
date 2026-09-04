@@ -201,18 +201,29 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     setTimeout(() => setToastMessage(null), 3200);
   };
 
-  // Helper to generate a clean PNG File object from the scorecard element
+  // Helper to generate a clean, high-DPI PNG File object from the scorecard element
   const generateScorecardFile = async (): Promise<File | null> => {
     if (!cardRef.current) return null;
     try {
+      // Pass 1: Warm up SVG layout & font engine in html-to-image
+      await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 1.5,
+        backgroundColor: "#0B0813",
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
+            return false;
+          }
+          return true;
+        },
+      });
+
+      // Pass 2: Produce high-DPI final capture
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "#0c0814",
-        skipFonts: true,
-        fontEmbedCSS: "",
+        pixelRatio: 2,
+        backgroundColor: "#0B0813",
         filter: (node) => {
-          // Exclude action buttons bar from the generated image for a clean showcase card
           if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
             return false;
           }
@@ -335,26 +346,30 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
 
   // Dedicated Instagram / Instagram Stories native share & save flow
   const handleShareInstagram = async () => {
-    // Copy score caption & direct link for easy paste
-    await copyToClipboard(`${shareText} https://murgii.vercel.app`);
+    showToast("Generating scorecard image for Instagram...");
+    const imageFile = await generateScorecardFile();
+    await copyToClipboard(`${shareText} ${shareUrl}`);
 
-    // If native share sheet is supported on mobile, invoke it with the image file
+    if (imageFile) {
+      const objectUrl = URL.createObjectURL(imageFile);
+      const downloadLink = document.createElement("a");
+      downloadLink.download = imageFile.name;
+      downloadLink.href = objectUrl;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    }
+
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
-        const imageFile = await generateScorecardFile();
         if (imageFile && typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
           await navigator.share({
             files: [imageFile],
             title: "Qreato Copy Score",
             text: shareText,
           });
-          return;
-        } else {
-          await navigator.share({
-            title: "Qreato Copy Score",
-            text: shareText,
-            url: "https://murgii.vercel.app",
-          });
+          showToast("Scorecard image & link ready for Instagram Story!");
           return;
         }
       } catch (err: any) {
@@ -364,9 +379,7 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
       }
     }
 
-    // Also trigger instant card download for story sticker
-    handleDownloadCard();
-    showToast("Scorecard saved & link copied! Add link 'murgii.vercel.app' in your story.");
+    showToast("Scorecard PNG saved to photos & link copied! Add link in Instagram Story.");
     window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
   };
 
@@ -375,20 +388,17 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     setIsDownloading(true);
 
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "#0B0813",
-        skipFonts: true,
-        fontEmbedCSS: "",
-      });
+      const imageFile = await generateScorecardFile();
+      if (!imageFile) throw new Error("Could not generate image file");
 
+      const objectUrl = URL.createObjectURL(imageFile);
       const downloadLink = document.createElement("a");
-      downloadLink.download = `qreato-copy-score-${cleanSlug || overallScore}.png`;
-      downloadLink.href = dataUrl;
+      downloadLink.download = imageFile.name;
+      downloadLink.href = objectUrl;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
       setDownloadSuccess(true);
       showToast("Scorecard image downloaded to your gallery!");
@@ -415,7 +425,7 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
       */}
       <div
         ref={cardRef}
-        className="w-full relative rounded-3xl border border-white/25 ring-1 ring-white/10 bg-[#0B0813] backdrop-blur-2xl p-5 sm:p-7 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden flex flex-col items-center text-center"
+        className="w-full relative rounded-3xl border border-white/25 ring-1 ring-white/10 bg-[#0B0813] p-5 sm:p-7 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden flex flex-col items-center text-center"
       >
         {/* Subtle deep ambient glow behind card */}
         <div 
@@ -455,7 +465,7 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
 
           {/* Evaluated Copy Snippet (The exact copy given by user) */}
           {cleanUserCopy && (
-            <div className="w-full my-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.14] text-left relative overflow-hidden backdrop-blur-md">
+            <div className="w-full my-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.05] bg-[#141021] border border-white/[0.14] text-left relative overflow-hidden">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-white/60" />

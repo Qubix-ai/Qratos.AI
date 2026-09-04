@@ -34,7 +34,7 @@ export const SecurityPage: React.FC<SecurityPageProps> = ({ onGoToHome, onGoToCh
   };
 
   return (
-    <div className="min-h-screen bg-[#07060B] text-zinc-300 selection:bg-zinc-800 selection:text-white py-12 md:py-20 px-4 sm:px-6">
+    <div className="min-h-screen relative z-10 text-zinc-300 selection:bg-zinc-800 selection:text-white py-12 md:py-20 px-4 sm:px-6">
       <div className="max-w-[720px] mx-auto">
         {/* Navigation */}
         <div className="mb-12">

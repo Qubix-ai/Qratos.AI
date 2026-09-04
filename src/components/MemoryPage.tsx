@@ -89,41 +89,29 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
   const tuningStrength = Math.round((filledCount / 5) * 100);
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0 bg-[#07060B] text-white overflow-y-auto custom-scrollbar relative selection:bg-white/30 selection:text-white">
-      
-      {/* Premium Multi-Layer White Specular Ambient Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[760px] h-[580px] bg-gradient-to-b from-white/[0.12] via-[#8B5CF6]/15 to-transparent rounded-full blur-[130px]" />
-        <div className="absolute top-[25%] -left-[10%] w-[550px] h-[550px] bg-white/[0.06] rounded-full blur-[140px]" />
-        <div className="absolute top-[45%] -right-[10%] w-[580px] h-[580px] bg-white/[0.06] rounded-full blur-[140px]" />
-        <div className="absolute bottom-[0%] left-[25%] w-[650px] h-[450px] bg-white/[0.04] rounded-full blur-[130px]" />
-        
-        {/* Crisp geometric grid texture */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-70" />
-      </div>
-
+    <div className="flex-1 flex flex-col h-full min-h-0 bg-[#07060B] text-white overflow-y-auto custom-scrollbar relative selection:bg-zinc-800 selection:text-white">
       <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 md:py-12 relative z-10 space-y-8">
         
-        {/* Navigation & Header with High-Contrast White Glass Accent */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/15">
+        {/* Navigation & Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-800">
           <div className="flex items-center gap-3.5">
             <button
               type="button"
               onClick={onGoToChat}
-              className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/40 text-white transition-all cursor-pointer group shadow-[0_0_20px_rgba(255,255,255,0.15)] backdrop-blur-xl hover:scale-105"
+              className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white transition-all cursor-pointer group"
               title="Return to Workspace"
             >
-              <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform text-white" />
+              <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
             </button>
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/25 shadow-[0_0_20px_rgba(255,255,255,0.15)] backdrop-blur-xl text-[10px] font-black text-white uppercase tracking-[0.2em] mb-1.5 font-mono">
-                <Brain size={12} className="text-white" />
+              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold mb-1 flex items-center gap-1.5">
+                <Brain size={12} className="text-zinc-400" />
                 Brand Context Engine
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(255,255,255,0.15)]">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 Memory & Personalization
               </h1>
-              <p className="text-xs sm:text-sm text-neutral-300 mt-1">
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1">
                 Configure your brand voice and offer background once for seamless, zero-brief copy generation.
               </p>
             </div>
@@ -133,7 +121,7 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
             <button
               type="button"
               onClick={onGoToChat}
-              className="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-bold text-white transition-all cursor-pointer backdrop-blur-xl hover:scale-[1.02]"
+              className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer"
             >
               Workspace
             </button>
@@ -141,7 +129,7 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
               type="button"
               onClick={() => handleSave()}
               disabled={isSaving || isLoading}
-              className="px-6 py-2 rounded-xl bg-white text-black hover:bg-neutral-100 text-xs font-bold shadow-[0_0_30px_rgba(255,255,255,0.35)] disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02]"
+              className="px-5 py-2 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-bold disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer"
             >
               {isSaving ? (
                 <>
@@ -158,208 +146,145 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
           </div>
         </div>
 
-        {/* Informative Explanation Banner with White Frosted Glass Sheen */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40"
-          style={{
-            background: "rgba(255, 255, 255, 0.05)",
-            backdropFilter: "blur(24px) saturate(1.4)",
-            WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-            border: "1px solid rgba(255, 255, 255, 0.18)",
-            boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 25px rgba(255, 255, 255, 0.03)",
-          }}
-        >
-          {/* Top specular highlight overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent pointer-events-none" />
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/[0.08] rounded-full blur-[50px] pointer-events-none" />
-
+        {/* Informative Explanation Banner */}
+        <div className="p-6 sm:p-7 rounded-2xl bg-[#0D0B14] border border-zinc-800 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white text-black flex items-center justify-center shrink-0 shadow-[0_0_25px_rgba(255,255,255,0.35)]">
-                <QreatoLogo size={22} className="text-black" />
+            <div className="flex items-start gap-3.5">
+              <div className="pt-0.5 shrink-0">
+                <QreatoLogo size={20} className="text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-base font-bold text-white tracking-tight">
                     How Murgii Personalization Works
                   </h2>
-                  <span className="px-2.5 py-0.5 rounded-full bg-white/15 border border-white/30 text-[9px] font-mono font-bold text-white shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
                     AUTO-INJECTED
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
                   Tell Murgii your background once — it automatically injects this context into every copy brief across Email, Ads, Sales Pages, and Psychology modes without repetitive manual prompting.
                 </p>
               </div>
             </div>
 
             {/* Tuning Strength Metric Box */}
-            <div className="w-full sm:w-48 p-4 rounded-2xl bg-black/50 border border-white/15 shrink-0 shadow-inner">
-              <div className="flex items-center justify-between text-[10px] font-mono text-neutral-300 mb-1.5 font-bold">
+            <div className="w-full sm:w-48 p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 shrink-0">
+              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 mb-1.5 font-bold">
                 <span>TUNING STRENGTH</span>
                 <span className="text-white font-bold">{tuningStrength}%</span>
               </div>
-              <div className="w-full h-2.5 rounded-full bg-white/10 p-[1px] overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-white via-white/90 to-white/70 rounded-full transition-all duration-700 shadow-[0_0_10px_#ffffff]"
+                  className="h-full bg-white rounded-full transition-all duration-500"
                   style={{ width: `${Math.max(8, tuningStrength)}%` }}
                 />
               </div>
-              <span className="block text-[9px] text-neutral-400 mt-1 font-mono">
+              <span className="block text-[9px] text-zinc-500 mt-1 font-mono">
                 {filledCount} of 5 vectors configured
               </span>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Form Content */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={32} className="text-white animate-spin drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]" />
+            <Loader2 size={28} className="text-zinc-400 animate-spin" />
           </div>
         ) : (
           <form onSubmit={handleSave} className="space-y-6">
             
-            {/* Preferred Name & Niche Grid (Frosted White Glassmorphism) */}
+            {/* Preferred Name & Niche Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
               {/* Preferred Name */}
-              <div 
-                className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40 space-y-3"
-                style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(24px) saturate(1.4)",
-                  WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.18)",
-                  boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 25px rgba(255, 255, 255, 0.03)",
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent pointer-events-none" />
-                <div className="flex items-center justify-between relative z-10">
-                  <label htmlFor="preferred_name" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shadow-sm">
-                      <User size={15} strokeWidth={2.2} />
-                    </div>
+              <div className="p-6 sm:p-7 rounded-2xl bg-[#0D0B14] border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="preferred_name" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <User size={15} className="text-zinc-400" />
                     <span>Preferred / Operator Name</span>
                   </label>
                 </div>
-                <div className="relative z-10">
+                <div>
                   <input
                     id="preferred_name"
                     type="text"
                     placeholder="e.g. Alex Sterling or Acme Marketing"
                     value={memory.preferred_name}
                     onChange={(e) => setMemory({ ...memory, preferred_name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/20 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/60 focus:bg-white/[0.1] focus:ring-2 focus:ring-white/20 transition-all shadow-inner"
+                    className="w-full px-4 py-3 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white placeholder:text-zinc-600 text-sm focus:outline-none focus:border-zinc-500 transition-all"
                   />
-                  <p className="text-[11px] text-neutral-300 mt-2">
+                  <p className="text-[11px] text-zinc-400 mt-2">
                     How you'd like Murgii to address you or sign off on personal copy.
                   </p>
                 </div>
               </div>
 
               {/* Niche / Industry */}
-              <div 
-                className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40 space-y-3"
-                style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(24px) saturate(1.4)",
-                  WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.18)",
-                  boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 25px rgba(255, 255, 255, 0.03)",
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent pointer-events-none" />
-                <div className="flex items-center justify-between relative z-10">
-                  <label htmlFor="niche" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shadow-sm">
-                      <Target size={15} strokeWidth={2.2} />
-                    </div>
+              <div className="p-6 sm:p-7 rounded-2xl bg-[#0D0B14] border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="niche" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Target size={15} className="text-zinc-400" />
                     <span>Niche / Industry Vertical</span>
                   </label>
                 </div>
-                <div className="relative z-10">
+                <div>
                   <input
                     id="niche"
                     type="text"
                     placeholder="e.g. B2B SaaS, High-Ticket E-commerce, Info Products"
                     value={memory.niche}
                     onChange={(e) => setMemory({ ...memory, niche: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/20 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/60 focus:bg-white/[0.1] focus:ring-2 focus:ring-white/20 transition-all shadow-inner"
+                    className="w-full px-4 py-3 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white placeholder:text-zinc-600 text-sm focus:outline-none focus:border-zinc-500 transition-all"
                   />
-                  <p className="text-[11px] text-neutral-300 mt-2">
+                  <p className="text-[11px] text-zinc-400 mt-2">
                     Your primary market domain or industry vertical for laser-targeted framing.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Business Description (Frosted White Glassmorphism Card) */}
-            <div 
-              className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40 space-y-3"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(24px) saturate(1.4)",
-                WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-                border: "1px solid rgba(255, 255, 255, 0.18)",
-                boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 25px rgba(255, 255, 255, 0.03)",
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent pointer-events-none" />
-              <div className="flex items-center justify-between relative z-10">
-                <label htmlFor="business_description" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shadow-sm">
-                    <Building size={15} strokeWidth={2.2} />
-                  </div>
+            {/* Business Description */}
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#0D0B14] border border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <label htmlFor="business_description" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Building size={15} className="text-zinc-400" />
                   <span>Business / Product Value Proposition</span>
                 </label>
               </div>
-              <div className="relative z-10">
+              <div>
                 <textarea
                   id="business_description"
                   rows={3}
                   placeholder="e.g. We build a high-performance analytics platform for subscription commerce brands, helping them reduce churn by 30% through automated win-back workflows."
                   value={memory.business_description}
                   onChange={(e) => setMemory({ ...memory, business_description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/20 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/60 focus:bg-white/[0.1] focus:ring-2 focus:ring-white/20 transition-all resize-y shadow-inner"
+                  className="w-full px-4 py-3 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white placeholder:text-zinc-600 text-sm focus:outline-none focus:border-zinc-500 transition-all resize-y"
                 />
-                <p className="text-[11px] text-neutral-300 mt-2">
+                <p className="text-[11px] text-zinc-400 mt-2">
                   A brief summary of what you sell, your core transformation, and target customer outcome.
                 </p>
               </div>
             </div>
 
-            {/* Preferred Tone (Frosted White Glassmorphic Card) */}
-            <div 
-              className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40 space-y-4"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(24px) saturate(1.4)",
-                WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-                border: "1px solid rgba(255, 255, 255, 0.18)",
-                boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 25px rgba(255, 255, 255, 0.03)",
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent pointer-events-none" />
-              <div className="flex items-center justify-between relative z-10">
-                <label htmlFor="preferred_tone" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shadow-sm">
-                    <MessageSquareQuote size={15} strokeWidth={2.2} />
-                  </div>
+            {/* Preferred Tone */}
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#0D0B14] border border-zinc-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <label htmlFor="preferred_tone" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <MessageSquareQuote size={15} className="text-zinc-400" />
                   <span>Preferred Tone & Psychological Cadence</span>
                 </label>
                 <button
                   type="button"
                   onClick={() => setCustomToneMode(!customToneMode)}
-                  className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-xs text-white font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                  className="px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 hover:text-white font-medium transition-all cursor-pointer"
                 >
                   {customToneMode ? "Choose Presets" : "Custom Tone"}
                 </button>
               </div>
 
-              <div className="relative z-10">
+              <div>
                 {!customToneMode ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {DEFAULT_TONE_OPTIONS.map((tone) => {
@@ -369,17 +294,15 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
                           key={tone}
                           type="button"
                           onClick={() => setMemory({ ...memory, preferred_tone: tone })}
-                          className={`px-4 py-3.5 rounded-2xl text-xs font-medium text-left border transition-all duration-200 cursor-pointer flex items-center justify-between ${
+                          className={`px-4 py-3 rounded-xl text-xs font-medium text-left border transition-all cursor-pointer flex items-center justify-between ${
                             isSelected
-                              ? "bg-white text-black border-white shadow-[0_0_25px_rgba(255,255,255,0.4)] font-bold scale-[1.02]"
-                              : "bg-white/[0.04] border-white/15 text-neutral-200 hover:bg-white/[0.09] hover:border-white/30 hover:text-white"
+                              ? "bg-white text-black border-white font-bold"
+                              : "bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:bg-zinc-800/80 hover:text-white"
                           }`}
                         >
-                          <span className="font-semibold">{tone}</span>
+                          <span>{tone}</span>
                           {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center shrink-0 shadow-sm">
-                              <Check size={11} strokeWidth={3} />
-                            </div>
+                            <Check size={14} className="text-black shrink-0" />
                           )}
                         </button>
                       );
@@ -392,91 +315,68 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
                     placeholder="e.g. Sarcastic yet authoritative Wall Street insider with high punchiness"
                     value={memory.preferred_tone}
                     onChange={(e) => setMemory({ ...memory, preferred_tone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/20 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/60 focus:bg-white/[0.1] focus:ring-2 focus:ring-white/20 transition-all shadow-inner"
+                    className="w-full px-4 py-3 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white placeholder:text-zinc-600 text-sm focus:outline-none focus:border-zinc-500 transition-all"
                   />
                 )}
-                <p className="text-[11px] text-neutral-300 mt-2">
+                <p className="text-[11px] text-zinc-400 mt-2">
                   The baseline voice framing applied automatically to your copy outputs.
                 </p>
               </div>
             </div>
 
-            {/* Additional Notes & Guardrails (Frosted White Glassmorphism Card) */}
-            <div 
-              className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40 space-y-3"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(24px) saturate(1.4)",
-                WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-                border: "1px solid rgba(255, 255, 255, 0.18)",
-                boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 25px rgba(255, 255, 255, 0.03)",
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent pointer-events-none" />
-              <div className="flex items-center justify-between relative z-10">
-                <label htmlFor="additional_notes" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shadow-sm">
-                    <FileText size={15} strokeWidth={2.2} />
-                  </div>
+            {/* Additional Notes & Guardrails */}
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#0D0B14] border border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <label htmlFor="additional_notes" className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <FileText size={15} className="text-zinc-400" />
                   <span>Forbidden Clichés, Guardrails & Audience Nuances</span>
                 </label>
               </div>
-              <div className="relative z-10">
+              <div>
                 <textarea
                   id="additional_notes"
                   rows={4}
                   placeholder="e.g. Never use clichés like 'game-changer' or 'supercharge'. Always emphasize ROI guarantee. Target audience is CMOs earning $250k+."
                   value={memory.additional_notes}
                   onChange={(e) => setMemory({ ...memory, additional_notes: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/20 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/60 focus:bg-white/[0.1] focus:ring-2 focus:ring-white/20 transition-all resize-y shadow-inner"
+                  className="w-full px-4 py-3 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white placeholder:text-zinc-600 text-sm focus:outline-none focus:border-zinc-500 transition-all resize-y"
                 />
-                <p className="text-[11px] text-neutral-300 mt-2">
+                <p className="text-[11px] text-zinc-400 mt-2">
                   Any specific guidelines, negative constraints, forbidden buzzwords, or pricing anchors.
                 </p>
               </div>
             </div>
 
-            {/* HOW MURGII USES YOUR SAVED MEMORY (Plain Language Summary Card) */}
-            <div 
-              className="p-6 sm:p-7 rounded-[32px] relative overflow-hidden transition-all duration-300 group hover:border-white/40"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(24px) saturate(1.4)",
-                WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-                border: "1px solid rgba(255, 255, 255, 0.18)",
-                boxShadow: "0 24px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 25px rgba(255, 255, 255, 0.03)",
-              }}
-            >
+            {/* HOW MURGII USES YOUR SAVED MEMORY */}
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#0D0B14] border border-zinc-800">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                    <Sparkle size={14} />
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Sparkle size={15} className="text-zinc-400" />
                   <span className="text-xs font-bold text-white uppercase tracking-wider">
                     How Murgii Personalizes Your Copy
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-white font-bold bg-white/15 px-2.5 py-1 rounded-full border border-white/25 shadow-sm">
-                  Active in Every Generation
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+                  ACTIVE IN EVERY GENERATION
                 </span>
               </div>
               
-              <div className="p-5 rounded-2xl bg-black/60 border border-white/15 text-sm text-neutral-200 leading-relaxed space-y-3 shadow-inner">
+              <div className="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-300 leading-relaxed space-y-3">
                 <p>
                   Murgii will address you as{" "}
                   {memory.preferred_name?.trim() ? (
-                    <strong className="text-white font-semibold underline decoration-white/30 underline-offset-4">{memory.preferred_name.trim()}</strong>
+                    <strong className="text-white font-semibold">{memory.preferred_name.trim()}</strong>
                   ) : (
-                    <span className="text-white/40 italic">Add your name above so Murgii can personalize your copy</span>
+                    <span className="text-zinc-500 italic">Add your name above so Murgii can personalize your copy</span>
                   )}
                   , write specifically for the{" "}
                   {memory.niche?.trim() ? (
-                    <strong className="text-white font-semibold underline decoration-white/30 underline-offset-4">{memory.niche.trim()}</strong>
+                    <strong className="text-white font-semibold">{memory.niche.trim()}</strong>
                   ) : (
-                    <span className="text-white/40 italic">your selected industry</span>
+                    <span className="text-zinc-500 italic">your selected industry</span>
                   )}{" "}
                   market, and speak in a{" "}
-                  <strong className="text-white font-semibold underline decoration-white/30 underline-offset-4">{memory.preferred_tone || "Bold and direct"}</strong>{" "}
+                  <strong className="text-white font-semibold">{memory.preferred_tone || "Bold and direct"}</strong>{" "}
                   tone.
                 </p>
 
@@ -487,7 +387,7 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
                       <span className="text-white font-medium italic">“{memory.business_description.trim()}”</span>
                     </span>
                   ) : (
-                    <span className="text-white/40 italic">
+                    <span className="text-zinc-500 italic">
                       Add your product or service description above so Murgii seamlessly anchors your value proposition without you having to retype it.
                     </span>
                   )}
@@ -500,7 +400,7 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
                       <span className="text-white font-medium italic">“{memory.additional_notes.trim()}”</span>
                     </span>
                   ) : (
-                    <span className="text-white/40 italic">
+                    <span className="text-zinc-500 italic">
                       Add any forbidden clichés or negative constraints above to automatically keep every output on-brand.
                     </span>
                   )}
@@ -509,18 +409,18 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
             </div>
 
             {/* Bottom Save Action */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/15">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
               <button
                 type="button"
                 onClick={onGoToChat}
-                className="px-5 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-xs font-bold text-white transition-all cursor-pointer backdrop-blur-xl hover:scale-[1.02]"
+                className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSaving || isLoading}
-                className="px-8 py-3 rounded-2xl bg-white text-black hover:bg-neutral-100 text-xs font-bold shadow-[0_0_30px_rgba(255,255,255,0.35)] disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02]"
+                className="px-6 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-bold disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer"
               >
                 {isSaving ? (
                   <>
@@ -538,21 +438,19 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
           </form>
         )}
 
-        {/* Saved Success Toast with White Glassmorphism */}
+        {/* Saved Success Toast */}
         <AnimatePresence>
           {showSavedToast && (
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="fixed bottom-8 right-8 z-50 px-5 py-4 rounded-2xl bg-black/90 border border-white/40 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_35px_rgba(255,255,255,0.3),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center gap-3.5"
+              className="fixed bottom-8 right-8 z-50 px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center gap-3.5 shadow-2xl"
             >
-              <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                <CheckCircle2 size={18} strokeWidth={2.5} />
-              </div>
+              <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
               <div>
                 <p className="text-xs font-bold text-white">Memory Context Saved</p>
-                <p className="text-[10px] text-neutral-300">Murgii will automatically apply this across all future copy briefs.</p>
+                <p className="text-[10px] text-zinc-400">Murgii will automatically apply this across all future copy briefs.</p>
               </div>
             </motion.div>
           )}

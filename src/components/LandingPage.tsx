@@ -19,6 +19,7 @@ import {
   Send,
   Bookmark,
   ChevronRight,
+  ChevronDown,
   Database,
   Menu,
   CreditCard,
@@ -148,6 +149,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             <a href="#features" className="hover:text-white transition-colors">Capabilities</a>
             <a href="#prompt-builder" className="hover:text-white transition-colors">Prompt Builder</a>
             <a href="#workflow" className="hover:text-white transition-colors">Workflow</a>
+            <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </nav>
 
           {/* Right Action Buttons */}
@@ -870,6 +872,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <LandingFAQSection 
+        onStartChallenge={onStartChallenge} 
+        onNavigate={onNavigate} 
+        handleSignupClick={handleSignupClick} 
+      />
+
       {/* Footer Ecosystem */}
       <footer className="relative pt-20 pb-12 overflow-hidden border-t border-white/5 bg-transparent">
         {/* Cinematic Ambient Glows */}
@@ -1303,5 +1312,135 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
         </motion.div>
       )}
     </div>
+  );
+}
+
+interface LandingFAQSectionProps {
+  onStartChallenge?: (initialText?: string) => void;
+  onNavigate?: (view: string) => void;
+  handleSignupClick: () => void;
+}
+
+function LandingFAQSection({ onStartChallenge, onNavigate, handleSignupClick }: LandingFAQSectionProps) {
+  const [openIndexes, setOpenIndexes] = useState<number[]>([]);
+
+  const toggleIndex = (index: number) => {
+    setOpenIndexes((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  };
+
+  const faqData = [
+    {
+      q: "I'm not a copywriter. What if I just don't have it in me?",
+      a: "You're not missing talent. You're missing a system. Nobody sat you down and taught you why one sentence makes someone reach for their wallet and another makes them scroll past. That's not a gift some people are born with — it's a mechanism, and mechanisms can be handed to you. Murgii is that mechanism. You don't need to become a copywriter. You need to stop being the bottleneck between your audience and your offer. Open it, describe what you're selling, and watch what \"having it in me\" actually looks like."
+    },
+    {
+      q: "I've tried ChatGPT. It sounds like a robot wrote a brochure.",
+      a: "That's because it did. ChatGPT was built to be agreeable and safe — the two things that kill a sale on contact. Nobody buys from \"helpful.\" They buy from tension, from a hook that won't let them look away, from a close that makes staying the same feel more expensive than saying yes. Murgii was never trained to be nice. It was trained to move people. That's the whole difference, and you'll feel it in the first line it writes you."
+    },
+    {
+      q: "I publish copy and just hope it works. I have no idea if it's actually good.",
+      a: "That's the most expensive habit in your business, and you don't even see the bill. Every headline you guess on, every email you send blind — that's revenue leaking out through a hole you can't see, because nobody ever showed you where to look. Copy Score closes that hole. Paste anything you've written and get a real number — Attention, Clarity, Desire, Persuasion, Action — the five things that actually decide whether a stranger becomes a customer. No more hoping. You'll know exactly what's bleeding you dry before your bank account tells you."
+    },
+    {
+      q: "I hired a copywriter once. Slow, expensive, and I explained my business to them every single time.",
+      a: "A copywriter is a rented brain — you pay for their attention, and the second the invoice is paid, that attention walks out the door with them. Then you're back to explaining your business from zero, again, on their schedule, at their rate. Murgii doesn't forget you. Tell it your business once in Memory & Personalization, and it's baked into everything it writes, forever, on your schedule, for a fraction of what one good freelancer charges for one email."
+    },
+    {
+      q: "I've built a real audience. It's just not turning into real money.",
+      a: "That gap is the most painful place to stand in business — watching people who clearly like you not buy from you. Here's the truth nobody tells you: an audience is just attention, and attention is not revenue. The bridge between the two is persuasion, and if nobody ever taught you persuasion, that bridge simply doesn't exist yet, no matter how many people are watching. You don't have a growth problem. You have a conversion problem. Murgii was built for exactly this moment — the moment attention is finally supposed to become income."
+    },
+    {
+      q: "I'm trying to scale but I can't write everything myself anymore.",
+      a: "That's not a discipline problem. That's math. One person has a finite number of hours, and scaling a business demands five different kinds of writing happening at once — emails, ads, pages, content, persuasion — all in your voice, all on time. You were never supposed to be five specialists wearing one body. Murgii gives you all five, pulling from the same brand memory, so growth stops being capped by how many hours you personally have left in a day."
+    },
+    {
+      q: "How do I know this isn't just another overhyped tool?",
+      a: "Good. Stay skeptical — most tools have earned it. So don't take our word for anything. Paste your own copy into Copy Score right now, free, no card, no pitch. You'll get the real number, weaknesses and all — not a flattering score designed to make you feel good, an honest one designed to make you better. If it tells you the truth about copy you already wrote, you'll know exactly what it'll do for the copy you haven't written yet."
+    }
+  ];
+
+  return (
+    <section id="faq" className="py-24 sm:py-32 px-4 relative overflow-hidden">
+      <div className="max-w-4xl mx-auto relative z-10">
+        <div className="text-center mb-16">
+          <h2 
+            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-nohemi leading-tight"
+            style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+          >
+            Before You Go — The Questions Everyone Asks
+          </h2>
+          <div className="w-24 h-[1px] bg-zinc-800 mx-auto mt-6" />
+        </div>
+
+        <div className="space-y-4">
+          {faqData.map((item, idx) => {
+            const isOpen = openIndexes.includes(idx);
+            return (
+              <div 
+                key={idx}
+                className="rounded-2xl bg-[#0D0B14] border border-zinc-800 overflow-hidden transition-colors"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleIndex(idx)}
+                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 cursor-pointer group"
+                >
+                  <span className="text-base sm:text-lg font-bold text-white group-hover:text-zinc-200 transition-colors font-nohemi">
+                    {item.q}
+                  </span>
+                  <div 
+                    className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white shrink-0 transition-transform duration-300"
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  >
+                    <ChevronDown size={18} />
+                  </div>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 pb-6 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal border-t border-zinc-800/60 pt-4">
+                        {item.a}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CTA below the FAQ block */}
+        <div className="mt-12 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              const challengeEl = document.getElementById("challenge");
+              if (challengeEl) {
+                challengeEl.scrollIntoView({ behavior: "smooth" });
+              } else if (onStartChallenge) {
+                onStartChallenge();
+              } else if (onNavigate) {
+                onNavigate("challenge");
+              } else {
+                handleSignupClick();
+              }
+            }}
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer group"
+          >
+            <span>See Your Copy Score</span>
+            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }

@@ -187,12 +187,24 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   const generateScorecardFile = async (): Promise<File | null> => {
     if (!cardRef.current) return null;
     try {
+      // Pass 1: Warm up SVG layout & font engine in html-to-image
+      await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 1.5,
+        backgroundColor: "#0B0813",
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
+            return false;
+          }
+          return true;
+        },
+      });
+
+      // Pass 2: High-DPI final capture
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "#07060B",
-        skipFonts: true,
-        fontEmbedCSS: "",
+        pixelRatio: 2,
+        backgroundColor: "#0B0813",
         filter: (node) => {
           if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
             return false;
@@ -231,28 +243,32 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   };
 
   const handleShareInstagram = async () => {
-    const success = await copyToClipboard(`${shareText} ${shareUrl}`);
-    if (success) {
-      setInstagramToast(true);
-      setTimeout(() => setInstagramToast(false), 3500);
+    showToast("Generating scorecard image for Instagram...");
+    const imageFile = await generateScorecardFile();
+    await copyToClipboard(`${shareText} ${shareUrl}`);
+    setInstagramToast(true);
+    setTimeout(() => setInstagramToast(false), 3500);
+
+    if (imageFile) {
+      const objectUrl = URL.createObjectURL(imageFile);
+      const downloadLink = document.createElement("a");
+      downloadLink.download = imageFile.name;
+      downloadLink.href = objectUrl;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     }
 
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
-        const imageFile = await generateScorecardFile();
         if (imageFile && typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
           await navigator.share({
             files: [imageFile],
             title: "Qreato Copy Score",
             text: shareText,
           });
-          return;
-        } else {
-          await navigator.share({
-            title: "Qreato Copy Score",
-            text: shareText,
-            url: shareUrl,
-          });
+          showToast("Scorecard image & link ready for Instagram Story!");
           return;
         }
       } catch (shareErr: any) {
@@ -262,7 +278,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
       }
     }
 
-    handleDownloadCard();
+    showToast("Scorecard PNG saved to photos & link copied! Add link in Instagram Story.");
     window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
   };
 
@@ -271,26 +287,17 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
     setIsDownloading(true);
 
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "#07060B",
-        skipFonts: true,
-        fontEmbedCSS: "",
-        filter: (node) => {
-          if (node instanceof HTMLElement && node.dataset.noCapture === "true") {
-            return false;
-          }
-          return true;
-        },
-      });
+      const imageFile = await generateScorecardFile();
+      if (!imageFile) throw new Error("Could not generate image file");
 
+      const objectUrl = URL.createObjectURL(imageFile);
       const downloadLink = document.createElement("a");
-      downloadLink.download = `qreato-challenge-${slug || overallScore}.png`;
-      downloadLink.href = dataUrl;
+      downloadLink.download = imageFile.name;
+      downloadLink.href = objectUrl;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
       showToast("Scorecard image downloaded!");
     } catch (err) {
@@ -468,7 +475,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
             {/* Primary Score Card Frame */}
             <div 
               ref={cardRef}
-              className={`relative rounded-3xl border ${tier.border} ring-1 ring-white/10 bg-[#0B0813] backdrop-blur-3xl p-6 sm:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden`}
+              className={`relative rounded-3xl border ${tier.border} ring-1 ring-white/10 bg-[#0B0813] p-6 sm:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden`}
             >
               {/* Internal ambient glow */}
               <div 
@@ -522,7 +529,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
 
                 {/* Evaluated Copy Box (The exact copy given by user) */}
                 {evaluatedUserCopy && (
-                  <div className="w-full mt-6 p-4 rounded-2xl bg-white/[0.05] border border-white/[0.15] text-left backdrop-blur-xl relative overflow-hidden">
+                  <div className="w-full mt-6 p-4 rounded-2xl bg-[#141021] bg-white/[0.05] border border-white/[0.15] text-left relative overflow-hidden">
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-white/70" />
