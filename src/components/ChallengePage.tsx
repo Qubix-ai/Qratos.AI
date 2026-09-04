@@ -184,6 +184,28 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
     ? `I scored ${overallScore}/100 on Qreato Copy Challenge for: "${copySnippet}" — Can you beat me?`
     : `I scored ${overallScore}/100 on Qreato Copy Challenge. Can you beat me?`;
 
+  const pregeneratedFileRef = useRef<File | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(async () => {
+      if (cardRef.current && isMounted && !pregeneratedFileRef.current) {
+        try {
+          const file = await generateScorecardFile();
+          if (file && isMounted) {
+            pregeneratedFileRef.current = file;
+          }
+        } catch (e) {
+          console.warn("Background challenge pregeneration:", e);
+        }
+      }
+    }, 350);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [overallScore, slug, evaluatedUserCopy]);
+
   const generateScorecardFile = async (): Promise<File | null> => {
     if (!cardRef.current) return null;
     try {
@@ -243,11 +265,57 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   };
 
   const handleShareInstagram = async () => {
-    showToast("Generating scorecard image for Instagram...");
-    const imageFile = await generateScorecardFile();
-    await copyToClipboard(`${shareText} ${shareUrl}`);
-    setInstagramToast(true);
-    setTimeout(() => setInstagramToast(false), 3500);
+    let imageFile = pregeneratedFileRef.current;
+
+    // Direct synchronous navigator.share if file is pre-generated
+    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+      if (navigator.canShare({ files: [imageFile] })) {
+        try {
+          await navigator.share({
+            files: [imageFile],
+            title: "Qreato Copy Score",
+            text: `${shareText} ${shareUrl}`,
+          });
+          showToast("Scorecard shared to Instagram / Story!");
+          return;
+        } catch (shareErr: any) {
+          if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
+            return;
+          }
+        }
+      }
+    }
+
+    if (!imageFile) {
+      showToast("Preparing scorecard image...");
+      imageFile = await generateScorecardFile();
+      if (imageFile) pregeneratedFileRef.current = imageFile;
+    }
+
+    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
+          await navigator.share({
+            files: [imageFile],
+            title: "Qreato Copy Score",
+            text: `${shareText} ${shareUrl}`,
+          });
+          showToast("Scorecard image shared!");
+          return;
+        } else {
+          await navigator.share({
+            title: "Qreato Copy Score",
+            text: shareText,
+            url: shareUrl,
+          });
+          return;
+        }
+      } catch (shareErr: any) {
+        if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
+          return;
+        }
+      }
+    }
 
     if (imageFile) {
       const objectUrl = URL.createObjectURL(imageFile);
@@ -259,27 +327,20 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
       document.body.removeChild(downloadLink);
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     }
+    await copyToClipboard(`${shareText} ${shareUrl}`);
+    setInstagramToast(true);
+    setTimeout(() => setInstagramToast(false), 3500);
+    showToast("Scorecard saved to photos & link copied! Opening Instagram...");
 
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        if (imageFile && typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
-          await navigator.share({
-            files: [imageFile],
-            title: "Qreato Copy Score",
-            text: shareText,
-          });
-          showToast("Scorecard image & link ready for Instagram Story!");
-          return;
-        }
-      } catch (shareErr: any) {
-        if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
-          return;
-        }
-      }
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = "instagram://story-camera";
+      setTimeout(() => {
+        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      }, 1000);
+    } else {
+      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
     }
-
-    showToast("Scorecard PNG saved to photos & link copied! Add link in Instagram Story.");
-    window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
   };
 
   const handleDownloadCard = async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   Share2, 
   Copy, 
@@ -201,6 +201,29 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     setTimeout(() => setToastMessage(null), 3200);
   };
 
+  const pregeneratedFileRef = useRef<File | null>(null);
+
+  // Background pregeneration of the scorecard image file so navigator.share() can run synchronously inside user clicks
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(async () => {
+      if (cardRef.current && isMounted && !pregeneratedFileRef.current) {
+        try {
+          const file = await generateScorecardFile();
+          if (file && isMounted) {
+            pregeneratedFileRef.current = file;
+          }
+        } catch (e) {
+          console.warn("Background scorecard pregeneration:", e);
+        }
+      }
+    }, 350);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [overallScore, cleanSlug, userCopy]);
+
   // Helper to generate a clean, high-DPI PNG File object from the scorecard element
   const generateScorecardFile = async (): Promise<File | null> => {
     if (!cardRef.current) return null;
@@ -247,12 +270,13 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     setIsSharing(true);
 
     try {
-      // 1. Generate the scorecard image file
-      const imageFile = await generateScorecardFile();
+      let imageFile = pregeneratedFileRef.current;
+      if (!imageFile) {
+        imageFile = await generateScorecardFile();
+        if (imageFile) pregeneratedFileRef.current = imageFile;
+      }
 
-      // 2. Check if Web Share API is available on the device
       if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-        // Prepare share data with image File if canShare supports it
         let shareDataWithFiles: ShareData | null = null;
 
         if (imageFile) {
@@ -294,30 +318,13 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
           setIsSharing(false);
           return;
         } catch (shareErr: any) {
-          // If user aborted or dismissed the share sheet, exit cleanly without error
           if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
             setIsSharing(false);
             return;
           }
-
-          // If sharing with files failed, try text/url fallback
-          if (shareDataWithFiles?.files) {
-            try {
-              await navigator.share({
-                title: "Qreato Copy Score",
-                text: shareText,
-                url: shareUrl,
-              });
-              setIsSharing(false);
-              return;
-            } catch {
-              // Fall through to clipboard copy
-            }
-          }
         }
       }
 
-      // 3. Fallback when Web Share is unsupported or fails: Copy link & show toast
       const success = await copyToClipboard(`${shareText} ${shareUrl}`);
       if (success) {
         setCopiedLink(true);
@@ -346,10 +353,60 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
 
   // Dedicated Instagram / Instagram Stories native share & save flow
   const handleShareInstagram = async () => {
-    showToast("Generating scorecard image for Instagram...");
-    const imageFile = await generateScorecardFile();
-    await copyToClipboard(`${shareText} ${shareUrl}`);
+    let imageFile = pregeneratedFileRef.current;
 
+    // Direct synchronous navigator.share if file is pre-generated (preserves user gesture)
+    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+      if (navigator.canShare({ files: [imageFile] })) {
+        try {
+          await navigator.share({
+            files: [imageFile],
+            title: "Qreato Copy Score",
+            text: `${shareText} ${shareUrl}`,
+          });
+          showToast("Scorecard shared to Instagram / Story!");
+          return;
+        } catch (shareErr: any) {
+          if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
+            return;
+          }
+        }
+      }
+    }
+
+    // If file wasn't ready yet, generate now
+    if (!imageFile) {
+      showToast("Preparing scorecard for Instagram...");
+      imageFile = await generateScorecardFile();
+      if (imageFile) pregeneratedFileRef.current = imageFile;
+    }
+
+    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
+          await navigator.share({
+            files: [imageFile],
+            title: "Qreato Copy Score",
+            text: `${shareText} ${shareUrl}`,
+          });
+          showToast("Scorecard shared!");
+          return;
+        } else {
+          await navigator.share({
+            title: "Qreato Copy Score",
+            text: shareText,
+            url: shareUrl,
+          });
+          return;
+        }
+      } catch (err: any) {
+        if (err && (err.name === "AbortError" || err.message?.includes("abort"))) {
+          return;
+        }
+      }
+    }
+
+    // Fallback when native share sheet is unavailable (e.g. desktop browsers): download PNG image & copy caption
     if (imageFile) {
       const objectUrl = URL.createObjectURL(imageFile);
       const downloadLink = document.createElement("a");
@@ -360,27 +417,18 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
       document.body.removeChild(downloadLink);
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     }
+    await copyToClipboard(`${shareText} ${shareUrl}`);
+    showToast("Scorecard saved to photos & link copied! Opening Instagram...");
 
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        if (imageFile && typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
-          await navigator.share({
-            files: [imageFile],
-            title: "Qreato Copy Score",
-            text: shareText,
-          });
-          showToast("Scorecard image & link ready for Instagram Story!");
-          return;
-        }
-      } catch (err: any) {
-        if (err && (err.name === "AbortError" || err.message?.includes("abort"))) {
-          return;
-        }
-      }
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = "instagram://story-camera";
+      setTimeout(() => {
+        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      }, 1000);
+    } else {
+      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
     }
-
-    showToast("Scorecard PNG saved to photos & link copied! Add link in Instagram Story.");
-    window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
   };
 
   const handleDownloadCard = async () => {
