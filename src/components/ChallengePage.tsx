@@ -22,7 +22,8 @@ import { supabase } from "../lib/supabase";
 import { copyToClipboard } from "../lib/clipboard";
 import { QreatoLogo } from "./QreatoLogo";
 import { StoryScoreCard, getScoreTierConfig } from "./StoryScoreCard";
-import { captureStoryImage, executeUnifiedShare } from "../lib/storyCapture";
+import { captureStoryImage } from "../lib/storyCapture";
+import { ShareModal } from "./ShareModal";
 
 interface ChallengeRecord {
   overall_score: number;
@@ -86,6 +87,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -224,81 +226,28 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   };
 
   const handleUnifiedShare = async () => {
-    if (isSharing) return;
-    setIsSharing(true);
-
-    try {
-      let imageFile = pregeneratedFileRef.current;
-      if (!imageFile) {
-        setIsGenerating(true);
-        showToast("Generating 1080x1920 Story card...");
-        imageFile = await generateStoryFile();
-        setIsGenerating(false);
-        if (imageFile) {
-          pregeneratedFileRef.current = imageFile;
-        } else {
-          showToast("Failed to generate card image. Tap to retry.");
-          setIsSharing(false);
-          return;
-        }
-      }
-
-      await executeUnifiedShare({
-        imageFile,
-        shareText,
-        shareUrl,
-        onShowToast: showToast,
-      });
-    } catch (err) {
-      console.error("Share error:", err);
-      showToast("Failed to share card. Retrying...");
-    } finally {
-      setIsSharing(false);
+    setIsShareModalOpen(true);
+    if (!pregeneratedFileRef.current && !isGenerating) {
+      setIsGenerating(true);
+      generateStoryFile()
+        .then((file) => {
+          if (file) pregeneratedFileRef.current = file;
+        })
+        .catch((err) => console.warn("Card generation error:", err))
+        .finally(() => setIsGenerating(false));
     }
   };
 
   const handleShareX = async () => {
-    let imageFile = pregeneratedFileRef.current;
-    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
-      if (navigator.canShare({ files: [imageFile] })) {
-        try {
-          await navigator.share({
-            files: [imageFile],
-            title: "Qreato Copy Score",
-            text: `${shareText} ${shareUrl}`,
-          });
-          return;
-        } catch (e: any) {
-          if (e && e.name === "AbortError") return;
-        }
-      }
-    }
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+    setIsShareModalOpen(true);
   };
 
   const handleShareFacebook = async () => {
-    let imageFile = pregeneratedFileRef.current;
-    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
-      if (navigator.canShare({ files: [imageFile] })) {
-        try {
-          await navigator.share({
-            files: [imageFile],
-            title: "Qreato Copy Score",
-            text: `${shareText} ${shareUrl}`,
-          });
-          return;
-        } catch (e: any) {
-          if (e && e.name === "AbortError") return;
-        }
-      }
-    }
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-    window.open(fbUrl, "_blank", "noopener,noreferrer");
+    setIsShareModalOpen(true);
   };
 
   const handleShareInstagram = async () => {
-    await handleUnifiedShare();
+    setIsShareModalOpen(true);
   };
 
   const handleDownloadCard = async () => {
@@ -819,6 +768,20 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
           Powered by persistent direct response cognitive architectures.
         </p>
       </footer>
+
+      {/* Rich Sharing Modal with Instagram, X, Facebook, Messenger */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        overallScore={overallScore}
+        shareSlug={slug || ""}
+        userCopy={evaluatedUserCopy}
+        biggestLeverage={result?.biggest_leverage}
+        diagnosis={result?.diagnosis}
+        imageFile={pregeneratedFileRef.current}
+        isGeneratingImage={isGenerating}
+        onEnsureImageFile={generateStoryFile}
+      />
     </div>
   );
 };

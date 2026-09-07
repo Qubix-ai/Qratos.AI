@@ -10,7 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { QreatoLogo } from "./QreatoLogo";
 import { copyToClipboard } from "../lib/clipboard";
 import { StoryScoreCard, getScoreTierConfig } from "./StoryScoreCard";
-import { captureStoryImage, executeUnifiedShare } from "../lib/storyCapture";
+import { captureStoryImage } from "../lib/storyCapture";
+import { ShareModal } from "./ShareModal";
 
 // Custom SVG Icons for Social Platforms (Icon Only)
 const XIcon: React.FC<{ size?: number; className?: string }> = ({ size = 15, className = "" }) => (
@@ -143,6 +144,7 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const config = getScoreTierConfig(overallScore);
   const cleanSlug = shareSlug ? shareSlug.trim() : "";
@@ -214,83 +216,31 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
     };
   }, [overallScore, cleanSlug, userCopy]);
 
-  // Primary Unified Share Flow
+  // Primary Share Flow — Opens the rich Share Modal with Instagram, X, Facebook, Messenger options
   const handleShareButton = async () => {
-    if (isSharing) return;
-    setIsSharing(true);
-
-    try {
-      let imageFile = pregeneratedFileRef.current;
-      if (!imageFile) {
-        setIsGenerating(true);
-        showToast("Generating 1080x1920 Story card...");
-        imageFile = await generateStoryFile();
-        setIsGenerating(false);
-        if (imageFile) {
-          pregeneratedFileRef.current = imageFile;
-        } else {
-          showToast("Failed to generate card image. Tap to retry.");
-          setIsSharing(false);
-          return;
-        }
-      }
-
-      await executeUnifiedShare({
-        imageFile,
-        shareText,
-        shareUrl,
-        onShowToast: showToast,
-      });
-    } catch (err) {
-      console.error("Share error:", err);
-      showToast("Failed to open share sheet. Retrying...");
-    } finally {
-      setIsSharing(false);
+    setIsShareModalOpen(true);
+    // Pregenerate high-res file if not already done so it's instantly ready
+    if (!pregeneratedFileRef.current && !isGenerating) {
+      setIsGenerating(true);
+      generateStoryFile()
+        .then((file) => {
+          if (file) pregeneratedFileRef.current = file;
+        })
+        .catch((err) => console.warn("Background card generation error:", err))
+        .finally(() => setIsGenerating(false));
     }
   };
 
   const handleShareX = async () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    let imageFile = pregeneratedFileRef.current;
-    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
-      if (navigator.canShare({ files: [imageFile] })) {
-        try {
-          await navigator.share({
-            files: [imageFile],
-            title: "Qreato Copy Score",
-            text: `${shareText} ${shareUrl}`,
-          });
-          return;
-        } catch (e: any) {
-          if (e && e.name === "AbortError") return;
-        }
-      }
-    }
-    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+    setIsShareModalOpen(true);
   };
 
   const handleShareFacebook = async () => {
-    let imageFile = pregeneratedFileRef.current;
-    if (imageFile && typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
-      if (navigator.canShare({ files: [imageFile] })) {
-        try {
-          await navigator.share({
-            files: [imageFile],
-            title: "Qreato Copy Score",
-            text: `${shareText} ${shareUrl}`,
-          });
-          return;
-        } catch (e: any) {
-          if (e && e.name === "AbortError") return;
-        }
-      }
-    }
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-    window.open(fbUrl, "_blank", "noopener,noreferrer");
+    setIsShareModalOpen(true);
   };
 
   const handleShareInstagram = async () => {
-    await handleShareButton();
+    setIsShareModalOpen(true);
   };
 
   const handleDownloadCard = async () => {
@@ -584,6 +534,20 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Rich Sharing Sheet & Modal with Instagram Stories, Feed, X, Facebook, Messenger */}
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          overallScore={overallScore}
+          shareSlug={cleanSlug}
+          userCopy={userCopy}
+          biggestLeverage={biggestLeverage}
+          diagnosis={diagnosis}
+          imageFile={pregeneratedFileRef.current}
+          isGeneratingImage={isGenerating}
+          onEnsureImageFile={generateStoryFile}
+        />
       </div>
     </motion.div>
   );
