@@ -1,4 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import { parseAndExtractScoreData, stripScoreDataTags } from "./scoreData";
+
+export { parseAndExtractScoreData, stripScoreDataTags };
 
 const DEFAULT_SUPABASE_URL = "https://omeqbiksjqyeqkxnkflh.supabase.co";
 // Safe fallback anon key placeholder if not yet provided in runtime env
@@ -6,8 +9,15 @@ const DEFAULT_SUPABASE_ANON_KEY =
   (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tZXFiaWtzanF5ZXFreG5rZmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk4NTYwMDAsImV4cCI6MjAyNTQzMjAwMH0.placeholder";
 
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+const supabaseUrl = 
+  (typeof process !== "undefined" && process.env?.VITE_SUPABASE_URL) ||
+  (import.meta as any).env?.VITE_SUPABASE_URL || 
+  DEFAULT_SUPABASE_URL;
+
+const supabaseAnonKey = 
+  (typeof process !== "undefined" && process.env?.VITE_SUPABASE_ANON_KEY) ||
+  (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 
+  DEFAULT_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -73,17 +83,24 @@ async function callLocalGenerateApi(
   }
 
   const data = await res.json();
+  const rawText = data.text || "";
+  const parsed = parseAndExtractScoreData(rawText, brief);
+  const finalChallengeResult = data.challengeResult
+    ? { ...data.challengeResult, ...(parsed.challengeResult || {}) }
+    : parsed.challengeResult;
+
   return {
-    text: data.text || "",
+    text: parsed.cleanText,
     remaining: typeof data.remaining === "number" ? data.remaining : undefined,
-    challengeResult: data.challengeResult || null,
+    challengeResult: finalChallengeResult,
   };
 }
 
 /**
- * Invokes the secure Murgii AI generation service with automatic fallback.
- * First tries the Supabase Edge Function; if it returns 502 or is unavailable,
- * seamlessly falls back to the server-side Gemini Persuasion Engine.
+ * Invokes the secure Murgii AI generation service.
+ * All modes (Emails, Ads, Pages, Persuasion, Content, and Challenge) call the
+ * exact same murgii-generate Edge Function with identical authentication,
+ * request structure, and mode parameters.
  */
 export async function callMurgiiGenerateEdgeFunction(
   mode: MurgiiMode,
@@ -100,7 +117,7 @@ export async function callMurgiiGenerateEdgeFunction(
 
   const functionUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/murgii-generate`;
 
-  // If we have a token, attempt calling the Supabase Edge Function
+  // If we have a token, call the primary Supabase Edge Function
   if (token) {
     try {
       const response = await fetch(functionUrl, {
@@ -131,10 +148,16 @@ export async function callMurgiiGenerateEdgeFunction(
 
       if (response.ok) {
         const data = await response.json();
+        const rawText = data.text || "";
+        const parsed = parseAndExtractScoreData(rawText, brief);
+        const finalChallengeResult = data.challengeResult
+          ? { ...data.challengeResult, ...(parsed.challengeResult || {}) }
+          : parsed.challengeResult;
+
         return {
-          text: data.text || "",
+          text: parsed.cleanText,
           remaining: typeof data.remaining === "number" ? data.remaining : undefined,
-          challengeResult: data.challengeResult || null,
+          challengeResult: finalChallengeResult,
         };
       }
 

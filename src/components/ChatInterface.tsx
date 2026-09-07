@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { 
   Sparkles, 
   Coins, 
@@ -13,6 +13,10 @@ import {
   Menu, 
   Copy, 
   Check, 
+  ThumbsUp,
+  ThumbsDown,
+  RotateCw,
+  Square,
   User as UserIcon, 
   LogOut, 
   AlertCircle,
@@ -32,7 +36,9 @@ import {
   callMurgiiGenerateEdgeFunction, 
   DailyLimitError, 
   MurgiiMode, 
-  supabase 
+  supabase,
+  parseAndExtractScoreData,
+  stripScoreDataTags
 } from "../lib/supabase";
 import { 
   saveSession, 
@@ -40,7 +46,12 @@ import {
   generateTitleFromMessage, 
   generateUuid,
   isUuid,
-  ChatSession 
+  ChatSession,
+  createChatSession,
+  ensureSessionExists,
+  insertChatMessage,
+  updateSessionTitle,
+  notifySessionsChanged
 } from "../lib/chatHistory";
 import { fetchUserPlanAndCredits, UserPlanData } from "../lib/userAccount";
 
@@ -162,6 +173,7 @@ const LoadingBubble = () => (
 );
 
 interface Message {
+  id?: string;
   role: "user" | "assistant";
   content: string;
   timestamp?: string;
@@ -262,25 +274,26 @@ export const markdownComponents = {
 };
 
 const TypewriterMarkdown = ({ content, isNew }: { content: string; isNew?: boolean }) => {
-  const [displayedContent, setDisplayedContent] = useState(isNew ? "" : content);
+  const sanitizedContent = useMemo(() => stripScoreDataTags(content), [content]);
+  const [displayedContent, setDisplayedContent] = useState(isNew ? "" : sanitizedContent);
   const [isTyping, setIsTyping] = useState(isNew);
 
   useEffect(() => {
     if (!isNew) {
-      setDisplayedContent(content);
+      setDisplayedContent(sanitizedContent);
       setIsTyping(false);
       return;
     }
 
     setIsTyping(true);
     let index = 0;
-    const speed = Math.max(4, Math.min(16, Math.round(2000 / (content.length || 1))));
+    const speed = Math.max(4, Math.min(16, Math.round(2000 / (sanitizedContent.length || 1))));
     
     const intervalId = setInterval(() => {
       setDisplayedContent(() => {
-        const nextPart = content.slice(0, index + 1);
+        const nextPart = sanitizedContent.slice(0, index + 1);
         index++;
-        if (index >= content.length) {
+        if (index >= sanitizedContent.length) {
           clearInterval(intervalId);
           setIsTyping(false);
         }
@@ -289,14 +302,14 @@ const TypewriterMarkdown = ({ content, isNew }: { content: string; isNew?: boole
     }, speed);
 
     return () => clearInterval(intervalId);
-  }, [content, isNew]);
+  }, [sanitizedContent, isNew]);
 
   return (
     <div className="relative inline-block w-full">
       <ReactMarkdown components={markdownComponents}>{displayedContent}</ReactMarkdown>
       {isTyping && (
         <span 
-          className="inline-block w-1.5 h-3.5 bg-gradient-to-b from-[#8B5CF6] to-[#D946EF] ml-1 animate-pulse rounded-sm shadow-[0_0_8px_#D946EF]" 
+          className="inline-block w-1.5 h-3.5 bg-white/90 ml-1 animate-pulse rounded-sm shadow-[0_0_6px_rgba(255,255,255,0.6)]" 
           style={{ verticalAlign: 'middle', marginTop: '-2px' }} 
         />
       )}
@@ -352,7 +365,6 @@ export function ChatInterface({
   const [inputFocused, setInputFocused] = useState(false);
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [isContextExpanded, setIsContextExpanded] = useState(false);
   const [isModeSelectorOpen, setIsModeSelectorOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [animatedWordIndex, setAnimatedWordIndex] = useState(0);
@@ -418,30 +430,42 @@ export function ChatInterface({
     adjustTextareaHeight();
   }, [inputValue]);
 
-  // Synchronize active session ID and load saved chat messages
+  // Synchronize active session ID and load saved chat messages fresh from Supabase
   useEffect(() => {
-    // If activeSessionId matches what is already loaded or being processed in memory, skip reloading/clearing
-    if (activeSessionId && activeSessionId === loadedSessionIdRef.current) {
-      currentSessionIdRef.current = activeSessionId;
+    currentSessionIdRef.current = activeSessionId;
+
+    if (!activeSessionId) {
+      setMessages([]);
       return;
     }
 
-    currentSessionIdRef.current = activeSessionId;
-    loadedSessionIdRef.current = activeSessionId;
-
-    if (activeSessionId && userId) {
-      getSessionById(userId, activeSessionId).then((session) => {
-        if (currentSessionIdRef.current === activeSessionId) {
-          if (session && Array.isArray(session.messages)) {
-            setMessages(session.messages);
-          } else {
-            setMessages([]);
-          }
-        }
-      });
-    } else if (!activeSessionId) {
-      setMessages([]);
+    if (!userId) {
+      console.log("[Supabase Chat] ChatInterface waiting for userId to fetch messages for session:", activeSessionId);
+      return;
     }
+
+    let isMounted = true;
+    console.log(`[Supabase Chat] Loading messages fresh from Supabase for session: ${activeSessionId}`);
+
+    getSessionById(userId, activeSessionId).then((session) => {
+      if (!isMounted) return;
+      if (currentSessionIdRef.current === activeSessionId) {
+        if (session && Array.isArray(session.messages)) {
+          console.log(`[Supabase Chat] Successfully retrieved ${session.messages.length} messages from Supabase for session: ${activeSessionId}`);
+          setMessages(session.messages);
+        } else {
+          console.log(`[Supabase Chat] No messages found in Supabase for session: ${activeSessionId}`);
+          setMessages([]);
+        }
+      }
+    }).catch((err) => {
+      console.error(`[Supabase Chat Error] Error loading messages for session ${activeSessionId}:`, err);
+      if (isMounted) setMessages([]);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [activeSessionId, userId]);
 
   // Close account menu on click outside
@@ -455,6 +479,18 @@ export function ChatInterface({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [feedbacks, setFeedbacks] = useState<Record<string | number, 'like' | 'dislike' | null>>({});
+  const [feedbackToast, setFeedbackToast] = useState<{ visible: boolean; id?: string | number }>({ visible: false });
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleCopy = async (text: string, id: string | number) => {
     const success = await copyToClipboard(text);
     if (success) {
@@ -462,6 +498,42 @@ export function ChatInterface({
       setTimeout(() => {
         setCopiedId(null);
       }, 2000);
+    }
+  };
+
+  const handleFeedback = (id: string | number, type: 'like' | 'dislike') => {
+    const isCurrent = feedbacks[id] === type;
+    const nextState = isCurrent ? null : type;
+
+    setFeedbacks((prev) => ({
+      ...prev,
+      [id]: nextState,
+    }));
+
+    // Trigger short temporary pop up when feedback is given
+    if (nextState !== null) {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+      setFeedbackToast({ visible: true, id });
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedbackToast({ visible: false });
+      }, 2400);
+    }
+  };
+
+  const handleRegenerate = async (index: number) => {
+    if (isLoading) return;
+    // Find preceding user prompt
+    let previousUserPrompt = "";
+    for (let j = index - 1; j >= 0; j--) {
+      if (messages[j]?.role === 'user') {
+        previousUserPrompt = messages[j].content;
+        break;
+      }
+    }
+    if (previousUserPrompt) {
+      await executePrompt(previousUserPrompt, selectedMode);
     }
   };
 
@@ -511,50 +583,60 @@ export function ChatInterface({
     const targetMode = modeToUse || detectMode(text, selectedMode);
     setSelectedMode(targetMode);
 
-    // Determine target session ID or generate new valid UUID session
-    let targetSessionId = currentSessionIdRef.current;
-    if (!targetSessionId || !isUuid(targetSessionId)) {
-      targetSessionId = generateUuid();
-      currentSessionIdRef.current = targetSessionId;
-      loadedSessionIdRef.current = targetSessionId;
-      onSessionChange?.(targetSessionId);
+    if (!userId) {
+      console.error("[Supabase Chat Error] Cannot execute prompt without authenticated user ID.");
+      return;
     }
 
-    // User message
+    // 1. Verify every chat session creation actually inserts a row into chat_sessions in Supabase BEFORE any messages are shown
+    let targetSessionId = currentSessionIdRef.current;
+    const computedTitle = generateTitleFromMessage(text);
+
+    if (!targetSessionId || !isUuid(targetSessionId)) {
+      console.log("[Supabase Chat] No active session ID exists. Inserting new row into chat_sessions BEFORE messages are shown...");
+      const newSession = await createChatSession(userId, computedTitle);
+      if (newSession) {
+        targetSessionId = newSession.id;
+        currentSessionIdRef.current = targetSessionId;
+        onSessionChange?.(targetSessionId);
+        console.log(`[Supabase Chat] Session row verified and inserted into chat_sessions with ID: ${targetSessionId}`);
+      } else {
+        targetSessionId = generateUuid();
+        currentSessionIdRef.current = targetSessionId;
+        onSessionChange?.(targetSessionId);
+      }
+    } else {
+      // Ensure the row exists in chat_sessions BEFORE messages are shown
+      console.log(`[Supabase Chat] Ensuring session row exists in chat_sessions for ID: ${targetSessionId}`);
+      await ensureSessionExists(userId, targetSessionId, computedTitle);
+    }
+
+    // 2. Build User message
+    const userMessageId = generateUuid();
     const userMessage: Message = {
+      id: userMessageId,
       role: 'user',
       content: text,
       timestamp: new Date().toISOString()
     };
 
+    // Show message in UI
     const updatedWithUser = [...messages, userMessage];
     setMessages(updatedWithUser);
     setInputValue('');
     setIsLoading(true);
 
-    // Save intermediate session with user message
-    if (userId) {
-      const existing = await getSessionById(userId, targetSessionId);
-      const title = existing?.title || generateTitleFromMessage(text);
-      await saveSession(userId, {
-        id: targetSessionId,
-        userId,
-        title,
-        isPinned: existing?.isPinned || false,
-        createdAt: existing?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        messages: updatedWithUser,
-      });
-    }
+    // 3. Immediately insert user message into chat_messages table in Supabase
+    console.log(`[Supabase Chat] Immediately inserting user message ${userMessageId} into chat_messages for session: ${targetSessionId}`);
+    await insertChatMessage(userId, targetSessionId, userMessage);
+
+    // Update session title if needed
+    updateSessionTitle(userId, targetSessionId, computedTitle).catch(() => {});
 
     try {
       // Call the secure Supabase Edge Function
       const result = await callMurgiiGenerateEdgeFunction(targetMode, text);
 
-      // Immediately after every successful call to the murgii-generate Edge Function:
-      // Re-fetch the user's current plan from user_plan table and the current day's usage count / exact remaining count.
-      // Do not calculate or guess remaining credits on the frontend:
-      // Always display the exact remaining value returned by the murgii-generate function response.
       if (typeof result.remaining === 'number') {
         setRemainingCredits(result.remaining);
         onRemainingCreditsChange?.(result.remaining);
@@ -570,15 +652,21 @@ export function ChatInterface({
           .catch((err) => console.warn("Error re-fetching user plan from Supabase:", err));
       }
 
+      // Ensure score data is cleanly parsed and stripped if not already done
+      const { cleanText, challengeResult: extractedResult } = parseAndExtractScoreData(result.text, text);
+      const combinedChallengeResult = result.challengeResult || extractedResult;
+
+      const aiMessageId = generateUuid();
       const aiMessage: Message = {
+        id: aiMessageId,
         role: 'assistant',
-        content: result.text,
+        content: cleanText,
         timestamp: new Date().toISOString(),
         isNew: true,
-        challengeResult: result.challengeResult 
+        challengeResult: combinedChallengeResult 
           ? {
-              ...result.challengeResult,
-              userCopy: result.challengeResult.userCopy || result.challengeResult.copy || text,
+              ...combinedChallengeResult,
+              userCopy: combinedChallengeResult.userCopy || combinedChallengeResult.copy || text,
             }
           : null,
       };
@@ -586,23 +674,15 @@ export function ChatInterface({
       const finalMessages = [...updatedWithUser, aiMessage];
       setMessages(finalMessages);
 
-      if (userId && targetSessionId) {
-        const existing = await getSessionById(userId, targetSessionId);
-        const title = existing?.title || generateTitleFromMessage(text);
-        await saveSession(userId, {
-          id: targetSessionId,
-          userId,
-          title,
-          isPinned: existing?.isPinned || false,
-          createdAt: existing?.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          messages: finalMessages,
-        });
-      }
+      // 4. Immediately insert assistant response into chat_messages table in Supabase
+      console.log(`[Supabase Chat] Immediately inserting assistant message ${aiMessageId} into chat_messages for session: ${targetSessionId}`);
+      await insertChatMessage(userId, targetSessionId, aiMessage);
+      notifySessionsChanged();
     } catch (err: any) {
       console.error("Murgii Generation Error:", err);
       
       let finalMessages = updatedWithUser;
+      const errorMsgId = generateUuid();
       if (err instanceof DailyLimitError || err?.name === "DailyLimitError") {
         setDailyLimitReached(true);
         setDailyLimitMessage(err.message);
@@ -612,13 +692,14 @@ export function ChatInterface({
 
         if (userId) {
           fetchUserPlanAndCredits(userId, limitRemaining, user?.user_metadata, user?.email)
-            .then(({ planData, remainingCredits: freshCredits }) => {
-              onUserDataRefresh?.(planData, freshCredits);
+            .then(({ planData, freshCredits }: any) => {
+              if (planData) onUserDataRefresh?.(planData, freshCredits);
             })
             .catch(() => {});
         }
 
         const limitNotice: Message = {
+          id: errorMsgId,
           role: 'assistant',
           content: `### 🛑 Daily Limit Reached\n\n${err.message}\n\nTo continue generating high-converting copy without interruption, upgrade your workspace plan:\n\n[**Upgrade Your Plan on Whop →**](https://whop.com/qreato/ai-leverage)`,
           timestamp: new Date().toISOString(),
@@ -626,29 +707,19 @@ export function ChatInterface({
         };
         finalMessages = [...updatedWithUser, limitNotice];
         setMessages(finalMessages);
+        await insertChatMessage(userId, targetSessionId, limitNotice);
       } else {
         const safeErrorMessage: Message = {
+          id: errorMsgId,
           role: 'assistant',
           content: "Something went wrong generating this — please try again in a moment.",
           timestamp: new Date().toISOString()
         };
         finalMessages = [...updatedWithUser, safeErrorMessage];
         setMessages(finalMessages);
+        await insertChatMessage(userId, targetSessionId, safeErrorMessage);
       }
-
-      if (userId && targetSessionId) {
-        const existing = await getSessionById(userId, targetSessionId);
-        const title = existing?.title || generateTitleFromMessage(text);
-        await saveSession(userId, {
-          id: targetSessionId,
-          userId,
-          title,
-          isPinned: existing?.isPinned || false,
-          createdAt: existing?.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          messages: finalMessages,
-        });
-      }
+      notifySessionsChanged();
     } finally {
       setIsLoading(false);
     }
@@ -701,51 +772,6 @@ export function ChatInterface({
       {/* MAIN SCROLL AREA */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pt-4 sm:pt-6 pb-[130px] px-3 sm:px-4 custom-scrollbar scroll-smooth relative z-10">
         <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
-          
-          {/* Neural Context Summary - Collapsible Label Section */}
-          {messages.length > 0 && (
-            <div className="mb-3">
-              <button 
-                type="button"
-                onClick={() => setIsContextExpanded(!isContextExpanded)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all border-dashed group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <QreatoLogo size={14} className={`transition-colors shrink-0 ${isContextExpanded ? "text-[#D946EF]" : "text-neutral-400"}`} />
-                </div>
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="text-[11px] text-white/35 font-medium truncate max-w-[150px] sm:max-w-xs">
-                    {messages.filter(m => m.role === 'user').slice(-1)[0]?.content}
-                  </div>
-                  <X size={12} className={`text-white/25 transition-transform ${isContextExpanded ? "rotate-0" : "rotate-45"}`} />
-                </div>
-              </button>
-              
-              <AnimatePresence>
-                {isContextExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-2 p-4 rounded-2xl bg-[#0A0812]/50 backdrop-blur-xl border border-[rgba(139,92,246,0.25)] shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
-                       <div className="flex items-center gap-2 mb-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#D946EF] animate-pulse" />
-                          <span className="text-[9px] font-bold text-[#C084FC]/80 uppercase tracking-widest">Latest User Brief</span>
-                       </div>
-                       <div className="prose prose-invert prose-xs max-w-none text-white/70 leading-relaxed">
-                          <ReactMarkdown components={markdownComponents}>
-                            {messages.filter(m => m.role === 'user').slice(-1)[0]?.content || ""}
-                          </ReactMarkdown>
-                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-
           {/* EMPTY STATE - CLEAN MINIMALIST HEADER */}
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center pt-8 sm:pt-16 pb-6 text-center">
@@ -792,9 +818,12 @@ export function ChatInterface({
 
           {/* MESSAGES LIST */}
           <AnimatePresence mode="popLayout">
-            {messages.map((m, i) => (
-              <motion.div 
-                key={m.timestamp || i}
+            {messages.map((m, i) => {
+              const messageKey = m.id ? `${m.id}-${i}` : `msg-${m.role}-${i}-${m.timestamp || ''}`;
+              const messageActionId = m.id || `${m.role}-${i}`;
+              return (
+                <motion.div 
+                  key={messageKey}
                 initial={{ 
                   opacity: 0, 
                   y: 20, 
@@ -814,54 +843,122 @@ export function ChatInterface({
                 }}
                 className={`flex ${m.role === "user" ? "justify-end relative z-10" : "justify-start relative z-10"} mb-6 last:mb-0`}
               >
-                <div className={m.role === "user" ? "user-bubble" : `ai-bubble relative group pr-11 ${m.isDailyLimit ? 'border-[#8B5CF6]/40 bg-[#120D1A]' : ''}`}>
-                  {m.role === "assistant" && !m.isDailyLimit && (
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(m.content, m.timestamp || i)}
-                      className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-[#D946EF] hover:border-[#8B5CF6]/40 hover:bg-[#8B5CF6]/10 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 z-20 flex items-center justify-center cursor-pointer"
-                      title="Copy persuasion brief"
-                    >
-                      {copiedId === (m.timestamp || i) ? (
-                        <div className="flex items-center gap-1">
-                          <Check size={13} className="text-[#D946EF]" />
-                          <span className="text-[9px] font-bold text-[#D946EF] uppercase tracking-wider">Copied!</span>
-                        </div>
-                      ) : (
-                        <Copy size={13} />
-                      )}
-                    </button>
-                  )}
-                  
+                <div className={m.role === "user" ? "user-bubble" : `ai-bubble relative group ${m.isDailyLimit ? 'border-[#8B5CF6]/40 bg-[#120D1A]' : ''}`}>
                   <div className="prose prose-invert max-w-none text-white/90 leading-relaxed text-[14px]">
                     <TypewriterMarkdown content={m.content} isNew={m.isNew} />
                   </div>
 
                   {/* If challengeResult is present on the assistant message, render the distinct Score Card UI */}
-                  {m.challengeResult && typeof m.challengeResult.overallScore === 'number' && (
-                    <ScoreCard 
-                      overallScore={m.challengeResult.overallScore}
-                      shareSlug={m.challengeResult.shareSlug}
-                      userCopy={
-                        m.challengeResult.userCopy || 
-                        m.challengeResult.copy || 
-                        (i > 0 && messages[i - 1]?.role === "user" ? messages[i - 1].content : undefined)
-                      }
-                      onNavigateToPublicChallenge={onNavigateToPublicChallenge}
-                      biggestLeverage={m.challengeResult.biggest_leverage || m.challengeResult.biggestLeverage}
-                      diagnosis={m.challengeResult.diagnosis || m.challengeResult.weakestReason}
-                      dimensions={m.challengeResult.dimensions || {
-                        attention: m.challengeResult.attention_score,
-                        clarity: m.challengeResult.clarity_score,
-                        desire: m.challengeResult.desire_score,
-                        persuasion: m.challengeResult.persuasion_score,
-                        action: m.challengeResult.action_score,
-                      }}
-                    />
+                  {(() => {
+                    const cardData = m.challengeResult || (m.content && m.content.includes("SCORE_DATA") ? parseAndExtractScoreData(m.content).challengeResult : null);
+                    if (!cardData || typeof cardData.overallScore !== 'number') return null;
+                    return (
+                      <ScoreCard 
+                        overallScore={cardData.overallScore}
+                        shareSlug={cardData.shareSlug}
+                        userCopy={
+                          cardData.userCopy || 
+                          cardData.copy || 
+                          (i > 0 && messages[i - 1]?.role === "user" ? messages[i - 1].content : undefined)
+                        }
+                        onNavigateToPublicChallenge={onNavigateToPublicChallenge}
+                        biggestLeverage={cardData.biggest_leverage || cardData.biggestLeverage}
+                        diagnosis={cardData.diagnosis || cardData.weakestReason}
+                        dimensions={cardData.dimensions || {
+                          attention: cardData.attention_score,
+                          clarity: cardData.clarity_score,
+                          desire: cardData.desire_score,
+                          persuasion: cardData.persuasion_score,
+                          action: cardData.action_score,
+                        }}
+                      />
+                    );
+                  })()}
+
+                  {/* Claude-style Under-Response Action Bar (when AI is done responding) */}
+                  {m.role === "assistant" && !m.isDailyLimit && (
+                    <div className="flex items-center justify-between pt-3 mt-3.5 border-t border-white/[0.06] select-none">
+                      {/* Qreato logo under responded text like Claude - strictly logo only, no text */}
+                      <div className="flex items-center text-white/40">
+                        <div 
+                          className="flex items-center justify-center w-5 h-5 rounded hover:text-white/80 transition-colors"
+                          title="Qreato"
+                        >
+                          <QreatoLogo size={14} className="text-white/60" dotClassName="text-white/60 fill-white/60" />
+                        </div>
+                      </div>
+
+                      {/* Claude-style action buttons: Copy, Like, Dislike, Regenerate */}
+                      <div className="flex items-center gap-1">
+                        {/* Copy button under response text */}
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(m.content, messageActionId)}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-xs"
+                          title="Copy response"
+                          aria-label="Copy response"
+                        >
+                          {copiedId === messageActionId ? (
+                            <>
+                              <Check size={14} className="text-emerald-400" />
+                              <span className="text-[11px] font-medium text-emerald-400">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={14} />
+                              <span className="text-[11px] font-medium opacity-0 sm:opacity-100 hidden sm:inline">Copy</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Like feedback button */}
+                        <button
+                          type="button"
+                          onClick={() => handleFeedback(messageActionId, 'like')}
+                          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                            feedbacks[messageActionId] === 'like'
+                              ? 'text-white bg-white/15'
+                              : 'text-white/50 hover:text-white hover:bg-white/[0.08]'
+                          }`}
+                          title="Good response"
+                          aria-label="Good response"
+                        >
+                          <ThumbsUp size={14} className={feedbacks[messageActionId] === 'like' ? 'fill-current' : ''} />
+                        </button>
+
+                        {/* Dislike feedback button */}
+                        <button
+                          type="button"
+                          onClick={() => handleFeedback(messageActionId, 'dislike')}
+                          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                            feedbacks[messageActionId] === 'dislike'
+                              ? 'text-white bg-white/15'
+                              : 'text-white/50 hover:text-white hover:bg-white/[0.08]'
+                          }`}
+                          title="Bad response"
+                          aria-label="Bad response"
+                        >
+                          <ThumbsDown size={14} className={feedbacks[messageActionId] === 'dislike' ? 'fill-current' : ''} />
+                        </button>
+
+                        {/* Regenerate button */}
+                        <button
+                          type="button"
+                          onClick={() => handleRegenerate(i)}
+                          disabled={isLoading}
+                          className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Regenerate response"
+                          aria-label="Regenerate response"
+                        >
+                          <RotateCw size={14} />
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </motion.div>
-            ))}
+            );
+          })}
 
             {/* CLEAN SIMPLIFIED LOADING INDICATOR */}
             {isLoading && (
@@ -993,22 +1090,25 @@ export function ChatInterface({
                   )}
                 </div>
 
-                {/* Right: Circular Up-Arrow Send Button */}
+                {/* Right: Circular Up-Arrow / Responding Stop Button */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="button"
-                  onClick={handleSend}
-                  disabled={isLoading || !inputValue.trim() || dailyLimitReached}
+                  onClick={isLoading ? () => setIsLoading(false) : handleSend}
+                  disabled={!isLoading && (!inputValue.trim() || dailyLimitReached)}
                   className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer ${
-                    inputValue.trim() && !isLoading && !dailyLimitReached
-                      ? "bg-white text-black shadow-md hover:bg-gray-200"
-                      : "bg-white/10 text-white/30 cursor-not-allowed border border-white/5"
+                    isLoading
+                      ? "bg-[#1C1C22] hover:bg-[#25252D] text-white/90 border border-white/20 shadow-inner"
+                      : inputValue.trim() && !dailyLimitReached
+                      ? "bg-white/20 hover:bg-white/25 text-white border border-white/20 shadow-sm"
+                      : "bg-white/[0.04] text-white/25 cursor-not-allowed border border-white/[0.06]"
                   }`}
-                  aria-label="Send brief"
+                  aria-label={isLoading ? "Stop responding" : "Send brief"}
+                  title={isLoading ? "Stop responding" : "Send brief"}
                 >
                   {isLoading ? (
-                    <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <Square size={12} className="fill-current text-white/90" />
                   ) : (
                     <ArrowUp size={16} className="stroke-[2.5]" />
                   )}
@@ -1016,8 +1116,35 @@ export function ChatInterface({
               </div>
             </div>
           </form>
+
+          {/* Claude-style thin single-line disclaimer under typing box */}
+          <div className="text-center pt-2 sm:pt-2.5 px-2 select-none pointer-events-none">
+            <p className="text-[11px] sm:text-xs text-neutral-400/75 font-light tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+              Murgii is AI and can make mistakes. Please double check responses
+            </p>
+          </div>
         </div>
       </footer>
+
+      {/* Short temporary pop up when user likes or dislikes an AI response */}
+      <AnimatePresence>
+        {feedbackToast.visible && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-24 sm:bottom-28 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          >
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#18181B]/95 border border-white/12 shadow-[0_10px_35px_rgba(0,0,0,0.7)] backdrop-blur-md">
+              <Check size={13} className="text-emerald-400 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-white/90 tracking-tight whitespace-nowrap">
+                Thanks for your feedback!
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

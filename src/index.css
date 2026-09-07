@@ -93,23 +93,46 @@ html {
     linear-gradient(to bottom, rgba(139, 92, 246, 0.06) 1px, transparent 1px);
 }
 
-/* Custom Scrollbar for Luxury Feel */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
+/* Site-wide Scrollbar Removal: Hide scrollbars completely while keeping full scrollability */
+html,
+body,
+#root,
+*,
+*::before,
+*::after {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.2);
-  border-radius: 10px;
-  transition: background 0.3s ease;
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-track {
+  display: none !important;
+  background: transparent !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(217, 70, 239, 0.4);
+.custom-scrollbar,
+.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
 .glass-card {
@@ -188,21 +211,7 @@ html {
     font-weight: 700;
   }
 
-  /* Custom Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(139, 92, 246, 0.3);
-  }
+  /* Scrollbar fully hidden site-wide */
 }
 
 @layer components {
@@ -420,39 +429,66 @@ html {
   z-index: 101;
 }
 
+@keyframes qreatoFadeDot {
+  0% { opacity: 0.15; }
+  20% { opacity: 1; }
+  84% { opacity: 1; }
+  96%, 100% { opacity: 0.15; }
+}
+
+@keyframes qreatoFadeSlash1 {
+  0%, 20% { opacity: 0.15; }
+  44% { opacity: 1; }
+  84% { opacity: 1; }
+  96%, 100% { opacity: 0.15; }
+}
+
+@keyframes qreatoFadeSlash2 {
+  0%, 44% { opacity: 0.15; }
+  68% { opacity: 1; }
+  84% { opacity: 1; }
+  96%, 100% { opacity: 0.15; }
+}
+
+.animate-qreato-dot {
+  animation: qreatoFadeDot 1.6s ease-in-out infinite;
+}
+
+.animate-qreato-slash-1 {
+  animation: qreatoFadeSlash1 1.6s ease-in-out infinite;
+}
+
+.animate-qreato-slash-2 {
+  animation: qreatoFadeSlash2 1.6s ease-in-out infinite;
+}
+
 /* SECTION SEVEN — AI MESSAGE ENTRANCE ANIMATIONS */
 .user-bubble {
   align-self: flex-end;
-  max-width: 80%;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(217, 70, 239, 0.12) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  border-radius: 18px 18px 4px 18px;
-  padding: 13px 16px;
+  max-width: 82%;
+  background: #1A1A1E;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px 20px 6px 20px;
+  padding: 13px 18px;
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.94);
-  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.6;
   word-break: break-word;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
 }
 
 .ai-bubble {
   align-self: flex-start;
-  max-width: 90%;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: 1px solid rgba(139, 92, 246, 0.25);
-  border-radius: 18px 18px 18px 4px;
-  padding: 16px 18px;
+  width: 100%;
+  max-width: 100%;
+  background: #111114;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  padding: 18px 22px;
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.90);
+  color: rgba(255, 255, 255, 0.92);
   line-height: 1.65;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 0 20px rgba(139, 92, 246, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   word-break: break-word;
 }
 

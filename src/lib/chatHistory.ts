@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { parseAndExtractScoreData, stripScoreDataTags } from "./scoreData";
 
 export interface ChatMessage {
   id?: string;
@@ -80,8 +81,8 @@ export function notifySessionsChanged() {
 /**
  * Encodes challengeResult into content if present.
  */
-function encodeMessageContent(msg: ChatMessage): string {
-  let text = msg.content || "";
+export function encodeMessageContent(msg: { content: string; challengeResult?: any }): string {
+  let text = stripScoreDataTags(msg.content || "");
   if (msg.challengeResult && typeof msg.challengeResult === "object") {
     text += `\n\n<!--CHALLENGE_RESULT:${JSON.stringify(msg.challengeResult)}-->`;
   }
@@ -91,7 +92,7 @@ function encodeMessageContent(msg: ChatMessage): string {
 /**
  * Decodes message content and extracts challengeResult if embedded.
  */
-function decodeMessageContent(rawContent: string): { content: string; challengeResult: any | null } {
+export function decodeMessageContent(rawContent: string): { content: string; challengeResult: any | null } {
   if (!rawContent) return { content: "", challengeResult: null };
   let content = rawContent;
   let challengeResult: any | null = null;
@@ -106,25 +107,33 @@ function decodeMessageContent(rawContent: string): { content: string; challengeR
     content = content.replace(/<!--CHALLENGE_RESULT:(.*?)-->/s, "").trim();
   }
 
+  // Also check if raw SCORE_DATA is in the content and clean it up
+  const parsed = parseAndExtractScoreData(content);
+  if (parsed.challengeResult && !challengeResult) {
+    challengeResult = parsed.challengeResult;
+  }
+  content = parsed.cleanText;
+
   return { content, challengeResult };
 }
 
 /**
  * Loads all chat sessions for a user directly from Supabase chat_sessions table as authoritative single source of truth.
+ * Queries fresh on every call: SELECT * FROM chat_sessions WHERE user_id = [current user] ORDER BY created_at DESC
  */
 export async function loadUserSessions(userId: string): Promise<ChatSession[]> {
   if (!userId) {
-    console.warn("[Supabase Chat] loadUserSessions called without userId");
+    console.warn("[Supabase Chat Warning] loadUserSessions called without userId");
     return [];
   }
 
-  console.log("[Supabase Chat] Querying chat_sessions for user_id:", userId);
+  console.log(`[Supabase Chat] Querying chat_sessions fresh for user_id: ${userId} ORDER BY created_at DESC`);
   try {
     const { data: sessionRows, error: sessionErr } = await supabase
       .from("chat_sessions")
       .select("*")
       .eq("user_id", userId)
-      .order("updated_at", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (sessionErr) {
       console.error("[Supabase Chat Error] Failed to fetch chat_sessions from Supabase:", sessionErr.message || sessionErr);
@@ -138,21 +147,23 @@ export async function loadUserSessions(userId: string): Promise<ChatSession[]> {
 
     console.log(`[Supabase Chat] Successfully retrieved ${sessionRows.length} sessions from chat_sessions table.`);
 
-    const sessions: ChatSession[] = sessionRows.map((row: any) => ({
-      id: row.id,
-      userId: row.user_id || userId,
-      title: row.title || "New Conversation",
-      isPinned: Boolean(row.is_pinned),
-      createdAt: row.created_at || new Date().toISOString(),
-      updatedAt: row.updated_at || new Date().toISOString(),
-      messages: [],
-    }));
+    const seenSessionIds = new Set<string>();
+    const sessions: ChatSession[] = [];
+    for (const row of sessionRows) {
+      if (!row.id || seenSessionIds.has(row.id)) continue;
+      seenSessionIds.add(row.id);
+      sessions.push({
+        id: row.id,
+        userId: row.user_id || userId,
+        title: row.title || "New Conversation",
+        isPinned: false,
+        createdAt: row.created_at || new Date().toISOString(),
+        updatedAt: row.updated_at || new Date().toISOString(),
+        messages: [],
+      });
+    }
 
-    return sessions.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
+    return sessions;
   } catch (err) {
     console.error("[Supabase Chat Error] Unexpected exception loading user sessions:", err);
     return [];
@@ -160,7 +171,53 @@ export async function loadUserSessions(userId: string): Promise<ChatSession[]> {
 }
 
 /**
+ * Creates a brand new chat session row directly in the Supabase chat_sessions table BEFORE any messages are sent.
+ */
+export async function createChatSession(userId: string, initialTitle: string = "New Conversation"): Promise<ChatSession | null> {
+  if (!userId) {
+    console.error("[Supabase Chat Error] createChatSession called without userId");
+    return null;
+  }
+  const sessionId = generateUuid();
+  const now = new Date().toISOString();
+  console.log(`[Supabase Chat] Creating new chat_sessions row in Supabase for user ${userId} with id: ${sessionId}`);
+
+  try {
+    const { error } = await supabase
+      .from("chat_sessions")
+      .insert({
+        id: sessionId,
+        user_id: userId,
+        title: initialTitle,
+        created_at: now,
+        updated_at: now,
+      });
+
+    if (error) {
+      console.error("[Supabase Chat Error] Failed to insert new chat_session:", error.message || error, error);
+      return null;
+    }
+
+    console.log(`[Supabase Chat] Successfully inserted chat_session into Supabase with ID: ${sessionId}`);
+    notifySessionsChanged();
+    return {
+      id: sessionId,
+      userId,
+      title: initialTitle,
+      isPinned: false,
+      createdAt: now,
+      updatedAt: now,
+      messages: [],
+    };
+  } catch (err) {
+    console.error("[Supabase Chat Error] Exception in createChatSession:", err);
+    return null;
+  }
+}
+
+/**
  * Fetches a single chat session with its full message history fresh from Supabase.
+ * Queries chat_messages table filtered by session_id ORDER BY created_at ASC.
  */
 export async function getSessionById(userId: string, sessionId: string): Promise<ChatSession | null> {
   if (!userId || !sessionId) return null;
@@ -181,11 +238,12 @@ export async function getSessionById(userId: string, sessionId: string): Promise
     }
 
     if (!sessionData) {
-      console.warn(`[Supabase Chat Warning] Session ${sessionId} not found in chat_sessions table.`);
+      console.warn(`[Supabase Chat Warning] Session ${sessionId} not found in chat_sessions table for user ${userId}.`);
       return null;
     }
 
     // 2. Fetch messages fresh from chat_messages table
+    console.log(`[Supabase Chat] Querying chat_messages fresh for session_id: ${sessionId} ORDER BY created_at ASC`);
     const { data: messageRows, error: msgErr } = await supabase
       .from("chat_messages")
       .select("*")
@@ -196,26 +254,31 @@ export async function getSessionById(userId: string, sessionId: string): Promise
       console.error(`[Supabase Chat Error] Failed to fetch messages from chat_messages for session ${sessionId}:`, msgErr.message || msgErr);
     }
 
-    const messages: ChatMessage[] = Array.isArray(messageRows)
-      ? messageRows.map((msgRow: any) => {
-          const { content, challengeResult } = decodeMessageContent(msgRow.content || "");
-          return {
-            id: msgRow.id,
-            role: msgRow.role,
-            content,
-            timestamp: msgRow.created_at,
-            challengeResult,
-          };
-        })
-      : [];
+    const seenMsgIds = new Set<string>();
+    const messages: ChatMessage[] = [];
+    if (Array.isArray(messageRows)) {
+      for (const msgRow of messageRows) {
+        const msgId = msgRow.id || `msg-${messages.length}-${msgRow.created_at || ""}`;
+        if (seenMsgIds.has(msgId)) continue;
+        seenMsgIds.add(msgId);
+        const { content, challengeResult } = decodeMessageContent(msgRow.content || "");
+        messages.push({
+          id: msgId,
+          role: msgRow.role,
+          content,
+          timestamp: msgRow.created_at,
+          challengeResult,
+        });
+      }
+    }
 
-    console.log(`[Supabase Chat] Loaded session ${sessionId} with ${messages.length} messages fresh from Supabase.`);
+    console.log(`[Supabase Chat] Successfully retrieved ${messages.length} messages fresh from chat_messages for session: ${sessionId}`);
 
     return {
       id: sessionData.id,
       userId: sessionData.user_id || userId,
       title: sessionData.title || "New Conversation",
-      isPinned: Boolean(sessionData.is_pinned),
+      isPinned: false,
       createdAt: sessionData.created_at || new Date().toISOString(),
       updatedAt: sessionData.updated_at || new Date().toISOString(),
       messages,
@@ -238,6 +301,17 @@ export async function ensureSessionExists(userId: string, sessionId: string, tit
   console.log(`[Supabase Chat] Ensuring session row exists in chat_sessions: ${validSessionId}`);
 
   try {
+    const { data: existing } = await supabase
+      .from("chat_sessions")
+      .select("id")
+      .eq("id", validSessionId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (existing) {
+      return true;
+    }
+
     const payload = {
       id: validSessionId,
       user_id: userId,
@@ -246,14 +320,15 @@ export async function ensureSessionExists(userId: string, sessionId: string, tit
       updated_at: now,
     };
 
-    const { error } = await supabase.from("chat_sessions").upsert(payload, { onConflict: "id" });
+    const { error } = await supabase.from("chat_sessions").insert(payload);
 
     if (error) {
-      console.error("[Supabase Chat Error] Error inserting/upserting chat_sessions row:", error.message || error);
+      console.error("[Supabase Chat Error] Error inserting chat_sessions row:", error.message || error);
       return false;
     }
 
-    console.log(`[Supabase Chat] Successfully ensured chat_sessions row: ${validSessionId}`);
+    console.log(`[Supabase Chat] Successfully created chat_sessions row: ${validSessionId}`);
+    notifySessionsChanged();
     return true;
   } catch (err) {
     console.error("[Supabase Chat Error] Exception in ensureSessionExists:", err);
@@ -262,31 +337,34 @@ export async function ensureSessionExists(userId: string, sessionId: string, tit
 }
 
 /**
- * Inserts a single chat message directly into Supabase chat_messages table and updates session timestamp.
+ * Inserts a single chat message directly into Supabase chat_messages table immediately.
  */
-export async function saveSingleMessage(userId: string, sessionId: string, message: ChatMessage, sessionTitle?: string): Promise<boolean> {
-  if (!userId || !sessionId) return false;
+export async function insertChatMessage(
+  userId: string,
+  sessionId: string,
+  message: ChatMessage
+): Promise<boolean> {
+  if (!userId || !sessionId) {
+    console.error("[Supabase Chat Error] insertChatMessage missing userId or sessionId", { userId, sessionId });
+    return false;
+  }
 
-  const validSessionId = isUuid(sessionId) ? sessionId : generateUuid();
   const validMessageId = message.id && isUuid(message.id) ? message.id : generateUuid();
   const now = message.timestamp || new Date().toISOString();
 
-  // 1. Ensure the parent chat_sessions row exists
-  await ensureSessionExists(userId, validSessionId, sessionTitle);
+  console.log(`[Supabase Chat] Inserting message (${message.role}) ${validMessageId} into chat_messages for session: ${sessionId}`);
 
-  // 2. Insert message into chat_messages
-  console.log(`[Supabase Chat] Inserting message (${message.role}) into chat_messages for session: ${validSessionId}`);
   try {
     const messagePayload = {
       id: validMessageId,
-      session_id: validSessionId,
+      session_id: sessionId,
       user_id: userId,
       role: message.role,
       content: encodeMessageContent(message),
       created_at: now,
     };
 
-    const { error: msgErr } = await supabase.from("chat_messages").upsert(messagePayload, { onConflict: "id" });
+    const { error: msgErr } = await supabase.from("chat_messages").insert(messagePayload);
 
     if (msgErr) {
       console.error("[Supabase Chat Error] Error inserting into chat_messages:", msgErr.message || msgErr);
@@ -295,27 +373,63 @@ export async function saveSingleMessage(userId: string, sessionId: string, messa
 
     console.log(`[Supabase Chat] Successfully saved message ${validMessageId} into chat_messages table.`);
 
-    // 3. Update parent session updated_at timestamp
+    // Update parent session updated_at timestamp
     const { error: sessionUpdateErr } = await supabase
       .from("chat_sessions")
-      .update({ updated_at: new Date().toISOString(), title: sessionTitle || undefined })
-      .eq("id", validSessionId)
+      .update({ updated_at: now })
+      .eq("id", sessionId)
       .eq("user_id", userId);
 
     if (sessionUpdateErr) {
       console.warn("[Supabase Chat Warning] Could not update session updated_at timestamp:", sessionUpdateErr.message || sessionUpdateErr);
     }
 
-    notifySessionsChanged();
     return true;
   } catch (err) {
-    console.error("[Supabase Chat Error] Exception in saveSingleMessage:", err);
+    console.error("[Supabase Chat Error] Exception in insertChatMessage:", err);
     return false;
   }
 }
 
 /**
- * Saves or updates a full chat session in Supabase.
+ * Updates a chat session's title in Supabase chat_sessions.
+ */
+export async function updateSessionTitle(userId: string, sessionId: string, newTitle: string): Promise<boolean> {
+  if (!userId || !sessionId || !newTitle.trim()) return false;
+  const cleanTitle = newTitle.trim();
+
+  console.log(`[Supabase Chat] Updating session ${sessionId} title to "${cleanTitle}" in chat_sessions...`);
+  try {
+    const { error } = await supabase
+      .from("chat_sessions")
+      .update({ title: cleanTitle, updated_at: new Date().toISOString() })
+      .eq("id", sessionId)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("[Supabase Chat Error] Error updating session title:", error.message || error);
+      return false;
+    }
+
+    console.log(`[Supabase Chat] Updated title for session ${sessionId} successfully.`);
+    notifySessionsChanged();
+    return true;
+  } catch (err) {
+    console.error("[Supabase Chat Error] Exception in updateSessionTitle:", err);
+    return false;
+  }
+}
+
+/**
+ * Saves a single message and ensures parent session exists.
+ */
+export async function saveSingleMessage(userId: string, sessionId: string, message: ChatMessage, sessionTitle?: string): Promise<boolean> {
+  await ensureSessionExists(userId, sessionId, sessionTitle);
+  return insertChatMessage(userId, sessionId, message);
+}
+
+/**
+ * Saves or updates a full chat session in Supabase (legacy compatibility wrapper).
  */
 export async function saveSession(userId: string, session: ChatSession): Promise<ChatSession[]> {
   if (!userId || !session.id) return [];
@@ -348,37 +462,13 @@ export async function saveSession(userId: string, session: ChatSession): Promise
 
   // 2. Insert messages into chat_messages table
   if (Array.isArray(session.messages) && session.messages.length > 0) {
-    try {
-      const messageRows = session.messages.map((msg) => {
-        const msgId = msg.id && isUuid(msg.id) ? msg.id : generateUuid();
-        return {
-          id: msgId,
-          session_id: validSessionId,
-          user_id: userId,
-          role: msg.role,
-          content: encodeMessageContent(msg),
-          created_at: msg.timestamp || now,
-        };
-      });
-
-      const { error: msgErr } = await supabase.from("chat_messages").upsert(messageRows, { onConflict: "id" });
-
-      if (msgErr) {
-        console.error("[Supabase Chat Error] Error upserting chat_messages rows:", msgErr.message || msgErr);
-      } else {
-        console.log(`[Supabase Chat] Successfully saved ${messageRows.length} messages to chat_messages table.`);
-      }
-    } catch (err) {
-      console.error("[Supabase Chat Error] Exception upserting messages to chat_messages:", err);
+    for (const msg of session.messages) {
+      await insertChatMessage(userId, validSessionId, msg);
     }
   }
 
-  // 3. Immediately re-fetch full session list from Supabase
   const freshSessions = await loadUserSessions(userId);
-
-  // 4. Notify listeners
   notifySessionsChanged();
-
   return freshSessions;
 }
 
@@ -386,62 +476,18 @@ export async function saveSession(userId: string, session: ChatSession): Promise
  * Renames a chat session in Supabase and re-fetches the fresh list.
  */
 export async function renameSession(userId: string, sessionId: string, newTitle: string): Promise<void> {
-  if (!userId || !sessionId) return;
-  const cleanTitle = newTitle.trim();
-  if (!cleanTitle) return;
-
-  console.log(`[Supabase Chat] Renaming session ${sessionId} to "${cleanTitle}" in Supabase...`);
-  try {
-    const { error } = await supabase
-      .from("chat_sessions")
-      .update({ title: cleanTitle, updated_at: new Date().toISOString() })
-      .eq("id", sessionId)
-      .eq("user_id", userId);
-
-    if (error) {
-      console.error("[Supabase Chat Error] Error renaming session:", error.message || error);
-    } else {
-      console.log(`[Supabase Chat] Renamed session ${sessionId} successfully.`);
-    }
-  } catch (err) {
-    console.error("[Supabase Chat Error] Exception in renameSession:", err);
-  }
-
+  await updateSessionTitle(userId, sessionId, newTitle);
   await loadUserSessions(userId);
-  notifySessionsChanged();
 }
 
 /**
- * Toggles the pinned status of a chat session in Supabase and re-fetches.
+ * Toggles the pinned status of a chat session in Supabase (in-memory/no-op if column absent).
  */
 export async function togglePinSession(userId: string, sessionId: string): Promise<boolean> {
   if (!userId || !sessionId) return false;
-
-  console.log(`[Supabase Chat] Toggling pin status for session: ${sessionId}`);
-  const currentSessions = await loadUserSessions(userId);
-  const target = currentSessions.find((s) => s.id === sessionId);
-  const newPinnedState = target ? !target.isPinned : true;
-
-  try {
-    const { error } = await supabase
-      .from("chat_sessions")
-      .update({ is_pinned: newPinnedState, updated_at: new Date().toISOString() })
-      .eq("id", sessionId)
-      .eq("user_id", userId);
-
-    if (error) {
-      console.warn("[Supabase Chat Warning] Could not update is_pinned column in chat_sessions:", error.message || error);
-    } else {
-      console.log(`[Supabase Chat] Updated pin status for session ${sessionId} to ${newPinnedState}`);
-    }
-  } catch (err) {
-    console.error("[Supabase Chat Error] Exception in togglePinSession:", err);
-  }
-
-  await loadUserSessions(userId);
+  console.log(`[Supabase Chat] togglePinSession requested for ${sessionId}`);
   notifySessionsChanged();
-
-  return newPinnedState;
+  return true;
 }
 
 /**

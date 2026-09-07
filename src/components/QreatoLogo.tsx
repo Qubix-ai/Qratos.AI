@@ -4,6 +4,7 @@ interface QreatoLogoProps {
   size?: number | string;
   className?: string;
   dotClassName?: string;
+  animated?: boolean;
 }
 
 /**
@@ -14,11 +15,14 @@ interface QreatoLogoProps {
  * 3. Right: Second parallel angled rounded capsule
  * Perfectly balanced spacing: equal, clear gap between dot and first bar,
  * and a small, even, distinct gap between the two parallel bars.
+ * When animated=true: stays stationary (does not spin), elements fade in sequentially
+ * starting with •, then /, then another /, and repeats.
  */
 export function QreatoLogo({ 
   size = 20, 
   className = "text-white", 
-  dotClassName = ""
+  dotClassName = "",
+  animated = false,
 }: QreatoLogoProps) {
   return (
     <svg
@@ -30,16 +34,16 @@ export function QreatoLogo({
       className={`shrink-0 select-none ${className}`}
       aria-label="Qreato Logo"
     >
-      {/* 1. Left Solid Circular Dot */}
+      {/* 1. Left Solid Circular Dot (•) */}
       <circle
         cx="25.5"
         cy="50"
         r="5.75"
         fill="currentColor"
-        className={dotClassName}
+        className={`${dotClassName} ${animated ? "animate-qreato-dot" : ""}`.trim()}
       />
 
-      {/* 2. First Angled Rounded Bar */}
+      {/* 2. First Angled Rounded Bar (/) */}
       <line
         x1="38.5"
         y1="64"
@@ -48,9 +52,10 @@ export function QreatoLogo({
         stroke="currentColor"
         strokeWidth="11.5"
         strokeLinecap="round"
+        className={animated ? "animate-qreato-slash-1" : ""}
       />
 
-      {/* 3. Second Angled Rounded Bar */}
+      {/* 3. Second Angled Rounded Bar (/) */}
       <line
         x1="59.5"
         y1="64"
@@ -59,6 +64,7 @@ export function QreatoLogo({
         stroke="currentColor"
         strokeWidth="11.5"
         strokeLinecap="round"
+        className={animated ? "animate-qreato-slash-2" : ""}
       />
     </svg>
   );

@@ -22,49 +22,19 @@ export function getScoreTierConfig(score: number) {
     return {
       tierKey: "LOW",
       tierLabel: "NEEDS WORK",
-      accentColor: "#EF4444", // Crimson Red
-      secondaryColor: "#F87171",
-      badgeBg: "rgba(127, 29, 29, 0.85)",
-      badgeBorder: "rgba(239, 68, 68, 0.6)",
-      badgeText: "#FCA5A5",
-      radialGlow: "radial-gradient(circle at 50% 30%, rgba(220, 38, 38, 0.35) 0%, rgba(153, 27, 27, 0.15) 50%, rgba(7, 5, 14, 0) 75%)",
-      cardBorder: "rgba(239, 68, 68, 0.45)",
-      cardBg: "#110912",
-      boxBg: "#1D0D14",
-      scoreGlow: "drop-shadow(0 0 45px rgba(239, 68, 68, 0.5))",
-      bannerText: "NEEDS PSYCHOLOGICAL RE-FRAME",
+      accentColor: "#E5484D", // Muted red accent
     };
   } else if (score <= 74) {
     return {
       tierKey: "MID",
       tierLabel: "PROSPECTIVE COPY",
-      accentColor: "#F59E0B", // Warm Amber / Gold
-      secondaryColor: "#FBBF24",
-      badgeBg: "rgba(120, 53, 15, 0.85)",
-      badgeBorder: "rgba(245, 158, 11, 0.6)",
-      badgeText: "#FDE68A",
-      radialGlow: "radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.35) 0%, rgba(180, 83, 9, 0.15) 50%, rgba(7, 5, 14, 0) 75%)",
-      cardBorder: "rgba(245, 158, 11, 0.45)",
-      cardBg: "#14100B",
-      boxBg: "#22190E",
-      scoreGlow: "drop-shadow(0 0 45px rgba(245, 158, 11, 0.5))",
-      bannerText: "SOLID FOUNDATION · NEEDS URGENCY",
+      accentColor: "#D4A94D", // Amber/Gold accent
     };
   } else {
     return {
       tierKey: "HIGH",
       tierLabel: "ELITE COPY",
-      accentColor: "#10B981", // Celebratory Emerald & Gold
-      secondaryColor: "#34D399",
-      badgeBg: "rgba(6, 78, 59, 0.85)",
-      badgeBorder: "rgba(16, 185, 129, 0.6)",
-      badgeText: "#A7F3D0",
-      radialGlow: "radial-gradient(circle at 50% 30%, rgba(16, 185, 129, 0.38) 0%, rgba(168, 85, 247, 0.2) 50%, rgba(7, 5, 14, 0) 75%)",
-      cardBorder: "rgba(16, 185, 129, 0.5)",
-      cardBg: "#081310",
-      boxBg: "#0F211B",
-      scoreGlow: "drop-shadow(0 0 55px rgba(16, 185, 129, 0.6))",
-      bannerText: "HIGH-CONVERSION ARCHITECTURE",
+      accentColor: "#F0D375", // Bright gold/champagne accent
     };
   }
 }
@@ -140,7 +110,7 @@ function sanitizeCopy(text?: string) {
 /**
  * StoryScoreCard Component
  * Fixed Pixel Dimensions: Exactly 1080px width × 1920px height (9:16 aspect ratio).
- * Designed specifically for 100% reliable canvas export and direct Instagram Story sharing.
+ * Redesigned with a minimal, premium editorial layout (museum plaque / certificate aesthetic).
  */
 export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
   overallScore,
@@ -159,71 +129,56 @@ export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
       style={{
         width: "1080px",
         height: "1920px",
-        backgroundColor: "#07050E",
+        backgroundColor: "#0A0A0A",
+        background: "radial-gradient(ellipse at 50% 40%, #161616 0%, #0A0A0A 70%, #050505 100%)",
         color: "#FFFFFF",
         position: "relative",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "80px 60px 70px 60px",
+        padding: "110px 90px 90px 90px",
         boxSizing: "border-box",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         overflow: "hidden",
       }}
     >
-      {/* Background Dynamic Radial Glow according to Score Tier */}
+      {/* Outer Subtle Frame Accent */}
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          width: "1080px",
-          height: "1920px",
-          background: config.radialGlow,
+          top: "40px",
+          left: "40px",
+          right: "40px",
+          bottom: "40px",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          borderRadius: "32px",
           pointerEvents: "none",
-          zIndex: 1,
         }}
       />
 
-      {/* Outer Decorative Subtle Frame Accent */}
+      {/* TOP HEADER: Small & unobtrusive branding */}
       <div
         style={{
-          position: "absolute",
-          top: "30px",
-          left: "30px",
-          right: "30px",
-          bottom: "30px",
-          border: `1px solid ${config.cardBorder}`,
-          borderRadius: "48px",
-          pointerEvents: "none",
-          zIndex: 2,
-          opacity: 0.6,
-        }}
-      />
-
-      {/* TOP HEADER: Qreato Branding */}
-      <div
-        style={{
-          width: "960px",
+          width: "900px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           zIndex: 10,
-          paddingBottom: "30px",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
+          paddingBottom: "40px",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
-        {/* Left: Brand Mark */}
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <QreatoLogo size={68} className="text-white" dotClassName="text-white fill-white" />
+        {/* Left: Small Logo Mark + Clean Title (No sparkles or decorative icons) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <QreatoLogo size={40} className="text-white" dotClassName="text-white fill-white" />
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span
               style={{
                 fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, sans-serif",
-                fontWeight: 800,
-                fontSize: "30px",
-                letterSpacing: "-0.02em",
+                fontWeight: 700,
+                fontSize: "22px",
+                letterSpacing: "-0.01em",
                 color: "#FFFFFF",
                 lineHeight: 1.1,
               }}
@@ -233,11 +188,11 @@ export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
             <span
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "18px",
-                color: "rgba(255, 255, 255, 0.5)",
+                fontSize: "13px",
+                color: "rgba(255, 255, 255, 0.4)",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
-                marginTop: "4px",
+                marginTop: "3px",
               }}
             >
               PERSUASION AUDIT
@@ -245,169 +200,66 @@ export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
           </div>
         </div>
 
-        {/* Right: URL pill */}
-        <div
+        {/* Right: Small, plain, muted-gray URL text (No icon) */}
+        <span
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.08)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "100px",
-            padding: "12px 28px",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
+            fontFamily: "'JetBrains Mono', monospace",
+            fontWeight: 500,
+            fontSize: "16px",
+            color: "rgba(255, 255, 255, 0.4)",
+            letterSpacing: "0.08em",
           }}
         >
-          <span
-            style={{
-              width: "10px",
-              height: "10px",
-              borderRadius: "50%",
-              backgroundColor: config.accentColor,
-            }}
-          />
-          <span
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontWeight: 600,
-              fontSize: "20px",
-              color: "#FFFFFF",
-              letterSpacing: "0.05em",
-            }}
-          >
-            murgii.vercel.app
-          </span>
-        </div>
+          murgii.vercel.app
+        </span>
       </div>
 
-      {/* CENTER MAIN SCORE CARD FRAME */}
+      {/* CENTER CONTENT CONTAINER WITH GENEROUS EDITORIAL SPACING */}
       <div
         style={{
-          width: "960px",
-          backgroundColor: config.cardBg,
-          border: `2px solid ${config.cardBorder}`,
-          borderRadius: "44px",
-          padding: "54px 50px",
-          boxSizing: "border-box",
+          width: "900px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           textAlign: "center",
-          boxShadow: "0 30px 90px rgba(0, 0, 0, 0.95)",
           zIndex: 10,
-          position: "relative",
+          padding: "10px 0",
         }}
       >
-        {/* Rating Subtitle */}
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 700,
-            fontSize: "20px",
-            letterSpacing: "0.3em",
-            color: "rgba(255, 255, 255, 0.45)",
-            textTransform: "uppercase",
-            marginBottom: "12px",
-          }}
-        >
-          OVERALL PERSUASION RATING
-        </span>
-
-        {/* Big Dominant Score Display */}
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", filter: config.scoreGlow, margin: "10px 0 20px 0" }}>
-          <span
-            style={{
-              fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, sans-serif",
-              fontWeight: 900,
-              fontSize: "190px",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-              color: "#FFFFFF",
-            }}
-          >
-            {overallScore}
-          </span>
-          <span
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontWeight: 700,
-              fontSize: "64px",
-              color: "rgba(255, 255, 255, 0.35)",
-              marginLeft: "12px",
-            }}
-          >
-            /100
-          </span>
-        </div>
-
-        {/* Tier Badge Pill */}
-        <div
-          style={{
-            backgroundColor: config.badgeBg,
-            border: `1.5px solid ${config.badgeBorder}`,
-            borderRadius: "100px",
-            padding: "12px 40px",
-            marginBottom: "36px",
-            display: "inline-block",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontWeight: 800,
-              fontSize: "22px",
-              letterSpacing: "0.2em",
-              color: config.badgeText,
-              textTransform: "uppercase",
-            }}
-          >
-            {config.tierLabel}
-          </span>
-        </div>
-
-        {/* Evaluated Copy Snippet (if userCopy present) */}
+        {/* EVALUATED COPY — Clean quoted line without container box */}
         {cleanCopy && (
           <div
             style={{
               width: "100%",
-              backgroundColor: config.boxBg,
-              border: "1px solid rgba(255, 255, 255, 0.14)",
-              borderRadius: "28px",
-              padding: "28px 32px",
-              marginBottom: "36px",
-              textAlign: "left",
-              boxSizing: "border-box",
+              marginBottom: "80px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <span
-                style={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(255, 255, 255, 0.6)",
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontWeight: 700,
-                  fontSize: "18px",
-                  letterSpacing: "0.22em",
-                  color: "rgba(255, 255, 255, 0.5)",
-                  textTransform: "uppercase",
-                }}
-              >
-                EVALUATED COPY
-              </span>
-            </div>
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontWeight: 600,
+                fontSize: "14px",
+                letterSpacing: "0.25em",
+                color: "rgba(255, 255, 255, 0.4)",
+                textTransform: "uppercase",
+                marginBottom: "20px",
+              }}
+            >
+              EVALUATED COPY
+            </span>
             <p
               style={{
                 fontFamily: "Inter, -apple-system, sans-serif",
-                fontSize: "26px",
+                fontSize: "28px",
+                fontWeight: 400,
                 fontStyle: "italic",
-                color: "rgba(255, 255, 255, 0.92)",
-                lineHeight: 1.5,
+                color: "rgba(255, 255, 255, 0.88)",
+                lineHeight: 1.55,
                 margin: 0,
+                maxWidth: "820px",
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
@@ -419,42 +271,147 @@ export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
           </div>
         )}
 
-        {/* Biggest Leverage Dimension + Diagnosis */}
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {/* HERO SCORE DISPLAY — Score is unmistakably the hero element */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginBottom: "70px",
+          }}
+        >
           <span
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontWeight: 700,
-              fontSize: "18px",
-              letterSpacing: "0.25em",
-              color: "rgba(255, 255, 255, 0.45)",
+              fontWeight: 600,
+              fontSize: "14px",
+              letterSpacing: "0.3em",
+              color: "rgba(255, 255, 255, 0.4)",
               textTransform: "uppercase",
-              marginBottom: "8px",
+              marginBottom: "24px",
+            }}
+          >
+            OVERALL PERSUASION SCORE
+          </span>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "center",
+              lineHeight: 0.82,
+            }}
+          >
+            {/* Score number dramatically large in Tier Accent Color */}
+            <span
+              style={{
+                fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, sans-serif",
+                fontWeight: 900,
+                fontSize: "270px",
+                letterSpacing: "-0.05em",
+                color: config.accentColor,
+                lineHeight: 0.82,
+              }}
+            >
+              {overallScore}
+            </span>
+            {/* /100 notably smaller in muted gray */}
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontWeight: 500,
+                fontSize: "52px",
+                color: "rgba(255, 255, 255, 0.35)",
+                marginLeft: "18px",
+              }}
+            >
+              /100
+            </span>
+          </div>
+
+          {/* Clean Tier Label Pill */}
+          <div
+            style={{
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              borderRadius: "100px",
+              padding: "10px 32px",
+              marginTop: "32px",
+              backgroundColor: "rgba(255, 255, 255, 0.02)",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontWeight: 600,
+                fontSize: "15px",
+                letterSpacing: "0.2em",
+                color: "rgba(255, 255, 255, 0.7)",
+                textTransform: "uppercase",
+              }}
+            >
+              {config.tierLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* THIN ACCENT RULE (1-2px line in Tier Accent Color) */}
+        <div
+          style={{
+            width: "120px",
+            height: "1px",
+            backgroundColor: config.accentColor,
+            opacity: 0.75,
+            marginBottom: "70px",
+          }}
+        />
+
+        {/* BIGGEST LEVERAGE SECTION */}
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontWeight: 600,
+              fontSize: "14px",
+              letterSpacing: "0.25em",
+              color: "rgba(255, 255, 255, 0.4)",
+              textTransform: "uppercase",
+              marginBottom: "16px",
             }}
           >
             BIGGEST LEVERAGE
           </span>
+
+          {/* Heading in Tier Accent Color */}
           <span
             style={{
               fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, sans-serif",
               fontWeight: 800,
-              fontSize: "34px",
-              letterSpacing: "0.08em",
-              color: "#FFFFFF",
+              fontSize: "36px",
+              letterSpacing: "0.05em",
+              color: config.accentColor,
               textTransform: "uppercase",
-              marginBottom: "12px",
+              marginBottom: "16px",
             }}
           >
             {leverageData.dimension}
           </span>
+
           <p
             style={{
               fontFamily: "Inter, -apple-system, sans-serif",
-              fontSize: "24px",
-              color: "rgba(255, 255, 255, 0.75)",
-              lineHeight: 1.5,
+              fontSize: "22px",
+              fontWeight: 400,
+              color: "rgba(255, 255, 255, 0.7)",
+              lineHeight: 1.6,
               margin: 0,
-              maxWidth: "800px",
+              maxWidth: "760px",
             }}
           >
             {leverageData.diagnosis}
@@ -462,14 +419,14 @@ export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
         </div>
       </div>
 
-      {/* BOTTOM CALLOUT CTA BANNER */}
+      {/* BOTTOM CTA — Clean understated outlined button */}
       <div
         style={{
-          width: "960px",
-          backgroundColor: "rgba(255, 255, 255, 0.07)",
-          border: "1.5px solid rgba(255, 255, 255, 0.18)",
-          borderRadius: "32px",
-          padding: "26px 40px",
+          width: "900px",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
+          backgroundColor: "rgba(255, 255, 255, 0.02)",
+          borderRadius: "24px",
+          padding: "32px 40px",
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
@@ -481,9 +438,9 @@ export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
         <span
           style={{
             fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontWeight: 900,
-            fontSize: "30px",
-            letterSpacing: "0.18em",
+            fontWeight: 800,
+            fontSize: "26px",
+            letterSpacing: "0.12em",
             color: "#FFFFFF",
             textTransform: "uppercase",
             lineHeight: 1.2,
@@ -495,14 +452,14 @@ export const StoryScoreCard: React.FC<StoryScoreCardProps> = ({
         <span
           style={{
             fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 500,
-            fontSize: "20px",
-            color: "rgba(255, 255, 255, 0.55)",
-            letterSpacing: "0.08em",
-            marginTop: "8px",
+            fontWeight: 400,
+            fontSize: "16px",
+            color: "rgba(255, 255, 255, 0.4)",
+            letterSpacing: "0.06em",
+            marginTop: "10px",
           }}
         >
-          Score your copy at <strong style={{ color: "#FFFFFF" }}>murgii.vercel.app</strong>
+          Score your copy at <strong style={{ color: "rgba(255, 255, 255, 0.8)", fontWeight: 600 }}>murgii.vercel.app</strong>
         </span>
       </div>
     </div>

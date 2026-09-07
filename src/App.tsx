@@ -31,6 +31,9 @@ import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
 import { AmbientBackground } from "./components/AmbientBackground";
 import { SpotlightCursor } from "./components/SpotlightCursor";
 import { fetchUserPlan, fetchUserPlanAndCredits, UserPlanData } from "./lib/userAccount";
+import { loadUserSessions, createChatSession, notifySessionsChanged } from "./lib/chatHistory";
+
+const LAST_ACTIVE_SESSION_KEY = "murgii_last_active_session_id";
 
 export default function App() {
   const getSlugFromPath = () => {
@@ -193,6 +196,36 @@ export default function App() {
     return null;
   };
 
+  const syncInitialSession = async (userId: string) => {
+    if (!userId) return;
+    console.log(`[Supabase Chat] App mounting/authenticating. Syncing initial active session for user: ${userId}`);
+    try {
+      const sessions = await loadUserSessions(userId);
+      console.log(`[Supabase Chat] Initial session query returned ${sessions.length} sessions from Supabase.`);
+
+      const storedSessionId = typeof window !== "undefined" ? localStorage.getItem(LAST_ACTIVE_SESSION_KEY) : null;
+
+      if (storedSessionId && sessions.some((s) => s.id === storedSessionId)) {
+        console.log(`[Supabase Chat] Restoring last active session on initial load/refresh: ${storedSessionId}`);
+        setActiveSessionId(storedSessionId);
+      } else if (sessions.length > 0) {
+        console.log(`[Supabase Chat] Selecting most recent session on initial load/refresh: ${sessions[0].id}`);
+        setActiveSessionId(sessions[0].id);
+        localStorage.setItem(LAST_ACTIVE_SESSION_KEY, sessions[0].id);
+      } else {
+        console.log("[Supabase Chat] No existing chat sessions found in Supabase. Creating initial session in chat_sessions...");
+        const newSession = await createChatSession(userId, "New Conversation");
+        if (newSession) {
+          console.log(`[Supabase Chat] Created initial session in Supabase: ${newSession.id}`);
+          setActiveSessionId(newSession.id);
+          localStorage.setItem(LAST_ACTIVE_SESSION_KEY, newSession.id);
+        }
+      }
+    } catch (e) {
+      console.error("[Supabase Chat Error] Exception syncing initial session:", e);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -208,6 +241,7 @@ export default function App() {
           // Immediately set destination to chat workspace before splash finishes
           setActiveTab("chat");
           loadUserData(currentUser);
+          syncInitialSession(currentUser.id);
         } else {
           setActiveTab("landing");
         }
@@ -224,6 +258,7 @@ export default function App() {
         if (currentUser && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED")) {
           setActiveTab("chat");
           loadUserData(currentUser);
+          syncInitialSession(currentUser.id);
         } else if (event === "SIGNED_OUT") {
           setUserPlanData({ plan: "none", maxCredits: 3 });
           setRemainingCredits(null);
@@ -238,6 +273,31 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
+
+  const handleSessionSelect = (id: string) => {
+    console.log(`[Supabase Chat] User selected session: ${id}`);
+    setActiveSessionId(id);
+    if (id) {
+      localStorage.setItem(LAST_ACTIVE_SESSION_KEY, id);
+    } else {
+      localStorage.removeItem(LAST_ACTIVE_SESSION_KEY);
+    }
+    setActiveTab("chat");
+  };
+
+  const handleCreateNewSession = async () => {
+    const uid = user?.id || user?.uid;
+    if (!uid) return;
+    console.log("[Supabase Chat] User requested new chat session in App...");
+    const newSession = await createChatSession(uid, "New Conversation");
+    if (newSession) {
+      console.log(`[Supabase Chat] New session inserted into Supabase with ID: ${newSession.id}`);
+      setActiveSessionId(newSession.id);
+      localStorage.setItem(LAST_ACTIVE_SESSION_KEY, newSession.id);
+      setActiveTab("chat");
+      notifySessionsChanged();
+    }
+  };
 
   const handleStartWriting = (mode: "login" | "signup" = "signup") => {
     if (user) {
@@ -1193,10 +1253,8 @@ export default function App() {
           setSidebarOpen(false);
           setShowAdmin(false);
         }} 
-        onSessionSelect={(id) => {
-          setActiveSessionId(id);
-          setActiveTab("chat");
-        }}
+        onSessionSelect={handleSessionSelect}
+        onNewSession={handleCreateNewSession}
         onLogout={handleLogout}
         onShowAdmin={() => {
           setShowAdmin(true);

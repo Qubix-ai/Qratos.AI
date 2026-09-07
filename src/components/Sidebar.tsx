@@ -14,14 +14,14 @@ import {
   Check, 
   AlertTriangle,
   PanelLeft,
-  SquarePen,
-  Zap
+  SquarePen
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { QreatoLogo } from "./QreatoLogo";
 import { 
   ChatSession, 
   loadUserSessions, 
+  createChatSession,
   renameSession, 
   togglePinSession, 
   deleteSession, 
@@ -35,6 +35,7 @@ interface SidebarProps {
   activeSessionId?: string;
   onTabChange: (tab: string) => void;
   onSessionSelect: (sessionId: string) => void;
+  onNewSession?: () => Promise<void> | void;
   onLogout: () => void;
   onShowAdmin?: () => void;
   isOpen?: boolean;
@@ -48,6 +49,7 @@ export function Sidebar({
   activeSessionId,
   onTabChange,
   onSessionSelect,
+  onNewSession,
   onLogout,
   isOpen,
   onClose,
@@ -75,12 +77,16 @@ export function Sidebar({
 
   // Fetch Session History from persistent storage
   const loadSessions = async () => {
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
+    console.log(`[Supabase Chat] Sidebar loading sessions for user ${userId} fresh from chat_sessions...`);
     try {
       const data = await loadUserSessions(userId);
+      console.log(`[Supabase Chat] Sidebar successfully loaded ${data.length} sessions from chat_sessions.`);
       setSessions(data);
     } catch (e) {
-      console.warn("Could not load sessions:", e);
+      console.error("[Supabase Chat Error] Could not load sessions in Sidebar:", e);
     }
   };
 
@@ -88,17 +94,32 @@ export function Sidebar({
     loadSessions();
 
     const handleSessionsUpdate = () => {
+      console.log("[Supabase Chat] Sidebar received SESSIONS_UPDATED_EVENT, refreshing from Supabase...");
       loadSessions();
     };
 
     window.addEventListener(SESSIONS_UPDATED_EVENT, handleSessionsUpdate);
-    const interval = setInterval(loadSessions, 4000);
+    const interval = setInterval(loadSessions, 5000);
     
     return () => {
       window.removeEventListener(SESSIONS_UPDATED_EVENT, handleSessionsUpdate);
       clearInterval(interval);
     };
   }, [userId]);
+
+  const handleNewTaskClick = async () => {
+    console.log("[Supabase Chat] User triggered New task creation.");
+    if (onNewSession) {
+      await onNewSession();
+    } else if (userId) {
+      const newSession = await createChatSession(userId, "New Conversation");
+      if (newSession) {
+        onSessionSelect(newSession.id);
+      }
+    }
+    onTabChange("chat");
+    onClose?.();
+  };
 
   // Close context menu on outside click
   useEffect(() => {
@@ -175,15 +196,16 @@ export function Sidebar({
     ? (userData.plan.charAt(0).toUpperCase() + userData.plan.slice(1)) 
     : "Free";
 
-  const renderChatItem = (session: ChatSession) => {
+  const renderChatItem = (session: ChatSession, prefix = "session") => {
     const isCurrentActive = activeSessionId === session.id;
     const isMenuOpen = openMenuId === session.id;
     const isEditing = editingId === session.id;
+    const itemKey = `${prefix}-${session.id}`;
 
     if (isEditing) {
       return (
         <form 
-          key={session.id}
+          key={itemKey}
           onSubmit={handleSaveRename}
           className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/30 shadow-sm my-1"
           onClick={(e) => e.stopPropagation()}
@@ -220,8 +242,9 @@ export function Sidebar({
 
     return (
       <div
-        key={session.id}
+        key={itemKey}
         onClick={() => {
+          console.log(`[Supabase Chat] User clicked session in sidebar: ${session.id} ("${session.title}")`);
           onSessionSelect(session.id);
           onTabChange("chat");
           onClose?.();
@@ -267,7 +290,7 @@ export function Sidebar({
                 exit={{ opacity: 0, scale: 0.95, y: -4 }}
                 transition={{ duration: 0.12 }}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-full mt-1 w-36 rounded-xl bg-[#141416] border border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.9)] p-1 z-50 backdrop-blur-xl"
+                className="absolute right-0 top-full mt-1 w-36 rounded-xl bg-[#141416] border border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.9)] p-1 z-50"
               >
                 {/* 1. Rename */}
                 <button
@@ -326,7 +349,7 @@ export function Sidebar({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 lg:hidden"
+            className="fixed inset-0 bg-black/80 z-50 lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -385,11 +408,7 @@ export function Sidebar({
             <div className="px-3 pt-3 pb-1 shrink-0">
               <button
                 type="button"
-                onClick={() => {
-                  onSessionSelect("");
-                  onTabChange("chat");
-                  onClose?.();
-                }}
+                onClick={handleNewTaskClick}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer group text-xs sm:text-[13px] font-medium border border-white/[0.06] hover:border-white/15"
               >
                 <SquarePen size={15} className="text-gray-300 group-hover:text-white" />
@@ -403,11 +422,7 @@ export function Sidebar({
                 <span>Tasks</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    onSessionSelect("");
-                    onTabChange("chat");
-                    onClose?.();
-                  }}
+                  onClick={handleNewTaskClick}
                   className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                   title="New Task"
                 >
@@ -417,7 +432,7 @@ export function Sidebar({
             </div>
 
             {/* Saved Chat Sessions List */}
-            <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {sessions.length === 0 ? (
                 <div className="py-6 px-3 text-center">
                   <p className="text-xs text-gray-500 font-medium">
@@ -429,44 +444,22 @@ export function Sidebar({
                   {/* PINNED TASKS */}
                   {pinnedSessions.length > 0 && (
                     <div className="space-y-0.5 mb-2">
-                      {pinnedSessions.map((session) => renderChatItem(session))}
+                      {pinnedSessions.map((session) => renderChatItem(session, "pinned"))}
                     </div>
                   )}
 
                   {/* RECENT TASKS */}
                   {recentSessions.length > 0 && (
                     <div className="space-y-0.5">
-                      {recentSessions.map((session) => renderChatItem(session))}
+                      {recentSessions.map((session) => renderChatItem(session, "recent"))}
                     </div>
                   )}
                 </>
               )}
             </div>
 
-            {/* Bottom Actions: Upgrade to Core Card + User Profile Info */}
-            <div className="p-3 border-t border-white/[0.08] space-y-2.5 shrink-0 bg-[#050507]">
-              {/* "Upgrade to Core" Card with Purple Lightning Badge */}
-              <div 
-                onClick={() => {
-                  onTabChange("pricing");
-                  onClose?.();
-                }}
-                className="w-full rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-[#8B5CF6]/40 p-3 flex items-center justify-between transition-all duration-200 cursor-pointer shadow-sm group"
-              >
-                <div className="flex flex-col text-left min-w-0 pr-2">
-                  <span className="text-xs font-bold text-white tracking-tight group-hover:text-purple-200 transition-colors">
-                    Upgrade to Core
-                  </span>
-                  <span className="text-[11px] text-gray-400 font-normal truncate mt-0.5">
-                    Unlock more features
-                  </span>
-                </div>
-
-                <div className="w-7 h-7 rounded-full bg-[#8B5CF6] flex items-center justify-center text-white shrink-0 shadow-[0_0_14px_rgba(139,92,246,0.6)] group-hover:scale-105 transition-transform">
-                  <Zap size={14} className="fill-white text-white" />
-                </div>
-              </div>
-
+            {/* Bottom Actions: User Profile Info */}
+            <div className="p-3 border-t border-white/[0.08] shrink-0 bg-[#050507]">
               {/* User Profile Row: Avatar + Name + Plan + Sign Out */}
               <div className="flex items-center justify-between px-2 py-1.5 rounded-xl bg-transparent">
                 <div 
@@ -519,7 +512,7 @@ export function Sidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setDeleteConfirmSession(null)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/80"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}

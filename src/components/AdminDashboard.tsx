@@ -3,6 +3,7 @@ import { X, Users, MessageSquare, Zap, TrendingUp, Activity, ShieldCheck, Heart,
 import { motion } from "motion/react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { auth } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 
 interface AdminDashboardProps {
   onClose: () => void;
@@ -15,7 +16,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = await auth.currentUser?.getIdToken();
+        let token = await auth.currentUser?.getIdToken();
+        if (!token) {
+          const { data: sessionData } = await supabase.auth.getSession();
+          token = sessionData?.session?.access_token;
+        }
         const headers: Record<string, string> = {};
         if (token) {
           headers["Authorization"] = `Bearer ${token}`;

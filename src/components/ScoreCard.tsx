@@ -370,128 +370,104 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
 
       {/* IN-VIEWPORT INTERACTIVE SCORE CARD */}
       <div
-        className="w-full relative rounded-3xl border p-5 sm:p-7 shadow-[0_24px_70px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden flex flex-col items-center text-center transition-all duration-300"
+        className="w-full relative rounded-3xl border border-white/10 p-6 sm:p-10 shadow-2xl overflow-hidden flex flex-col items-center text-center transition-all duration-300"
         style={{
-          backgroundColor: config.cardBg,
-          borderColor: config.cardBorder,
+          backgroundColor: "#0A0A0A",
+          background: "radial-gradient(ellipse at 50% 40%, #161616 0%, #0A0A0A 70%, #050505 100%)",
         }}
       >
-        {/* Subtle ambient radial glow behind card matching tier */}
-        <div 
-          className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full blur-[100px] pointer-events-none opacity-30"
-          style={{ background: config.radialGlow }}
-        />
-
         <div className="relative z-10 w-full flex flex-col items-center text-center">
           {/* Top Header Bar */}
-          <div className="w-full flex items-center justify-between mb-3 px-0.5">
-            <div className="flex items-center" title="Qreato">
+          <div className="w-full flex items-center justify-between pb-6 mb-8 border-b border-white/10 px-1">
+            <div className="flex items-center gap-3">
               <QreatoLogo 
-                size={34} 
-                className="text-white drop-shadow-[0_0_16px_rgba(255,255,255,0.65)]" 
+                size={32} 
+                className="text-white" 
                 dotClassName="text-white fill-white" 
               />
+              <div className="flex flex-col text-left">
+                <span className="text-xs sm:text-sm font-bold tracking-tight text-white font-nohemi leading-none">
+                  Qreato Copy Engine
+                </span>
+                <span className="text-[10px] font-mono tracking-widest text-white/40 uppercase mt-1">
+                  PERSUASION AUDIT
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-col items-end text-right">
-              <span 
-                className="text-xs sm:text-sm font-bold tracking-tight text-white font-nohemi"
-                style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-              >
-                Test your own copy
-              </span>
-              <a
-                href="https://murgii.vercel.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] sm:text-xs font-mono font-medium text-white/70 hover:text-white underline underline-offset-2 tracking-wide transition-colors mt-0.5"
-              >
+              <span className="text-xs font-mono font-medium text-white/40 tracking-wide">
                 murgii.vercel.app
-              </a>
+              </span>
             </div>
           </div>
 
-          {/* Evaluated Copy Snippet */}
+          {/* Evaluated Copy Snippet — Clean quoted string without container box */}
           {cleanUserCopy && (
-            <div 
-              className="w-full my-2.5 px-3.5 py-2.5 rounded-xl border text-left relative overflow-hidden"
-              style={{
-                backgroundColor: config.boxBg,
-                borderColor: "rgba(255, 255, 255, 0.15)",
-              }}
-            >
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
-                  <span className="text-[9px] font-mono font-bold tracking-[0.2em] text-white/50 uppercase">
-                    EVALUATED COPY
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs sm:text-[13px] text-white/90 font-normal italic leading-relaxed line-clamp-3 break-words font-sans">
+            <div className="w-full mb-8 flex flex-col items-center text-center">
+              <span className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/40 uppercase mb-2">
+                EVALUATED COPY
+              </span>
+              <p className="text-sm sm:text-base text-white/88 font-normal italic leading-relaxed line-clamp-3 max-w-md font-sans">
                 "{cleanUserCopy}"
               </p>
             </div>
           )}
 
           {/* Big Dominant Score Display */}
-          <div className="relative my-2 sm:my-3 flex flex-col items-center">
-            <div className="flex items-baseline justify-center tracking-tight">
+          <div className="relative mb-8 flex flex-col items-center">
+            <span className="text-[10px] font-mono font-bold tracking-[0.28em] text-white/40 uppercase mb-3">
+              OVERALL PERSUASION SCORE
+            </span>
+            <div className="flex items-baseline justify-center tracking-tight leading-none">
               <span 
-                className="text-6xl sm:text-7xl font-black font-['Nohemi',sans-serif] tracking-tight text-white leading-none"
-                style={{ filter: config.scoreGlow }}
+                className="text-7xl sm:text-8xl font-black font-nohemi tracking-tight leading-none"
+                style={{ color: config.accentColor }}
               >
                 {overallScore}
               </span>
-              <span className="text-2xl sm:text-3xl font-semibold text-white/35 font-mono ml-1.5">
+              <span className="text-xl sm:text-2xl font-semibold text-white/35 font-mono ml-2">
                 /100
               </span>
             </div>
 
-            {/* Score Tier Badge */}
-            <div 
-              className="mt-2 px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-bold font-mono tracking-widest uppercase border shadow-sm"
-              style={{
-                backgroundColor: config.badgeBg,
-                borderColor: config.badgeBorder,
-                color: config.badgeText,
-              }}
-            >
+            {/* Score Tier Badge Pill */}
+            <div className="mt-4 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-bold font-mono tracking-widest uppercase border border-white/15 bg-white/[0.02] text-white/70">
               {config.tierLabel}
             </div>
           </div>
 
+          {/* Thin Accent Rule (1-2px in Accent Color) */}
+          <div 
+            className="w-16 h-[1px] mb-8 opacity-75"
+            style={{ backgroundColor: config.accentColor }}
+          />
+
           {/* Leverage Diagnosis */}
-          <div className="w-full max-w-sm flex flex-col items-center text-center my-1.5 px-2">
-            <span className="text-[10px] font-mono font-bold tracking-[0.22em] text-white/40 uppercase mb-1">
+          <div className="w-full max-w-md flex flex-col items-center text-center">
+            <span className="text-[10px] font-mono font-bold tracking-[0.22em] text-white/40 uppercase mb-2">
               BIGGEST LEVERAGE
             </span>
             <span 
-              className="text-sm sm:text-base font-bold text-white tracking-wider uppercase font-nohemi"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+              className="text-base sm:text-xl font-bold tracking-wider uppercase font-nohemi"
+              style={{ color: config.accentColor }}
             >
               {leverageData.dimension}
             </span>
-            <p className="text-xs sm:text-[13px] text-white/70 leading-relaxed mt-1 font-sans max-w-xs sm:max-w-sm">
+            <p className="text-xs sm:text-sm text-white/70 leading-relaxed mt-2 font-sans max-w-sm">
               {leverageData.diagnosis}
             </p>
           </div>
 
-          {/* Bottom Callout CTA */}
-          <div className="w-full mt-4 pt-3 border-t border-white/[0.1] flex flex-col items-center gap-2">
-            <div className="w-full py-2.5 px-3 rounded-xl bg-white/[0.08] border border-white/15 text-center shadow-inner">
-              <span 
-                className="text-xs sm:text-sm font-black tracking-widest text-white uppercase font-nohemi drop-shadow-sm"
-                style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-              >
-                I GOT {overallScore}. CAN YOU BEAT ME?
-              </span>
-            </div>
+          {/* Bottom Callout CTA Button */}
+          <div className="w-full mt-8 p-4 sm:p-5 rounded-2xl border border-white/18 bg-white/[0.02] text-center flex flex-col items-center justify-center">
+            <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase font-nohemi">
+              I GOT {overallScore}. CAN YOU BEAT ME?
+            </span>
             
-            <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-white/50 tracking-wider pt-0.5">
-              <span>Score yours at</span>
-              <span className="text-white/80 font-bold underline">murgii.vercel.app</span>
-            </div>
+            <span className="text-[11px] font-mono text-white/40 tracking-wider mt-1.5">
+              Score your copy at <strong className="text-white/80 font-semibold">murgii.vercel.app</strong>
+            </span>
           </div>
         </div>
       </div>
