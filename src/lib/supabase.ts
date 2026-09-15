@@ -32,6 +32,25 @@ export type MurgiiMode = "email" | "ads" | "landing" | "psych" | "content" | "ch
 export interface ChallengeResult {
   shareSlug: string;
   overallScore: number;
+  attention_score?: number;
+  clarity_score?: number;
+  desire_score?: number;
+  persuasion_score?: number;
+  action_score?: number;
+  strongest_dimension?: string;
+  strongest_element?: string;
+  strongestElement?: string;
+  biggest_leverage?: string;
+  diagnosis?: string;
+  userCopy?: string;
+  copy?: string;
+  dimensions?: {
+    attention?: number;
+    clarity?: number;
+    desire?: number;
+    persuasion?: number;
+    action?: number;
+  };
   [key: string]: any;
 }
 
@@ -71,18 +90,22 @@ async function callLocalGenerateApi(
     body: JSON.stringify({ mode, brief }),
   });
 
-  if (!res.ok) {
-    let errorDetail = "Something went wrong generating this — please try again in a moment.";
-    try {
-      const errJson = await res.json();
-      if (errJson?.error) errorDetail = errJson.error;
-    } catch {
-      // fallback
+  const rawResText = await res.text();
+  let data: any = null;
+  try {
+    data = JSON.parse(rawResText);
+  } catch {
+    if (!res.ok) {
+      throw new Error(rawResText || "Generation server error.");
     }
+    data = { text: rawResText };
+  }
+
+  if (!res.ok) {
+    let errorDetail = data?.error || "Something went wrong generating this — please try again in a moment.";
     throw new Error(errorDetail);
   }
 
-  const data = await res.json();
   const rawText = data.text || "";
   const parsed = parseAndExtractScoreData(rawText, brief);
   const finalChallengeResult = data.challengeResult
@@ -147,18 +170,27 @@ export async function callMurgiiGenerateEdgeFunction(
       }
 
       if (response.ok) {
-        const data = await response.json();
-        const rawText = data.text || "";
-        const parsed = parseAndExtractScoreData(rawText, brief);
-        const finalChallengeResult = data.challengeResult
-          ? { ...data.challengeResult, ...(parsed.challengeResult || {}) }
-          : parsed.challengeResult;
+        const rawBody = await response.text();
+        let data: any = null;
+        try {
+          data = JSON.parse(rawBody);
+        } catch {
+          console.warn("[Murgii] Supabase Edge function returned non-JSON body, falling back to server engine...");
+        }
 
-        return {
-          text: parsed.cleanText,
-          remaining: typeof data.remaining === "number" ? data.remaining : undefined,
-          challengeResult: finalChallengeResult,
-        };
+        if (data && data.text) {
+          const rawText = data.text || "";
+          const parsed = parseAndExtractScoreData(rawText, brief);
+          const finalChallengeResult = data.challengeResult
+            ? { ...data.challengeResult, ...(parsed.challengeResult || {}) }
+            : parsed.challengeResult;
+
+          return {
+            text: parsed.cleanText,
+            remaining: typeof data.remaining === "number" ? data.remaining : undefined,
+            challengeResult: finalChallengeResult,
+          };
+        }
       }
 
       console.warn(`[Murgii] Supabase Edge function returned HTTP ${response.status}. Falling back to server engine...`);
@@ -166,7 +198,7 @@ export async function callMurgiiGenerateEdgeFunction(
       if (edgeErr instanceof DailyLimitError || edgeErr?.name === "DailyLimitError") {
         throw edgeErr;
       }
-      console.warn("[Murgii] Supabase Edge function network issue, falling back to server engine:", edgeErr);
+      console.warn("[Murgii] Supabase Edge function issue, falling back to server engine:", edgeErr);
     }
   }
 

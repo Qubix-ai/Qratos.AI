@@ -4,26 +4,27 @@ import {
   ArrowRight, 
   ArrowLeft, 
   Share2, 
-  Copy, 
+  Download, 
   Check, 
-  Target,
-  Zap,
-  Flame,
-  CheckCircle2,
+  TrendingUp, 
+  ShieldCheck, 
+  CheckCircle2, 
   AlertCircle,
-  TrendingUp,
-  Brain,
-  ShieldCheck,
-  Download,
-  Loader2
+  Loader2,
+  Target,
+  Flame,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
-import { copyToClipboard } from "../lib/clipboard";
 import { QreatoLogo } from "./QreatoLogo";
 import { StoryScoreCard, getScoreTierConfig } from "./StoryScoreCard";
-import { captureStoryImage } from "../lib/storyCapture";
-import { ShareModal } from "./ShareModal";
+import { computeStrongestElement } from "../lib/scoreData";
+import { 
+  captureStoryImage, 
+  downloadImageFile, 
+  executeNativeShare 
+} from "../lib/storyCapture";
 
 interface ChallengeRecord {
   overall_score: number;
@@ -32,8 +33,12 @@ interface ChallengeRecord {
   desire_score?: number;
   persuasion_score?: number;
   action_score?: number;
+  strongest_dimension?: string;
+  strongest_element?: string;
+  strongestElement?: string;
   biggest_leverage?: string;
   diagnosis?: string;
+  submitted_copy?: string;
   user_copy?: string;
   copy?: string;
   prompt?: string;
@@ -49,54 +54,33 @@ interface ChallengePageProps {
   onGoToSignup: () => void;
 }
 
-// Social Icons
-const XIcon: React.FC<{ size?: number; className?: string }> = ({ size = 15, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
-
-const FacebookIcon: React.FC<{ size?: number; className?: string }> = ({ size = 15, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-  </svg>
-);
-
-const InstagramIcon: React.FC<{ size?: number; className?: string }> = ({ size = 15, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-  </svg>
-);
-
 export const ChallengePage: React.FC<ChallengePageProps> = ({
   slug,
   onGoToHome,
   onGoToSignup,
 }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
   const storyCardRef = useRef<HTMLDivElement>(null);
-  const pregeneratedFileRef = useRef<File | null>(null);
+  const cachedFileRef = useRef<File | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<ChallengeRecord | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3200);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   useEffect(() => {
+    let isCancelled = false;
+
     async function fetchChallengeResult() {
-      if (!slug) {
+      const cleanSlug = (slug || "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
+      if (!cleanSlug) {
         setNotFound(true);
         setLoading(false);
         return;
@@ -106,64 +90,132 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
         setLoading(true);
         setNotFound(false);
 
-        // 1. Try querying with share_slug
-        const { data: byShareSlug, error: err1 } = await supabase
-          .from("challenge_results")
-          .select("overall_score, attention_score, clarity_score, desire_score, persuasion_score, action_score, biggest_leverage, diagnosis, user_copy, copy, prompt, brief, share_slug")
-          .eq("share_slug", slug)
-          .maybeSingle();
+        // Safety timeout so UI never hangs
+        const timeoutPromise = new Promise<{ timeout: true }>((resolve) =>
+          setTimeout(() => resolve({ timeout: true }), 8000)
+        );
 
-        if (byShareSlug && !err1) {
-          setResult(byShareSlug);
-          setLoading(false);
-          return;
-        }
+        const fetchPromise = (async () => {
+          // 1. Primary Query: Match on share_slug
+          const { data: byShareSlug, error: err1 } = await supabase
+            .from("challenge_results")
+            .select("*")
+            .eq("share_slug", cleanSlug)
+            .maybeSingle();
 
-        // 2. Try fallback query with slug column
-        const { data: bySlug, error: err2 } = await supabase
-          .from("challenge_results")
-          .select("overall_score, attention_score, clarity_score, desire_score, persuasion_score, action_score, biggest_leverage, diagnosis, user_copy, copy, prompt, brief, slug")
-          .eq("slug", slug)
-          .maybeSingle();
+          if (byShareSlug && !err1) {
+            return {
+              overall_score: byShareSlug.overall_score,
+              attention_score: byShareSlug.attention_score,
+              clarity_score: byShareSlug.clarity_score,
+              desire_score: byShareSlug.desire_score,
+              persuasion_score: byShareSlug.persuasion_score,
+              action_score: byShareSlug.action_score,
+              biggest_leverage: byShareSlug.biggest_leverage || "PERSUASION",
+              diagnosis: byShareSlug.diagnosis,
+              submitted_copy: byShareSlug.submitted_copy || "",
+              user_copy: byShareSlug.submitted_copy || "",
+              copy: byShareSlug.submitted_copy || "",
+              share_slug: byShareSlug.share_slug,
+              created_at: byShareSlug.created_at,
+            };
+          }
 
-        if (bySlug && !err2) {
-          setResult(bySlug);
-          setLoading(false);
-          return;
-        }
+          // 2. Secondary Query: Match on ID if slug happens to be a UUID
+          if (cleanSlug.length >= 30) {
+            const { data: byId, error: err2 } = await supabase
+              .from("challenge_results")
+              .select("*")
+              .eq("id", cleanSlug)
+              .maybeSingle();
 
-        // 3. Try fallback to local server challenge store API
-        try {
-          const apiRes = await fetch(`/api/challenge/${slug}`);
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (apiData && typeof apiData.overall_score === 'number') {
-              setResult(apiData);
-              setLoading(false);
-              return;
+            if (byId && !err2) {
+              return {
+                overall_score: byId.overall_score,
+                attention_score: byId.attention_score,
+                clarity_score: byId.clarity_score,
+                desire_score: byId.desire_score,
+                persuasion_score: byId.persuasion_score,
+                action_score: byId.action_score,
+                biggest_leverage: byId.biggest_leverage || "PERSUASION",
+                diagnosis: byId.diagnosis,
+                submitted_copy: byId.submitted_copy || "",
+                user_copy: byId.submitted_copy || "",
+                copy: byId.submitted_copy || "",
+                share_slug: byId.share_slug || cleanSlug,
+                created_at: byId.created_at,
+              };
             }
           }
-        } catch {
-          // fallback
-        }
 
-        setNotFound(true);
+          // 3. Fallback to API route
+          try {
+            const apiRes = await fetch(`/api/challenge/${encodeURIComponent(cleanSlug)}`);
+            if (apiRes.ok) {
+              const apiData = await apiRes.json();
+              if (apiData && typeof apiData.overall_score === "number") {
+                return {
+                  overall_score: apiData.overall_score,
+                  attention_score: apiData.attention_score,
+                  clarity_score: apiData.clarity_score,
+                  desire_score: apiData.desire_score,
+                  persuasion_score: apiData.persuasion_score,
+                  action_score: apiData.action_score,
+                  biggest_leverage: apiData.biggest_leverage || "PERSUASION",
+                  diagnosis: apiData.diagnosis,
+                  submitted_copy: apiData.submitted_copy || apiData.userCopy || apiData.copy || "",
+                  user_copy: apiData.submitted_copy || apiData.userCopy || apiData.copy || "",
+                  copy: apiData.submitted_copy || apiData.userCopy || apiData.copy || "",
+                  share_slug: apiData.share_slug || apiData.shareSlug || cleanSlug,
+                  created_at: apiData.created_at,
+                };
+              }
+            }
+          } catch {
+            // ignore network/api error in fallback
+          }
+
+          return null;
+        })();
+
+        const outcome = await Promise.race([fetchPromise, timeoutPromise]);
+
+        if (isCancelled) return;
+
+        if (outcome && !("timeout" in outcome)) {
+          setResult(outcome);
+          setNotFound(false);
+        } else {
+          setResult(null);
+          setNotFound(true);
+        }
       } catch (err) {
-        console.error("Error fetching challenge result:", err);
-        setNotFound(true);
+        if (!isCancelled) {
+          console.error("Error fetching challenge result:", err);
+          setNotFound(true);
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     }
 
     fetchChallengeResult();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [slug]);
 
   const overallScore = result?.overall_score ?? 0;
   const config = getScoreTierConfig(overallScore);
-  const shareUrl = typeof window !== "undefined" ? window.location.href : `https://murgii.vercel.app/challenge/${slug}`;
-  
-  const rawUserCopy = (result?.user_copy || result?.copy || result?.prompt || result?.brief || "").trim();
+  const cleanSlug = (slug || "").trim();
+  const shareUrl = typeof window !== "undefined" && window.location.origin
+    ? `${window.location.origin}/challenge/${cleanSlug}`
+    : `https://murgii.vercel.app/challenge/${cleanSlug}`;
+
+  const rawUserCopy = (result?.submitted_copy || result?.user_copy || result?.copy || result?.prompt || result?.brief || "").trim();
   const evaluatedUserCopy = (() => {
     if (!rawUserCopy) return "";
     let cleaned = rawUserCopy;
@@ -190,98 +242,88 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
     ? `I scored ${overallScore}/100 on Qreato Copy Challenge for: "${copySnippet}" — Can you beat me?`
     : `I scored ${overallScore}/100 on Qreato Copy Challenge. Can you beat me?`;
 
-  const generateStoryFile = async (): Promise<File | null> => {
-    if (!storyCardRef.current) return null;
-    const filename = `qreato-challenge-${slug || overallScore}.png`;
-    return await captureStoryImage(storyCardRef.current, filename);
-  };
+  const cacheKey = `challenge-${overallScore}-${cleanSlug}-${evaluatedUserCopy.slice(0, 40)}`;
 
+  // Background single-pass rasterization once data is ready
   useEffect(() => {
     let isMounted = true;
+    if (!result) return;
+
     const timer = setTimeout(async () => {
-      if (storyCardRef.current && isMounted && !pregeneratedFileRef.current) {
+      if (storyCardRef.current && isMounted && !cachedFileRef.current) {
         try {
-          const file = await generateStoryFile();
+          const filename = `qreato-challenge-${cleanSlug || overallScore}.png`;
+          const file = await captureStoryImage(storyCardRef.current, filename, cacheKey);
           if (file && isMounted) {
-            pregeneratedFileRef.current = file;
+            cachedFileRef.current = file;
           }
         } catch (e) {
-          console.warn("Background challenge pregeneration error:", e);
+          console.warn("Challenge card pre-capture error:", e);
         }
       }
-    }, 350);
+    }, 200);
+
     return () => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [overallScore, slug, evaluatedUserCopy]);
+  }, [result, cleanSlug, overallScore, evaluatedUserCopy, cacheKey]);
 
-  const handleCopyLink = async () => {
-    const success = await copyToClipboard(shareUrl);
-    if (success) {
-      setCopiedLink(true);
-      showToast("Challenge link copied to clipboard!");
-      setTimeout(() => setCopiedLink(false), 2400);
+  const ensureImageFile = async (): Promise<File | null> => {
+    if (cachedFileRef.current) return cachedFileRef.current;
+    if (storyCardRef.current) {
+      const filename = `qreato-challenge-${cleanSlug || overallScore}.png`;
+      const file = await captureStoryImage(storyCardRef.current, filename, cacheKey);
+      if (file) {
+        cachedFileRef.current = file;
+        return file;
+      }
+    }
+    return null;
+  };
+
+  // Fix #1: Native OS Share Sheet
+  const handleShare = async () => {
+    if (isSharing) return;
+    setIsSharing(true);
+
+    try {
+      const imageFile = await ensureImageFile();
+      await executeNativeShare({
+        imageFile,
+        shareText,
+        shareUrl,
+        onShowToast: showToast,
+      });
+    } catch (err) {
+      console.error("Share error:", err);
+      showToast("Unable to open share sheet. Please try again.");
+    } finally {
+      setIsSharing(false);
     }
   };
 
-  const handleUnifiedShare = async () => {
-    setIsShareModalOpen(true);
-    if (!pregeneratedFileRef.current && !isGenerating) {
-      setIsGenerating(true);
-      generateStoryFile()
-        .then((file) => {
-          if (file) pregeneratedFileRef.current = file;
-        })
-        .catch((err) => console.warn("Card generation error:", err))
-        .finally(() => setIsGenerating(false));
-    }
-  };
-
-  const handleShareX = async () => {
-    setIsShareModalOpen(true);
-  };
-
-  const handleShareFacebook = async () => {
-    setIsShareModalOpen(true);
-  };
-
-  const handleShareInstagram = async () => {
-    setIsShareModalOpen(true);
-  };
-
-  const handleDownloadCard = async () => {
+  // Fix #2: Direct Download with zero intermediate dialog
+  const handleDownload = async () => {
     if (isDownloading) return;
     setIsDownloading(true);
 
     try {
-      let imageFile = pregeneratedFileRef.current;
+      const imageFile = await ensureImageFile();
       if (!imageFile) {
-        setIsGenerating(true);
-        showToast("Generating 1080x1920 Story image...");
-        imageFile = await generateStoryFile();
-        setIsGenerating(false);
-        if (imageFile) pregeneratedFileRef.current = imageFile;
-      }
-
-      if (!imageFile) {
-        showToast("Failed to generate image. Tap to retry.");
+        showToast("Unable to render image. Please try again.");
         return;
       }
 
-      const objectUrl = URL.createObjectURL(imageFile);
-      const downloadLink = document.createElement("a");
-      downloadLink.download = imageFile.name;
-      downloadLink.href = objectUrl;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-
-      showToast("Scorecard saved to gallery!");
+      const success = downloadImageFile(imageFile, `qreato-challenge-${overallScore}.png`);
+      if (success) {
+        setDownloadSuccess(true);
+        showToast("Card saved to your device!");
+        setTimeout(() => setDownloadSuccess(false), 2800);
+      }
     } catch (err) {
-      console.error("Failed to save scorecard:", err);
-      showToast("Failed to save image. Please try again.");
+      console.error("Download error:", err);
+      showToast("Download failed. Please try again.");
     } finally {
       setIsDownloading(false);
     }
@@ -290,55 +332,56 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
   const dimensionsList = [
     {
       id: "attention",
-      label: "Hook Retention",
+      label: "Attention / Hook",
       score: result?.attention_score ?? Math.round(overallScore * 0.95),
-      color: "from-amber-400 to-amber-600",
+      icon: Target,
+      color: "from-amber-400 to-orange-500",
       textColor: "text-amber-400",
-      desc: "Captures scroll attention in 3 seconds",
-      icon: Flame,
+      desc: "Ability to stop the scroll and seize immediate mental focus.",
     },
     {
       id: "clarity",
       label: "Value Clarity",
       score: result?.clarity_score ?? Math.round(overallScore * 1.02),
-      color: "from-sky-400 to-blue-600",
+      icon: CheckCircle2,
+      color: "from-sky-400 to-blue-500",
       textColor: "text-sky-400",
-      desc: "Communicates zero-ambiguity value proposition",
-      icon: Brain,
+      desc: "Speed at which the reader grasps the core transformation offer.",
     },
     {
       id: "desire",
-      label: "Desire Building",
+      label: "Visceral Desire",
       score: result?.desire_score ?? Math.round(overallScore * 0.98),
-      color: "from-purple-400 to-indigo-600",
-      textColor: "text-purple-400",
-      desc: "Triggers visceral emotional aspiration",
-      icon: Target,
+      icon: Flame,
+      color: "from-rose-400 to-red-500",
+      textColor: "text-rose-400",
+      desc: "Emotional tension created to desire the claimed outcome.",
     },
     {
       id: "persuasion",
-      label: "Persuasion Force",
-      score: result?.persuasion_score ?? overallScore,
-      color: "from-emerald-400 to-teal-600",
-      textColor: "text-emerald-400",
-      desc: "Overcomes cognitive friction and objections",
-      icon: ShieldCheck,
+      label: "Persuasion Mechanics",
+      score: result?.persuasion_score ?? Math.round(overallScore * 0.92),
+      icon: Zap,
+      color: "from-purple-400 to-indigo-500",
+      textColor: "text-purple-400",
+      desc: "Proof structures, objection-handling, and cognitive momentum.",
     },
     {
       id: "action",
       label: "Action Urgency",
-      score: result?.action_score ?? Math.round(overallScore * 0.92),
-      color: "from-rose-400 to-red-600",
-      textColor: "text-rose-400",
-      desc: "Compels immediate commitment and conversion",
-      icon: Zap,
+      score: result?.action_score ?? Math.round(overallScore * 1.05),
+      icon: Trophy,
+      color: "from-emerald-400 to-teal-500",
+      textColor: "text-emerald-400",
+      desc: "Frictionless impulse leading directly to the commitment call.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#07050E] text-white flex flex-col font-sans selection:bg-white/20 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#07060B] text-white flex flex-col justify-between selection:bg-[#8B5CF6]/40 relative overflow-x-hidden font-sans">
       {/* 
-        OFF-SCREEN FIXED 1080x1920 INSTAGRAM STORY CANVAS CAPTURE NODE
+        OFFSCREEN 1080x1920 INSTAGRAM STORY TARGET
+        Rendered once and cached in memory
       */}
       <div
         style={{
@@ -356,80 +399,83 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
         <div ref={storyCardRef} style={{ width: "1080px", height: "1920px" }}>
           <StoryScoreCard
             overallScore={overallScore}
-            shareSlug={slug}
+            shareSlug={cleanSlug}
             userCopy={evaluatedUserCopy}
-            biggestLeverage={result?.biggest_leverage}
-            diagnosis={result?.diagnosis}
+            strongestDimension={result?.strongest_dimension}
+            strongestElement={result?.strongest_element}
+            dimensions={{
+              attention: result?.attention_score,
+              clarity: result?.clarity_score,
+              desire: result?.desire_score,
+              persuasion: result?.persuasion_score,
+              action: result?.action_score,
+            }}
           />
         </div>
       </div>
 
-      {/* Top Header */}
-      <header className="relative z-10 w-full border-b border-white/10 bg-black/40 backdrop-blur-md px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onGoToHome}
-          className="flex items-center gap-2 group cursor-pointer"
-        >
-          <QreatoLogo size={28} className="text-white group-hover:scale-105 transition-transform" />
-          <span 
-            className="text-base sm:text-lg font-bold tracking-tight text-white font-nohemi"
-            style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-          >
+      {/* Top Navigation */}
+      <header className="relative z-10 border-b border-white/10 bg-black/40 backdrop-blur-md px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={onGoToHome}>
+          <QreatoLogo size={28} className="text-white" dotClassName="text-white fill-white" />
+          <span className="text-base font-bold tracking-tight text-white font-['Nohemi',sans-serif]">
             Qreato
           </span>
-        </button>
+        </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onGoToHome}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.12] text-xs font-medium text-white/80 hover:text-white transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/10 text-xs font-medium text-white/80 transition-all cursor-pointer"
           >
             <ArrowLeft size={13} />
-            <span>Home</span>
+            <span className="hidden sm:inline">Back to Studio</span>
           </button>
 
           <button
             type="button"
             onClick={onGoToSignup}
-            className="flex items-center gap-1.5 px-4 py-1.5 sm:py-2 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs sm:text-sm font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.25)] cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,255,255,0.25)] cursor-pointer"
           >
-            <span>Score Your Copy Free</span>
-            <ArrowRight size={14} className="stroke-[2.5]" />
+            Score Your Copy
           </button>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 relative z-10 flex flex-col items-center justify-center px-4 py-8 sm:py-14 max-w-4xl mx-auto w-full">
+      {/* Main Content View */}
+      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 py-8 sm:py-12 flex flex-col items-center justify-center">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
-            <p className="text-xs font-mono tracking-widest uppercase text-white/50 animate-pulse">
-              Retrieving Challenge Score…
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <Loader2 size={36} className="text-[#8B5CF6] animate-spin" />
+            <p className="text-xs sm:text-sm font-mono tracking-widest text-white/60 uppercase">
+              Loading persuasion scorecard...
             </p>
           </div>
-        ) : notFound ? (
-          <motion.div
+        ) : notFound || !result ? (
+          <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md p-8 rounded-3xl border border-white/15 bg-white/[0.03] backdrop-blur-2xl text-center shadow-2xl"
+            className="w-full max-w-md p-8 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl text-center space-y-6 shadow-2xl"
           >
-            <div className="w-14 h-14 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center mx-auto mb-4 text-red-400">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mx-auto flex items-center justify-center">
               <AlertCircle size={28} />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">This challenge result wasn't found</h2>
-            <p className="text-xs text-white/60 mb-6 leading-relaxed">
-              The copy score link you followed may have expired, or the challenge slug does not exist.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold font-['Nohemi',sans-serif] text-white">
+                Scorecard Not Found
+              </h2>
+              <p className="text-xs sm:text-sm text-white/60 leading-relaxed">
+                This challenge scorecard could not be located, or the link has expired.
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={onGoToHome}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-all cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-xl border border-white/20 bg-white/[0.05] hover:bg-white/10 text-xs font-semibold text-white transition-all cursor-pointer"
               >
-                Go to Homepage
+                Go to Studio
               </button>
               <button
                 type="button"
@@ -444,7 +490,7 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="w-full space-y-6"
           >
             {/* Header Callout */}
@@ -462,250 +508,209 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
             </div>
 
             {/* Primary Score Card Frame */}
-            <div 
-              ref={cardRef}
-              className="relative rounded-3xl border border-white/10 p-6 sm:p-10 shadow-2xl overflow-hidden"
-              style={{
-                backgroundColor: "#0A0A0A",
-                background: "radial-gradient(ellipse at 50% 40%, #161616 0%, #0A0A0A 70%, #050505 100%)",
-              }}
-            >
-              <div className="relative z-10 flex flex-col items-center text-center">
-                {/* Top Header Bar */}
-                <div className="w-full flex items-center justify-between pb-6 mb-8 border-b border-white/10 px-1">
-                  <div className="flex items-center gap-3" title="Qreato">
-                    <QreatoLogo size={32} className="text-white" dotClassName="text-white fill-white" />
-                    <div className="flex flex-col text-left">
-                      <span className="text-xs sm:text-sm font-bold tracking-tight text-white font-nohemi leading-none">
-                        Qreato Copy Engine
-                      </span>
-                      <span className="text-[10px] font-mono tracking-widest text-white/40 uppercase mt-1">
-                        PERSUASION AUDIT
-                      </span>
+            {(() => {
+              const strongestInfo = computeStrongestElement(
+                {
+                  attention: result?.attention_score,
+                  clarity: result?.clarity_score,
+                  desire: result?.desire_score,
+                  persuasion: result?.persuasion_score,
+                  action: result?.action_score,
+                },
+                result?.strongest_element
+              );
+
+              return (
+                <div 
+                  className="relative rounded-3xl border border-white/10 p-6 sm:p-10 shadow-2xl overflow-hidden"
+                  style={{
+                    backgroundColor: "#0A0A0A",
+                    background: "radial-gradient(ellipse at 50% 40%, #161616 0%, #0A0A0A 70%, #050505 100%)",
+                  }}
+                >
+                  <div className="relative z-10 flex flex-col items-center text-center">
+                    {/* Top Header Bar — Top-left shows ONLY the Qreato logo mark, nothing else */}
+                    <div className="w-full flex items-center justify-start pb-6 mb-8 border-b border-white/10 px-1">
+                      <QreatoLogo size={32} className="text-white" dotClassName="text-white fill-white" />
                     </div>
-                  </div>
 
-                  <div className="flex flex-col items-end text-right">
-                    <span className="text-xs font-mono font-medium text-white/40 tracking-wide">
-                      murgii.vercel.app
-                    </span>
-                  </div>
-                </div>
-
-                {/* Big Score Header */}
-                <div className="flex flex-col items-center mb-8">
-                  <span className="text-[10px] font-mono font-bold tracking-[0.28em] text-white/40 uppercase mb-3">
-                    OVERALL PERSUASION SCORE
-                  </span>
-                  <div className="flex items-baseline justify-center tracking-tight leading-none">
-                    <span 
-                      className="text-7xl sm:text-8xl font-black font-nohemi tracking-tight leading-none"
-                      style={{ color: config.accentColor }}
-                    >
-                      {overallScore}
-                    </span>
-                    <span className="text-xl sm:text-2xl font-semibold text-white/35 font-mono ml-2">
-                      /100
-                    </span>
-                  </div>
-                  
-                  <div className="mt-4 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-bold font-mono tracking-widest uppercase border border-white/15 bg-white/[0.02] text-white/70">
-                    {config.tierLabel}
-                  </div>
-                </div>
-
-                {/* Evaluated Copy Snippet — Clean quoted string without container box */}
-                {evaluatedUserCopy && (
-                  <div className="w-full mb-8 flex flex-col items-center text-center">
-                    <span className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/40 uppercase mb-2">
-                      EVALUATED COPY
-                    </span>
-                    <p className="text-sm sm:text-base text-white/88 font-normal italic leading-relaxed line-clamp-3 max-w-lg font-sans">
-                      "{evaluatedUserCopy}"
-                    </p>
-                  </div>
-                )}
-
-                {/* 5 Dimension Breakdown Grid */}
-                <div className="w-full mt-8 pt-6 border-t border-white/10">
-                  <div className="text-left text-xs font-mono uppercase tracking-widest text-white/50 mb-4 flex items-center justify-between">
-                    <span>5-Dimension Evaluation Breakdown</span>
-                    <span className="text-[10px] text-white/40">Benchmarked against top 1% copy</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
-                    {dimensionsList.map((dim) => {
-                      const DimIcon = dim.icon;
-                      const clampedScore = Math.min(100, Math.max(0, dim.score));
-                      return (
-                        <div 
-                          key={dim.id}
-                          className="p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 transition-all"
+                    {/* Big Score Centerpiece — No label above, no status pill under */}
+                    <div className="flex flex-col items-center mb-8">
+                      <div className="flex items-baseline justify-center tracking-tight leading-none">
+                        <span 
+                          className="text-7xl sm:text-8xl font-black font-nohemi tracking-tight leading-none"
+                          style={{ color: config.accentColor }}
                         >
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-1.5">
-                              <DimIcon size={14} className={dim.textColor} />
-                              <span className="text-xs font-bold text-white">{dim.label}</span>
-                            </div>
-                            <span className="text-xs font-mono font-bold text-white">
-                              {clampedScore}<span className="text-white/40 text-[10px]">/100</span>
-                            </span>
-                          </div>
+                          {overallScore}
+                        </span>
+                        <span className="text-xl sm:text-2xl font-semibold text-white/35 font-mono ml-2">
+                          /100
+                        </span>
+                      </div>
+                    </div>
 
-                          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-1.5">
+                    {/* Evaluated Copy Snippet */}
+                    {evaluatedUserCopy && (
+                      <div className="w-full mb-8 flex flex-col items-center text-center">
+                        <span className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/40 uppercase mb-2">
+                          EVALUATED COPY
+                        </span>
+                        <p className="text-sm sm:text-base text-white/88 font-normal italic leading-relaxed line-clamp-3 max-w-lg font-sans">
+                          "{evaluatedUserCopy}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* 5 Dimension Breakdown Grid */}
+                    <div className="w-full mt-8 pt-6 border-t border-white/10">
+                      <div className="text-left text-xs font-mono uppercase tracking-widest text-white/50 mb-4 flex items-center justify-between">
+                        <span>5-Dimension Evaluation Breakdown</span>
+                        <span className="text-[10px] text-white/40">Benchmarked against top 1% copy</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
+                        {dimensionsList.map((dim) => {
+                          const DimIcon = dim.icon;
+                          const clampedScore = Math.min(100, Math.max(0, dim.score));
+                          return (
                             <div 
-                              className={`h-full rounded-full bg-gradient-to-r ${dim.color}`}
-                              style={{ width: `${clampedScore}%` }}
-                            />
-                          </div>
+                              key={dim.id}
+                              className="p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 transition-all"
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <DimIcon size={14} className={dim.textColor} />
+                                  <span className="text-xs font-bold text-white">{dim.label}</span>
+                                </div>
+                                <span className="text-xs font-mono font-bold text-white">
+                                  {clampedScore}<span className="text-white/40 text-[10px]">/100</span>
+                                </span>
+                              </div>
 
-                          <div className="text-[10px] text-white/50 leading-tight">
-                            {dim.desc}
+                              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-1.5">
+                                <div 
+                                  className={`h-full rounded-full bg-gradient-to-r ${dim.color}`}
+                                  style={{ width: `${clampedScore}%` }}
+                                />
+                              </div>
+
+                              <div className="text-[10px] text-white/50 leading-tight">
+                                {dim.desc}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col justify-between">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <ShieldCheck size={14} className="text-emerald-400" />
+                            <span className="text-xs font-bold text-white">Conversion Audit</span>
+                          </div>
+                          <div className="text-[11px] text-white/70 leading-snug">
+                            Calculated using verified direct response persuasion matrices.
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    </div>
 
-                    <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col justify-between">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <ShieldCheck size={14} className="text-emerald-400" />
-                        <span className="text-xs font-bold text-white">Conversion Audit</span>
-                      </div>
-                      <div className="text-[11px] text-white/70 leading-snug">
-                        Calculated using verified direct response persuasion matrices.
-                      </div>
+                    {/* Strongest Element Callout — Positive, computed from actual subscores */}
+                    <div className="w-full mt-6 p-5 rounded-2xl bg-white/[0.03] border border-white/10 text-center flex flex-col items-center">
+                      <span className="text-[10px] font-mono font-bold tracking-[0.22em] text-white/40 uppercase mb-2">
+                        STRONGEST ELEMENT
+                      </span>
+                      <span 
+                        className="text-base sm:text-xl font-bold tracking-wider uppercase font-nohemi"
+                        style={{ color: config.accentColor }}
+                      >
+                        {strongestInfo.dimensionUpper}
+                      </span>
+                      <p className="text-xs sm:text-sm text-white/85 leading-relaxed mt-2 font-sans max-w-md">
+                        {strongestInfo.line}
+                      </p>
+                    </div>
+
+                    {/* Challenge Line — Perfectly centered, no logo, no wordmark */}
+                    <div className="w-full mt-7 p-4 sm:p-5 rounded-2xl border border-white/15 bg-white/[0.02] flex items-center justify-center text-center">
+                      <span className="text-xs sm:text-sm font-black tracking-widest text-white uppercase font-nohemi text-center">
+                        I GOT {overallScore}. CAN YOU BEAT ME?
+                      </span>
                     </div>
                   </div>
                 </div>
+              );
+            })()}
 
-                {/* Biggest Leverage Point */}
-                {result?.biggest_leverage && (
-                  <div className="w-full mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left flex items-start gap-3">
-                    <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
-                      <TrendingUp size={16} />
-                    </div>
-                    <div>
-                      <div className="text-[11px] uppercase font-mono tracking-wider font-bold text-amber-300 mb-0.5">
-                        Biggest Leverage Opportunity
-                      </div>
-                      <div className="text-xs text-white/85 leading-relaxed">
-                        {result.diagnosis || result.biggest_leverage}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Finished Card Footer Banner */}
-                <div className="w-full mt-6 pt-4 border-t border-white/[0.1] flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-white/50">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
-                    <span>Tested on Qreato Copy Engine</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>Score yours free at</span>
-                    <a href="https://murgii.vercel.app" target="_blank" rel="noopener noreferrer" className="text-white font-bold underline">murgii.vercel.app</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Share & Challenge Controls Bar */}
+            {/* 
+              Fix #2: Under the Challenge response card, show EXACTLY TWO BUTTONS: Share and Download.
+              No social quick-icons, no external link button, no modal.
+            */}
             <div className="w-full rounded-2xl border border-white/15 bg-white/[0.03] backdrop-blur-xl p-4 sm:p-6 flex flex-col gap-3 shadow-lg">
-              <div className="text-[10px] uppercase font-mono tracking-widest text-white/40 text-center">
-                Share 1080x1920 Story Card or Challenge a Colleague
-              </div>
-
-              {/* Primary Full Width Share Button */}
-              <button
-                type="button"
-                onClick={handleUnifiedShare}
-                disabled={isSharing || isGenerating}
-                className="w-full py-3 px-4 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_2px_15px_rgba(255,255,255,0.25)] cursor-pointer"
-              >
-                {isSharing || isGenerating ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin text-black" />
-                    <span>{isGenerating ? "Generating 1080x1920 Card..." : "Preparing Share Sheet..."}</span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 size={16} className="stroke-[2.5]" />
-                    <span>Share 1080x1920 Instagram Story Card</span>
-                  </>
-                )}
-              </button>
-
-              <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-3 w-full">
-                {/* Share to X */}
+              <div className="grid grid-cols-2 gap-3 w-full">
+                {/* Button 1: Share (Native OS Share Sheet) */}
                 <button
                   type="button"
-                  onClick={handleShareX}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] border border-white/10 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                  onClick={handleShare}
+                  disabled={isSharing}
+                  className="w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer border bg-white text-black hover:bg-neutral-200 border-white shadow-[0_2px_15px_rgba(255,255,255,0.25)] flex items-center justify-center gap-2 active:scale-[0.99]"
+                  title="Share score card"
                 >
-                  <XIcon size={14} />
-                  <span className="truncate">Share X</span>
+                  {isSharing ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin text-black" />
+                      <span>Sharing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 size={16} className="stroke-[2.5]" />
+                      <span>Share</span>
+                    </>
+                  )}
                 </button>
 
-                {/* Share to Instagram */}
+                {/* Button 2: Download (Direct save to gallery/downloads) */}
                 <button
                   type="button"
-                  onClick={handleShareInstagram}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-gradient-to-r from-[#833AB4]/20 via-[#FD1D1D]/20 to-[#F56040]/20 hover:from-[#833AB4]/35 hover:via-[#FD1D1D]/35 hover:to-[#F56040]/35 border border-[#FD1D1D]/30 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className={`w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer border flex items-center justify-center gap-2 active:scale-[0.99] ${
+                    downloadSuccess
+                      ? "bg-[#10B981]/20 border-[#10B981]/50 text-[#10B981]"
+                      : "bg-white/[0.08] hover:bg-white/[0.16] border-white/20 text-white"
+                  }`}
+                  title="Download score card image"
                 >
-                  <InstagramIcon size={14} className="text-[#FD1D1D]" />
-                  <span className="truncate">Instagram</span>
-                </button>
-
-                {/* Share to Facebook */}
-                <button
-                  type="button"
-                  onClick={handleShareFacebook}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-[#1877F2]/15 hover:bg-[#1877F2]/25 border border-[#1877F2]/30 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <FacebookIcon size={14} className="text-[#1877F2]" />
-                  <span className="truncate">Facebook</span>
-                </button>
-
-                {/* Download Card */}
-                <button
-                  type="button"
-                  onClick={handleDownloadCard}
-                  disabled={isDownloading || isGenerating}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] border border-white/20 text-white text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  {isDownloading || isGenerating ? <Loader2 size={14} className="animate-spin text-white" /> : <Download size={14} />}
-                  <span className="truncate">Save Card</span>
+                  {isDownloading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin text-white" />
+                      <span>Saving...</span>
+                    </>
+                  ) : downloadSuccess ? (
+                    <>
+                      <Check size={16} className="stroke-[2.5]" />
+                      <span>Saved!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download size={16} className="stroke-[2.2]" />
+                      <span>Download</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              {/* Copy Link Button */}
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
-                  copiedLink
-                    ? "bg-[#10B981] text-black border-[#10B981] shadow-[0_0_20px_rgba(16,185,129,0.5)]"
-                    : "bg-white/[0.08] hover:bg-white/[0.15] text-white border-white/20"
-                }`}
-              >
-                {copiedLink ? (
-                  <>
-                    <Check size={14} className="stroke-[3]" />
-                    <span>Challenge Link Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy size={14} className="stroke-[2.5]" />
-                    <span>Copy Challenge URL</span>
-                  </>
+              {/* Toast Feedback */}
+              <AnimatePresence>
+                {toastMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 3, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -3, height: 0 }}
+                    className="p-2 rounded-xl bg-white/10 border border-white/20 text-xs text-[#E0AAFF] font-mono text-center"
+                  >
+                    {toastMessage}
+                  </motion.div>
                 )}
-              </button>
-
-              {toastMessage && (
-                <div className="p-2 rounded-xl bg-white/10 border border-white/20 text-xs text-[#E0AAFF] font-mono text-center">
-                  {toastMessage}
-                </div>
-              )}
+              </AnimatePresence>
             </div>
 
             {/* High-Converting CTA Box */}
@@ -768,20 +773,6 @@ export const ChallengePage: React.FC<ChallengePageProps> = ({
           Powered by persistent direct response cognitive architectures.
         </p>
       </footer>
-
-      {/* Rich Sharing Modal with Instagram, X, Facebook, Messenger */}
-      <ShareModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        overallScore={overallScore}
-        shareSlug={slug || ""}
-        userCopy={evaluatedUserCopy}
-        biggestLeverage={result?.biggest_leverage}
-        diagnosis={result?.diagnosis}
-        imageFile={pregeneratedFileRef.current}
-        isGeneratingImage={isGenerating}
-        onEnsureImageFile={generateStoryFile}
-      />
     </div>
   );
 };

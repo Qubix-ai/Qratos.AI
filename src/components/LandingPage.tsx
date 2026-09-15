@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useSpring, useTransform } from "motion/react";
 import {
   Sparkles,
   ArrowRight,
+  ArrowUp,
   Zap,
   Mail,
   Target,
@@ -31,10 +32,6 @@ import {
 } from "lucide-react";
 import { QreatoLogo } from "./QreatoLogo";
 import { AuthModal } from "./AuthModal";
-import { Murgii3DChicken } from "./Murgii3DChicken";
-import { TrueFocus } from "./TrueFocus";
-import { ShinyText } from "./ShinyText";
-import LightPillar from "./LightPillar";
 import { LandingChallengeSection } from "./LandingChallengeSection";
 import {
   ModesCycleVisual,
@@ -118,31 +115,30 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
   };
 
   return (
-    <div className="min-h-screen bg-[#07060B] text-white selection:bg-[#8B5CF6]/40 selection:text-white relative overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-[#09090B] text-white selection:bg-neutral-800 selection:text-white relative overflow-x-hidden font-sans">
       {/* Top Floating Glassmorphic Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 transition-all duration-300">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-6 py-3 rounded-full bg-black/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-6 py-3 rounded-full bg-[#0E0E12]/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.6)] relative">
           {/* Brand Logo & Name */}
           <div 
             onClick={onStart}
             className="flex items-center gap-3 cursor-pointer group select-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.35)] group-hover:scale-105 transition-transform shrink-0">
-              <QreatoLogo size={20} className="text-black" />
+            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
+              <QreatoLogo size={18} className="text-black" />
             </div>
             <div 
-              className="text-white text-xl font-bold tracking-tight font-nohemi flex items-center gap-1"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+              className="text-white text-lg font-bold tracking-tight font-['Geist',sans-serif] flex items-center gap-1"
             >
-              <span className="font-extrabold text-white">murgii</span>
-              <span className="font-extrabold text-white">AI</span>
+              <span className="font-bold text-white">murgii</span>
+              <span className="font-semibold text-neutral-400">AI</span>
             </div>
           </div>
 
           {/* Center Navigation Links */}
-          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-gray-300">
-            <a href="#challenge" className="hover:text-white transition-colors flex items-center gap-1.5 text-white/90">
-              <Trophy size={13} className="text-[#FFBE0B]" />
+          <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-neutral-400">
+            <a href="#challenge" className="hover:text-white transition-colors flex items-center gap-1.5 text-neutral-300">
+              <Trophy size={13} className="text-[#F59E0B]" />
               <span>Copy Challenge</span>
             </a>
             <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
@@ -157,14 +153,14 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
             <button
               type="button"
               onClick={handleLoginClick}
-              className="text-xs font-bold text-gray-300 hover:text-white px-3 py-2 transition-colors cursor-pointer"
+              className="text-xs font-medium text-neutral-300 hover:text-white px-3 py-2 transition-colors cursor-pointer"
             >
               Log in
             </button>
             <button
               type="button"
-              onClick={handleSignupClick}
-              className="hidden sm:inline-flex text-xs font-bold text-black bg-white hover:bg-gray-100 px-4 py-2 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 cursor-pointer"
+              onClick={onStart}
+              className="hidden sm:inline-flex text-xs font-semibold text-black bg-white hover:bg-neutral-200 px-4 py-2 rounded-full transition-colors cursor-pointer"
             >
               Start Free
             </button>
@@ -175,7 +171,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               onClick={() => setQuickNavOpen(!quickNavOpen)}
               className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
                 quickNavOpen
-                  ? "bg-white/20 border border-white/40 text-white shadow-[0_0_15px_rgba(255,255,255,0.25)]"
+                  ? "bg-white/20 border border-white/40 text-white"
                   : "bg-white/5 border border-white/10 text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/20"
               }`}
               aria-label="Toggle Quick Navigation"
@@ -216,13 +212,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                 }}
               >
                 {/* Panel Header */}
-                <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/10 px-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/70 shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
-                    <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400 font-semibold">
-                      QUICK NAVIGATION
-                    </span>
-                  </div>
+                <div className="flex items-center justify-end pb-3 mb-2 border-b border-white/10 px-1">
                   <button
                     type="button"
                     onClick={() => setQuickNavOpen(false)}
@@ -490,87 +480,77 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-36 sm:pt-44 pb-24 sm:pb-32 px-4 overflow-hidden">
-        {/* Subtle Dark Vignette Overlay for High Contrast Text Legibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050508]/40 via-transparent to-[#050508]/90 pointer-events-none z-[1]" />
+      <section className="relative pt-36 sm:pt-40 pb-20 sm:pb-28 px-4 overflow-hidden">
+        {/* Subtle grid background */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_30%,#000_70%,transparent_100%)] pointer-events-none" />
 
-        {/* Cinematic Atmosphere */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.1)_0%,transparent_70%)] pointer-events-none z-[2]" />
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-900/15 rounded-full blur-[160px] pointer-events-none z-[2]" />
-        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-[#D946EF]/10 rounded-full blur-[160px] pointer-events-none z-[2]" />
-        
-        {/* Animated Grid Lines */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none z-[2]" />
+        <div className="max-w-6xl mx-auto text-center relative z-10">
+          {/* Standalone White Premium Qreato Logo on top of headline */}
+          <div className="flex items-center justify-center mb-7">
+            <QreatoLogo size={46} className="text-white" dotClassName="text-white fill-white" />
+          </div>
 
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          {/* 3D Animated Murgii Circular Orb Mascot Showcase with Centered Qreato Geometric Mark */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col items-center justify-center mb-6"
-          >
-            <Murgii3DChicken size="lg" interactive={true} showPedestal={true} showHologram={true} showMagicRings={false} />
-          </motion.div>
-          
-          {/* Main Hero Headline in Nohemi Bold with Gold Shimmer Wave Effect */}
-          <div className="w-full max-w-6xl mx-auto mb-8 px-4">
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[5.75rem] 2xl:text-[6.5rem] font-bold font-nohemi tracking-[-0.02em] leading-[1.05] text-white [text-shadow:0_4px_35px_rgba(0,0,0,0.9)] select-none text-center"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+          {/* Main Hero Headline - Editorial Sans-Serif */}
+          <div className="w-full max-w-4xl mx-auto mb-6 px-4">
+            <h1 
+              className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-bold font-['Geist',sans-serif] tracking-[-0.035em] leading-[1.08] text-white select-none text-center"
             >
-              <ShinyText
-                text="Say Less. Make It Land."
-                speed={2.4}
-                delay={0.1}
-                color="#ffffff"
-                shineColor="#FFBE0B"
-                spread={120}
-                direction="left"
-                yoyo={false}
-                pauseOnHover={false}
-                disabled={false}
-                className="font-nohemi font-bold"
-              />
-            </motion.h1>
+              <span className="block">Word that sells.</span>
+              <span className="block">Not just reads well.</span>
+            </h1>
           </div>
           
-          {/* Benefit-Focused Subheadline with Balanced Line Wrapping */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 1 }}
-            className="text-base sm:text-lg md:text-xl text-neutral-200 max-w-2xl mx-auto mb-10 leading-relaxed font-normal px-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]"
-            style={{ textWrap: "balance" }}
+          {/* Benefit-Focused Subheadline: 3 lines strictly balanced */}
+          <p 
+            className="text-sm sm:text-base md:text-[17px] text-neutral-400 max-w-2xl sm:max-w-3xl mx-auto mb-12 leading-relaxed font-normal px-4 text-center"
           >
-            Give murgii the idea, offer or message. It finds the strongest angle &amp; turns it into clear, persuasive copy your audience can understand &amp; act on.
-          </motion.p>
+            <span className="block">Give Murgii your idea. It applies the frameworks</span>
+            <span className="block">copywriting legends Ogilvy, Halbert &amp; Schwartz built careers on.</span>
+            <span className="block">All automatically and hands you copy that's built to convert.</span>
+          </p>
 
-          {/* Primary Call to Action Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4"
-          >
-            <motion.button
-              whileHover={{ scale: 1.03, backgroundColor: "rgba(255, 255, 255, 0.18)" }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleLoginClick}
-              className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 rounded-full text-base sm:text-lg font-bold text-white flex items-center justify-center gap-3 transition-all duration-300 cursor-pointer shadow-[0_15px_35px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)] [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]"
-              style={{
-                background: "rgba(255, 255, 255, 0.12)",
-                backdropFilter: "blur(16px) saturate(1.5)",
-                WebkitBackdropFilter: "blur(16px) saturate(1.5)",
-                border: "1px solid rgba(255, 255, 255, 0.25)",
-              }}
+          {/* Static Chat Interface Demonstration (Fully Visible, No Top Fade) */}
+          <div className="w-full max-w-2xl mx-auto text-left">
+            <div className="relative rounded-2xl sm:rounded-3xl border border-white/[0.08] bg-[#09090B] p-4 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.5)] overflow-hidden">
+              {/* Inner messages viewport (fully visible, no clipping or top fade) */}
+              <div className="space-y-4 pt-1 sm:pt-2 pb-1">
+                {/* User Message Bubble - guaranteed single line */}
+                <div className="flex justify-end">
+                  <div className="user-bubble w-fit max-w-full bg-[#1A1A1E] border border-white/[0.09] rounded-[20px_20px_6px_20px] px-4 py-2.5 text-xs sm:text-sm md:text-[15px] text-white/95 shadow-[0_4px_18px_rgba(0,0,0,0.45)] whitespace-nowrap">
+                    Why not just use ChatGPT or Claude for this?
+                  </div>
+                </div>
+
+                {/* Murgii Assistant Message Bubble */}
+                <div className="flex justify-start">
+                  <div className="ai-bubble w-full bg-[#111114] border border-white/[0.07] rounded-2xl p-4 sm:p-5 text-sm sm:text-[15px] text-white/90 leading-relaxed shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                    <p className="text-white/90 text-sm sm:text-[15px] leading-relaxed m-0 text-left">
+                      You can but you would have to already know AIDA, PAS &amp; Schwartz's awareness stages &amp; prompt for them correctly every time. Murgii has those frameworks built in. Give it the idea &amp; it picks the angle, applies the framework &amp; writes copy built to convert, not just built to read well.
+                    </p>
+
+                    {/* Qreato logo positioned on the right side of AI response */}
+                    <div className="flex items-center justify-end pt-3 mt-3.5 border-t border-white/[0.06] select-none">
+                      <div className="flex items-center text-white/40" title="Qreato">
+                        <QreatoLogo size={14} className="text-white/40" dotClassName="text-white/40 fill-white/40" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Primary Call to Action Button directly under the AI Chat Demonstration */}
+          <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 px-4 relative z-20">
+            <button
+              type="button"
+              onClick={onStart}
+              className="w-full sm:w-auto px-9 py-4 rounded-full text-base font-bold text-neutral-950 bg-white hover:bg-neutral-100 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-[0_0_35px_rgba(255,255,255,0.35)] hover:shadow-[0_0_50px_rgba(255,255,255,0.55)] border border-white flex items-center justify-center gap-2.5 select-none"
             >
-              <span className="font-bold text-white tracking-tight">Try murgii free →</span>
-            </motion.button>
-          </motion.div>
+              <span>Try murgii free</span>
+              <ArrowRight size={16} className="text-neutral-950" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -588,34 +568,16 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
       />
 
       {/* How Murgii AI Engineers Conversion Section */}
-      <section id="how-it-works" className="py-36 sm:py-44 px-4 relative overflow-hidden">
+      <section id="how-it-works" className="py-28 sm:py-36 px-4 relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
-          <div className="text-center mb-28 relative">
-            <h2 
-              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 tracking-tight leading-[1.12] text-white select-none text-center font-nohemi"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
-            >
-              <span className="block text-white font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
-                How Murgii AI
-              </span>
-              <span className="block mt-2 sm:mt-3 font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
-                <TrueFocus 
-                  sentence="Engineers Conversion"
-                  manualMode={false}
-                  blurAmount={5.5}
-                  borderColor="#EAB308"
-                  glowColor="rgba(234, 179, 8, 0.6)"
-                  animationDuration={0.5}
-                  pauseBetweenAnimations={0.5}
-                  className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-nohemi"
-                  wordClassName="font-nohemi font-bold text-white"
-                />
-              </span>
+          <div className="text-center mb-20 relative">
+            <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-5 tracking-tight leading-[1.08] text-white font-['Geist',sans-serif]">
+              How Murgii Engineers Conversion
             </h2>
-            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mb-10" />
-            <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-6">
-              Murgii AI combines psychology, conversion insights & AI to create persuasive content that gets attention, drives action & turns ideas into growth.
+            <div className="w-16 h-[1px] bg-white/20 mx-auto mb-6" />
+            <p className="text-neutral-400 text-sm sm:text-base md:text-lg max-w-xl mx-auto leading-relaxed px-4">
+              Murgii combines direct-response psychology, conversion diagnostics, and AI to produce copy that captures attention, breaks inertia, and drives action.
             </p>
           </div>
 
@@ -668,50 +630,41 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
       </section>
 
       {/* PROMPT BUILDER ARCHITECTURE SECTION */}
-      <section id="prompt-builder" className="py-36 sm:py-44 px-4 relative overflow-hidden">
-        {/* Ambient Pure White/Glass Glows */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-[radial-gradient(circle,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-white/[0.02] rounded-full blur-[140px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
+      <section id="prompt-builder" className="py-24 sm:py-32 px-4 relative overflow-hidden bg-[#09090B]">
+        <div className="max-w-6xl mx-auto relative z-10">
           {/* Section Header */}
-          <div className="text-center mb-14 px-4">
+          <div className="text-center mb-12 px-4">
             <h2 
-              className="text-4xl md:text-7xl font-bold tracking-tight mb-5 text-white leading-[1.05] font-nohemi [text-shadow:0_4px_30px_rgba(0,0,0,0.8)]"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+              className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 text-white leading-[1.08] font-['Geist',sans-serif]"
             >
-              Your Strategy. <br className="hidden md:block" /> Built Into Every Prompt.
+              <span className="block">Your Strategy.</span>
+              <span className="block">Built Into Every Prompt.</span>
             </h2>
-            <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto mb-6 shadow-[0_0_20px_rgba(255,255,255,0.2)]" />
-            <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Create powerful, reusable prompts tailored to your business, audience, goals & voice.
+            <div className="w-16 h-[1px] bg-white/20 mx-auto mb-5" />
+            <p className="text-neutral-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+              Create powerful, reusable prompts tailored to your business, audience, goals &amp; voice.
             </p>
           </div>
 
-          {/* Interactive Supporting Visual: Clean High-Contrast Glassmorphic Card */}
+          {/* Interactive Supporting Visual: Clean High-Contrast Card */}
           <div 
-            className="max-w-4xl mx-auto rounded-[28px] sm:rounded-[32px] border border-white/20 shadow-[0_20px_70px_rgba(0,0,0,0.85)] p-4 sm:p-6 sm:py-6 relative overflow-hidden"
-            style={{
-              background: "rgba(255, 255, 255, 0.05)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)"
-            }}
+            className="max-w-4xl mx-auto rounded-2xl border border-white/[0.08] bg-[#0E0E12] shadow-2xl p-4 sm:p-6 relative overflow-hidden"
           >
             {/* Mode Selection Pills (Emails / Ads / Pages / Persuasion / Content) */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3.5 border-b border-white/10">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-white/15 border border-white/25 flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.2)] shrink-0">
-                  <Wand2 size={14} className="text-white" />
+                <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                  <Wand2 size={13} className="text-white" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white tracking-tight font-nohemi" style={{ fontFamily: "'Nohemi', sans-serif" }}>
+                  <h4 className="text-xs sm:text-sm font-semibold text-white tracking-tight font-['Geist',sans-serif]">
                     Select Mode
                   </h4>
                 </div>
               </div>
 
               {/* 5 Mode Selection Pills */}
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10 w-full md:w-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/10 w-full md:w-auto">
                 {[
                   { id: "email", label: "Emails", icon: Mail },
                   { id: "ads", label: "Ads", icon: Target },
@@ -726,13 +679,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                       key={tab.id}
                       type="button"
                       onClick={() => setActiveDemoMode(tab.id as any)}
-                      className={`flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
                         isActive
-                          ? "bg-white text-black font-bold shadow-[0_0_12px_rgba(255,255,255,0.4)]"
-                          : "text-gray-300 hover:text-white hover:bg-white/5"
+                          ? "bg-white text-black font-semibold shadow-sm"
+                          : "text-neutral-400 hover:text-white hover:bg-white/5"
                       }`}
                     >
-                      <Icon size={12} strokeWidth={2.2} />
+                      <Icon size={12} strokeWidth={2} />
                       <span>{tab.label}</span>
                     </button>
                   );
@@ -748,113 +701,90 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
 
             {/* Bottom CTA Area */}
             <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-center">
-              {/* Primary CTA Button */}
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
+              <button
+                type="button"
                 onClick={handleCraftPromptClick}
-                className="px-6 py-3 rounded-xl bg-white text-black font-extrabold text-sm tracking-tight shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-white text-black hover:bg-neutral-200 font-semibold text-xs tracking-tight transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
                 <span>Build Your First Prompt →</span>
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
       {/* UPGRADED REPLACEMENT SECTION: Clean, Honest "How Murgii Operates" 3-Step Flow & 5-Mode Capability Grid */}
-      <section id="workflow" className="py-36 sm:py-44 px-4 relative overflow-hidden">
-        {/* Cinematic Ambient Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(255,255,255,0.04)_0%,transparent_70%)] pointer-events-none blur-[120px]" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
+      <section id="workflow" className="py-24 sm:py-32 px-4 relative overflow-hidden bg-[#09090B]">
+        <div className="max-w-6xl mx-auto relative z-10">
           {/* Section Header */}
-          <div className="text-center mb-14 px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-black text-white uppercase tracking-[0.25em] mb-5 backdrop-blur-md"
+          <div className="text-center mb-12 px-4">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[10px] font-mono text-neutral-300 uppercase tracking-widest mb-4"
             >
-              <Compass size={12} className="text-white" />
+              <Compass size={11} className="text-white" />
               THE EXECUTION WORKFLOW
-            </motion.div>
+            </div>
             <h2 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white font-nohemi max-w-4xl mx-auto leading-[1.15]"
-              style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+              className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-['Geist',sans-serif] max-w-2xl mx-auto leading-[1.1]"
             >
               Strategy In. Better Copy Out.
             </h2>
-            <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mt-5" />
+            <div className="w-16 h-[1px] bg-white/20 mx-auto mt-4" />
           </div>
 
-          {/* Live White/Glass Linear 3-Stage Pipeline Demonstration */}
+          {/* Live Linear 3-Stage Pipeline Demonstration */}
           <LinearPipelineVisual />
         </div>
       </section>
 
       {/* Affiliate Partner Section (Positioned Directly Above Footer) */}
-      <section className="relative py-10 sm:py-14 overflow-hidden">
+      <section className="relative py-12 sm:py-16 overflow-hidden bg-[#09090B]">
         <div className="max-w-4xl mx-auto px-4 relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-[24px] border border-white/20 p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.7)] relative overflow-hidden [box-shadow:inset_0_1px_0_rgba(255,255,255,0.15)]"
-            style={{
-              background: "rgba(255, 255, 255, 0.04)",
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)"
-            }}
+          <div 
+            className="rounded-2xl border border-white/[0.08] p-6 sm:p-8 shadow-xl bg-[#0E0E12] relative overflow-hidden"
           >
-            {/* Subtle Ambient Backlight Glow */}
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/[0.05] rounded-full blur-[60px] pointer-events-none" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/[0.03] rounded-full blur-[60px] pointer-events-none" />
-
             <div className="space-y-6 relative z-10">
               {/* Header Info */}
               <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md">
-                  <Sparkles size={12} className="text-white" />
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-white/90 font-bold">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/10">
+                  <Sparkles size={11} className="text-white" />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-300 font-semibold">
                     Qreato partner program
                   </span>
                 </div>
 
                 <h3 
-                  className="text-2xl sm:text-3xl font-bold text-white font-nohemi tracking-tight leading-tight"
-                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                  className="text-2xl sm:text-3xl font-bold text-white font-['Geist',sans-serif] tracking-tight leading-tight"
                 >
                   Your Audience. Your Link. 50% Yours.
                 </h3>
 
-                <p className="text-gray-300 text-xs sm:text-sm leading-relaxed font-normal max-w-2xl">
-                  Recommend murgii to people who can benefit from it & earn 50% of their first paid month when they become a customer.
+                <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed font-normal max-w-2xl">
+                  Recommend Murgii to creators and founders who need high-converting copy, and earn 50% of their first paid month when they become a customer.
                 </p>
               </div>
 
               {/* 3 Highlight Metric Cards - Compact & Clean */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/12 flex flex-col justify-between space-y-1">
-                  <span className="text-lg sm:text-xl font-bold text-white font-mono">50%</span>
-                  <span className="text-[11px] text-gray-300 font-normal">First-month commission</span>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between space-y-1">
+                  <span className="text-xl font-bold text-white font-mono">50%</span>
+                  <span className="text-xs text-neutral-400 font-normal">First-month commission</span>
                 </div>
 
-                <div className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/12 flex flex-col justify-between space-y-1">
-                  <span className="text-lg sm:text-xl font-bold text-white font-mono">1 Link</span>
-                  <span className="text-[11px] text-gray-300 font-normal">Everything tracked automatically</span>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between space-y-1">
+                  <span className="text-xl font-bold text-white font-mono">1 Link</span>
+                  <span className="text-xs text-neutral-400 font-normal">Everything tracked automatically</span>
                 </div>
 
-                <div className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/12 flex flex-col justify-between space-y-1">
-                  <span className="text-lg sm:text-xl font-bold text-white font-mono">0 Extra Dashboards</span>
-                  <span className="text-[11px] text-gray-300 font-normal">Clicks, signups & earnings in Whop</span>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between space-y-1">
+                  <span className="text-xl font-bold text-white font-mono">0 Dashboards</span>
+                  <span className="text-xs text-neutral-400 font-normal">Clicks, signups &amp; earnings in Whop</span>
                 </div>
               </div>
 
               {/* Call to Action Footer Row */}
-              <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-xs sm:text-sm font-semibold text-white/90 font-nohemi">
+              <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs sm:text-sm font-medium text-neutral-300 font-['Geist',sans-serif]">
                   Turn Your Influence Into Income
                 </span>
 
@@ -862,13 +792,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                   href="https://whop.com/qreato/ai-leverage"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-gray-100 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-1.5 group"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <span>Become a Murgii Partner →</span>
                 </a>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -890,37 +820,34 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
           <div className="flex flex-col xl:flex-row justify-between items-start gap-12 xl:gap-16 pb-16 border-b border-white/10">
             {/* BRAND & VALUE PROP */}
             <div className="max-w-md space-y-5">
-              <div className="flex items-center gap-3.5 group cursor-pointer" onClick={onStart}>
-                {/* Black Logo with Clean White Background */}
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.25)] group-hover:scale-105 transition-transform shrink-0">
-                  <QreatoLogo size={22} className="text-black" />
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={onStart}>
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
+                  <QreatoLogo size={18} className="text-black" />
                 </div>
                 <div 
-                  className="text-white text-2xl font-bold tracking-tight font-nohemi flex items-center gap-1.5"
-                  style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+                  className="text-white text-xl font-bold tracking-tight font-['Geist',sans-serif] flex items-center gap-1"
                 >
-                  <span className="font-extrabold text-white">murgii</span>
-                  <span className="font-extrabold text-white">AI</span>
+                  <span>murgii</span>
+                  <span className="text-neutral-400 font-normal">AI</span>
                 </div>
               </div>
 
-              {/* High-Converting Value Statement */}
-              <p className="text-gray-300 text-xs sm:text-[13px] leading-relaxed font-normal max-w-[380px] sm:max-w-[420px]">
-                Murgii AI is Qreato Labs proprietary copywriting engine, trained to write emails, ads, contents & sales pages that convert. Built for creators and founders who need results, not busywork. Every generation remembers your brand, your voice & your goals.
+              {/* Value Statement */}
+              <p className="text-neutral-400 text-xs leading-relaxed font-normal max-w-sm">
+                Murgii is a direct-response copywriting engine engineered to write emails, ads, sales pages, and content that drives real revenue.
               </p>
             </div>
 
             {/* CATEGORIZED FOOTER SECTIONS */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 sm:gap-6 lg:gap-8 flex-1 w-full">
               {/* 1. COMPANY */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <h4 
-                  className="text-xs font-bold text-white uppercase tracking-[0.2em] font-nohemi"
-                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                  className="text-xs font-semibold text-neutral-300 uppercase tracking-wider font-['Geist',sans-serif]"
                 >
                   Company
                 </h4>
-                <ul className="space-y-2.5">
+                <ul className="space-y-2">
                   {[
                     { label: "Media", href: "/media", key: "media" },
                     { label: "Enterprise", href: "/enterprise", key: "enterprise" },
@@ -939,8 +866,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                             window.dispatchEvent(new Event("popstate"));
                           }
                         }}
-                        className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                        style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] block"
                       >
                         {item.label}
                       </a>
@@ -950,14 +876,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               </div>
 
               {/* 2. LEGAL */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <h4 
-                  className="text-xs font-bold text-white uppercase tracking-[0.2em] font-nohemi"
-                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                  className="text-xs font-semibold text-neutral-300 uppercase tracking-wider font-['Geist',sans-serif]"
                 >
                   Legal
                 </h4>
-                <ul className="space-y-2.5">
+                <ul className="space-y-2">
                   {[
                     { label: "Terms of Service", href: "/terms", key: "terms" },
                     { label: "Privacy Policy", href: "/privacy", key: "privacy" },
@@ -977,8 +902,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                             window.dispatchEvent(new Event("popstate"));
                           }
                         }}
-                        className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                        style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] block"
                       >
                         {item.label}
                       </a>
@@ -988,14 +912,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               </div>
 
               {/* 3. PRODUCT */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <h4 
-                  className="text-xs font-bold text-white uppercase tracking-[0.2em] font-nohemi"
-                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                  className="text-xs font-semibold text-neutral-300 uppercase tracking-wider font-['Geist',sans-serif]"
                 >
                   Product
                 </h4>
-                <ul className="space-y-2.5">
+                <ul className="space-y-2">
                   <li>
                     <button
                       type="button"
@@ -1006,8 +929,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                           handleLoginClick();
                         }
                       }}
-                      className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] block"
                     >
                       Pricing
                     </button>
@@ -1024,8 +946,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                           window.dispatchEvent(new Event("popstate"));
                         }
                       }}
-                      className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] block"
                     >
                       Affiliates
                     </a>
@@ -1034,8 +955,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                     <button
                       type="button"
                       onClick={onStart}
-                      className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] block"
                     >
                       Internal Tools
                     </button>
@@ -1044,14 +964,13 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               </div>
 
               {/* 4. RESOURCES */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <h4 
-                  className="text-xs font-bold text-white uppercase tracking-[0.2em] font-nohemi"
-                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                  className="text-xs font-semibold text-neutral-300 uppercase tracking-wider font-['Geist',sans-serif]"
                 >
                   Resources
                 </h4>
-                <ul className="space-y-2.5">
+                <ul className="space-y-2">
                   {[
                     { label: "Learn", href: "/learn", key: "learn" },
                     { label: "Guides", href: "/guides", key: "guides" },
@@ -1070,8 +989,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                             window.dispatchEvent(new Event("popstate"));
                           }
                         }}
-                        className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi block"
-                        style={{ fontFamily: "'Nohemi', sans-serif" }}
+                        className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] block"
                       >
                         {item.label}
                       </a>
@@ -1081,21 +999,19 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
               </div>
 
               {/* 5. COMMUNITY */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <h4 
-                  className="text-xs font-bold text-white uppercase tracking-[0.2em] font-nohemi"
-                  style={{ fontFamily: "'Nohemi', sans-serif" }}
+                  className="text-xs font-semibold text-neutral-300 uppercase tracking-wider font-['Geist',sans-serif]"
                 >
                   Community
                 </h4>
-                <ul className="space-y-2.5">
+                <ul className="space-y-2">
                   <li>
                     <a
                       href="https://www.instagram.com/qreato.io?igsh=MTlmNHN6ampqYWF3bQ=="
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi flex items-center gap-2"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] flex items-center gap-2"
                     >
                       <span>Instagram</span>
                     </a>
@@ -1105,8 +1021,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                       href="https://x.com/s4lma9"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi flex items-center gap-2"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] flex items-center gap-2"
                     >
                       <span>X</span>
                     </a>
@@ -1116,8 +1031,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
                       href="https://whop.com/qreato/ai-leverage"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs sm:text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer text-left font-nohemi flex items-center gap-2"
-                      style={{ fontFamily: "'Nohemi', sans-serif" }}
+                      className="text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer text-left font-['Geist',sans-serif] flex items-center gap-2"
                     >
                       <span>Whop</span>
                     </a>
@@ -1130,8 +1044,7 @@ export function LandingPage({ user, userData, onStart, onLogin, onOpenBolt, onNa
           {/* CLEAN RIGHTS RESERVED STRIP */}
           <div className="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
             <p 
-              className="text-[11px] sm:text-xs font-nohemi text-white/70 uppercase tracking-[0.2em]"
-              style={{ fontFamily: "'Nohemi', sans-serif" }}
+              className="text-xs text-neutral-500 font-['Geist',sans-serif]"
             >
               © 2026 Qreato Labs. All rights reserved.
             </p>
@@ -1240,47 +1153,37 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
         className="flex-1 space-y-8 w-full"
       >
         <div className="inline-flex items-center gap-4">
-           <motion.span 
-             animate={{ opacity: [0.6, 1, 0.6] }}
-             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-             className="text-5xl md:text-8xl font-black text-white/90 tracking-tighter select-none will-change-opacity font-nohemi [text-shadow:0_4px_25px_rgba(0,0,0,0.8)]"
-             style={{ fontFamily: "'Nohemi', sans-serif" }}
+           <span 
+             className="text-4xl md:text-5xl font-bold font-mono text-neutral-500 tracking-tight select-none"
            >
              0{index}
-           </motion.span>
-           <div className="w-16 h-[1px] bg-gradient-to-r from-white/40 via-white/20 to-transparent" />
+           </span>
+           <div className="w-12 h-[1px] bg-white/20" />
         </div>
         <h3 
-          className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-white font-nohemi"
-          style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+          className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-white font-['Geist',sans-serif]"
         >
           {title}
         </h3>
         <div className="space-y-4">
           {typeof description === "string" ? (
-            <p className="text-gray-300 text-base md:text-lg leading-relaxed">{description}</p>
+            <p className="text-neutral-400 text-sm md:text-base leading-relaxed">{description}</p>
           ) : (
             description
           )}
           {trustLine && (
-            <div className="relative inline-flex items-center overflow-hidden rounded-xl bg-white/[0.04] border border-white/15 px-4 py-2.5 shadow-[0_0_20px_rgba(255,255,255,0.03)]">
-              <span className="text-xs sm:text-sm font-mono tracking-wider font-extrabold text-white relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
+            <div className="inline-flex items-center rounded-lg bg-white/[0.04] border border-white/10 px-3.5 py-1.5">
+              <span className="text-xs font-mono tracking-wider font-semibold text-neutral-300">
                 {trustLine}
               </span>
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none"
-                initial={{ x: "-100%" }}
-                animate={{ x: "200%" }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.8 }}
-              />
             </div>
           )}
         </div>
-        <div className="space-y-3.5 pt-2">
+        <div className="space-y-3 pt-2">
            {points.map((p, i) => (
-             <div key={i} className="flex items-start gap-3.5 group">
-               <div className="w-1.5 h-1.5 rounded-full bg-white mt-2 group-hover:scale-150 group-hover:shadow-[0_0_10px_#ffffff] transition-all shrink-0" />
-               <span className="text-sm md:text-base font-medium text-gray-300 group-hover:text-white transition-colors leading-relaxed">{p}</span>
+             <div key={i} className="flex items-start gap-3 group">
+               <div className="w-1.5 h-1.5 rounded-full bg-white/60 mt-2 shrink-0 group-hover:bg-white transition-colors" />
+               <span className="text-sm font-normal text-neutral-300 group-hover:text-white transition-colors leading-relaxed">{p}</span>
              </div>
            ))}
         </div>
@@ -1288,27 +1191,19 @@ function FeatureBlock({ index, title, description, trustLine, points, visual, re
 
       {visual && (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          initial={{ opacity: 0, scale: 0.98, y: 16 }}
           whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          style={{ rotateX, rotateY }}
-          className="flex-1 w-full relative group cursor-crosshair"
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="flex-1 w-full relative"
         >
           <div 
-            className="w-full rounded-[30px] sm:rounded-[36px] bg-[#0c0d12] border border-white/20 overflow-hidden group-hover:border-white/35 transition-all duration-500 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.8)] p-3 sm:p-4 relative"
+            className="w-full rounded-2xl bg-[#0E0E12] border border-white/[0.08] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-3 sm:p-5 relative"
           >
-             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent pointer-events-none" />
              <div className="relative w-full flex items-center justify-center">
                {visual}
              </div>
           </div>
-          
-          {/* Floating Ambient Accents */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/[0.03] rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
         </motion.div>
       )}
     </div>
@@ -1362,39 +1257,38 @@ function LandingFAQSection({ onStartChallenge, onNavigate, handleSignupClick }: 
   ];
 
   return (
-    <section id="faq" className="py-24 sm:py-32 px-4 relative overflow-hidden">
+    <section id="faq" className="py-24 sm:py-32 px-4 relative overflow-hidden bg-[#09090B]">
       <div className="max-w-4xl mx-auto relative z-10">
-        <div className="text-center mb-16">
+        <div className="text-center mb-14">
           <h2 
-            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-nohemi leading-tight"
-            style={{ fontFamily: "'Nohemi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-['Geist',sans-serif] leading-tight"
           >
-            Before You Go — The Questions Everyone Asks
+            Frequently Asked Questions
           </h2>
-          <div className="w-24 h-[1px] bg-zinc-800 mx-auto mt-6" />
+          <div className="w-16 h-[1px] bg-white/20 mx-auto mt-5" />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqData.map((item, idx) => {
             const isOpen = openIndexes.includes(idx);
             return (
               <div 
                 key={idx}
-                className="rounded-2xl bg-[#0D0B14] border border-zinc-800 overflow-hidden transition-colors"
+                className="rounded-xl bg-[#0E0E12] border border-white/[0.08] overflow-hidden transition-colors"
               >
                 <button
                   type="button"
                   onClick={() => toggleIndex(idx)}
                   className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 cursor-pointer group"
                 >
-                  <span className="text-base sm:text-lg font-bold text-white group-hover:text-zinc-200 transition-colors font-nohemi">
+                  <span className="text-sm sm:text-base font-semibold text-white group-hover:text-neutral-200 transition-colors font-['Geist',sans-serif]">
                     {item.q}
                   </span>
                   <div 
-                    className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white shrink-0 transition-transform duration-300"
+                    className="w-7 h-7 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-neutral-400 group-hover:text-white shrink-0 transition-transform duration-300"
                     style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
                   >
-                    <ChevronDown size={18} />
+                    <ChevronDown size={15} />
                   </div>
                 </button>
 
@@ -1404,10 +1298,10 @@ function LandingFAQSection({ onStartChallenge, onNavigate, handleSignupClick }: 
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="px-5 pb-6 sm:px-6 sm:pb-6 text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal border-t border-zinc-800/60 pt-4">
+                      <div className="px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-neutral-400 leading-relaxed font-normal border-t border-white/[0.06] pt-3.5">
                         {item.a}
                       </div>
                     </motion.div>
@@ -1419,7 +1313,7 @@ function LandingFAQSection({ onStartChallenge, onNavigate, handleSignupClick }: 
         </div>
 
         {/* CTA below the FAQ block */}
-        <div className="mt-12 text-center">
+        <div className="mt-10 text-center">
           <button
             type="button"
             onClick={() => {
@@ -1434,10 +1328,10 @@ function LandingFAQSection({ onStartChallenge, onNavigate, handleSignupClick }: 
                 handleSignupClick();
               }
             }}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer group"
+            className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition-colors cursor-pointer group shadow-sm"
           >
             <span>See Your Copy Score</span>
-            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </div>

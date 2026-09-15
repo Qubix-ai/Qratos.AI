@@ -51,7 +51,7 @@ html {
   color-scheme: dark;
   forced-color-adjust: none;
   -webkit-forced-color-adjust: none;
-  background-color: #07060B;
+  background-color: #09090B;
   color: #ffffff;
 }
 
@@ -67,7 +67,7 @@ html {
     color-scheme: dark;
     forced-color-adjust: none;
     -webkit-forced-color-adjust: none;
-    @apply bg-[#07060B] text-white selection:bg-[#8B5CF6]/40 selection:text-white;
+    @apply bg-[#09090B] text-white selection:bg-[#F59E0B]/30 selection:text-white;
   }
 
   h1, h2, h3, h4, h5, h6, .font-nohemi, .font-display, .heading-nohemi {
@@ -104,21 +104,34 @@ body,
   -ms-overflow-style: none !important;
 }
 
+::-webkit-scrollbar,
 *::-webkit-scrollbar,
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
-#root::-webkit-scrollbar {
+#root::-webkit-scrollbar,
+div::-webkit-scrollbar,
+textarea::-webkit-scrollbar,
+section::-webkit-scrollbar,
+main::-webkit-scrollbar,
+aside::-webkit-scrollbar {
   display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  width: 0px !important;
+  height: 0px !important;
   background: transparent !important;
   -webkit-appearance: none !important;
+  opacity: 0 !important;
 }
 
+::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb,
-*::-webkit-scrollbar-track {
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
   display: none !important;
   background: transparent !important;
+  width: 0px !important;
+  height: 0px !important;
 }
 
 .custom-scrollbar,
@@ -130,8 +143,8 @@ body::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar {
   display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  width: 0px !important;
+  height: 0px !important;
   background: transparent !important;
 }
 

@@ -1,12 +1,13 @@
 import { toPng } from "html-to-image";
 import { copyToClipboard } from "./clipboard";
 
+// Memory cache for rendered score card image files
+const storyImageCache = new Map<string, File>();
+
 /**
- * Ensures all document fonts and embedded images inside an element are fully loaded
- * before attempting DOM rasterization / canvas capture.
+ * Ensures document fonts and images inside element are fully loaded
  */
 export async function ensureAssetsLoaded(container: HTMLElement): Promise<void> {
-  // 1. Wait for document fonts to be ready
   if (typeof document !== "undefined" && document.fonts && document.fonts.ready) {
     try {
       await document.fonts.ready;
@@ -15,32 +16,38 @@ export async function ensureAssetsLoaded(container: HTMLElement): Promise<void> 
     }
   }
 
-  // 2. Wait for any <img> elements in container to complete
   if (container) {
     const images = Array.from(container.querySelectorAll("img"));
     const pendingImages = images.map((img) => {
       if (img.complete) return Promise.resolve();
       return new Promise<void>((resolve) => {
         img.onload = () => resolve();
-        img.onerror = () => resolve(); // proceed even if one fails
+        img.onerror = () => resolve();
       });
     });
-    await Promise.all(pendingImages);
+    if (pendingImages.length > 0) {
+      await Promise.all(pendingImages);
+    }
   }
 }
 
 /**
  * Captures a fixed 1080x1920 DOM element into a high-DPI PNG File.
- * Performs font checks, image preloading, and a 2-pass rendering pipeline.
+ * Single-pass, cached in memory to eliminate lag and prevent duplicate rendering.
  */
 export async function captureStoryImage(
   element: HTMLElement | null,
-  filename: string
+  filename: string,
+  cacheKey?: string
 ): Promise<File | null> {
   if (!element) return null;
 
+  const key = cacheKey || filename;
+  if (storyImageCache.has(key)) {
+    return storyImageCache.get(key)!;
+  }
+
   try {
-    // Ensure all typography and images are painted in DOM
     await ensureAssetsLoaded(element);
 
     const filterOptions = (node: Node) => {
@@ -50,29 +57,22 @@ export async function captureStoryImage(
       return true;
     };
 
-    // Pass 1: Warm up SVG layout & font engine in html-to-image
-    await toPng(element, {
-      width: 1080,
-      height: 1920,
-      pixelRatio: 1,
-      backgroundColor: "#07050E",
-      filter: filterOptions,
-      cacheBust: true,
-    });
-
-    // Pass 2: High-DPI final capture
+    // Single-pass high-resolution capture
     const dataUrl = await toPng(element, {
       width: 1080,
       height: 1920,
       pixelRatio: 1,
-      backgroundColor: "#07050E",
+      backgroundColor: "#0A0A0A",
       filter: filterOptions,
-      cacheBust: true,
+      cacheBust: false,
     });
 
     const res = await fetch(dataUrl);
     const blob = await res.blob();
-    return new File([blob], filename, { type: "image/png" });
+    const file = new File([blob], filename, { type: "image/png" });
+
+    storyImageCache.set(key, file);
+    return file;
   } catch (err) {
     console.error("Story card capture error:", err);
     return null;
@@ -80,11 +80,35 @@ export async function captureStoryImage(
 }
 
 /**
- * Unified Share Function
- * - Tries native OS share sheet with file attachment if supported.
- * - Otherwise falls back cleanly to image download + clipboard link copy with clear toast.
+ * Downloads a pre-rendered image file directly to the device gallery / downloads
+ * with zero intermediate dialogs.
  */
-export async function executeUnifiedShare({
+export function downloadImageFile(file: File | null, fallbackFilename = "qreato-copy-score.png"): boolean {
+  if (!file) return false;
+  try {
+    const objectUrl = URL.createObjectURL(file);
+    const downloadLink = document.createElement("a");
+    downloadLink.download = file.name || fallbackFilename;
+    downloadLink.href = objectUrl;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
+  } catch (err) {
+    console.error("Download image error:", err);
+    return false;
+  }
+}
+
+/**
+ * Native OS Share Sheet Execution (Fix #1)
+ * 1. Checks if Web Share API supports file sharing -> opens native share sheet with file + URL + text.
+ * 2. If file sharing is not supported by the browser -> falls back to navigator.share({ title, text, url }).
+ * 3. If Web Share API is completely unsupported -> copies link to clipboard with toast.
+ * Never displays a custom modal.
+ */
+export async function executeNativeShare({
   imageFile,
   shareText,
   shareUrl,
@@ -95,48 +119,51 @@ export async function executeUnifiedShare({
   shareUrl: string;
   onShowToast: (msg: string) => void;
 }): Promise<boolean> {
-  // 1. Check native Web Share API with File support
-  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    if (imageFile && typeof navigator.canShare === "function") {
-      const sharePayload = {
-        files: [imageFile],
-        title: "Qreato Copy Score",
-        text: `${shareText} ${shareUrl}`,
-      };
+  const hasShareApi = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
-      try {
-        if (navigator.canShare({ files: [imageFile] })) {
-          await navigator.share(sharePayload);
-          onShowToast("Scorecard shared!");
-          return true;
-        }
-      } catch (shareErr: any) {
-        if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
-          return false;
-        }
-        console.warn("Native file share error:", shareErr);
-      }
-    }
-  }
-
-  // 2. Fallback when native file share sheet is unsupported (e.g. desktop web browser):
-  // Automatically download 1080x1920 PNG file & copy link
-  if (imageFile) {
+  // Tier 1: Native Share Sheet WITH file attachment
+  if (hasShareApi && imageFile && typeof navigator.canShare === "function") {
     try {
-      const objectUrl = URL.createObjectURL(imageFile);
-      const downloadLink = document.createElement("a");
-      downloadLink.download = imageFile.name;
-      downloadLink.href = objectUrl;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } catch (e) {
-      console.warn("Download fallback error:", e);
+      if (navigator.canShare({ files: [imageFile] })) {
+        await navigator.share({
+          files: [imageFile],
+          title: "Qreato Copy Score Challenge",
+          text: `${shareText}\n${shareUrl}`,
+        });
+        return true;
+      }
+    } catch (shareErr: any) {
+      if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
+        // User closed native share sheet without picking an app
+        return false;
+      }
+      console.warn("Native file share fallback:", shareErr);
     }
   }
 
-  await copyToClipboard(`${shareText} ${shareUrl}`);
-  onShowToast("Story image saved to gallery — link copied!");
-  return true;
+  // Tier 2: Native Share Sheet with URL and caption text only
+  if (hasShareApi) {
+    try {
+      await navigator.share({
+        title: "Qreato Copy Score Challenge",
+        text: shareText,
+        url: shareUrl,
+      });
+      return true;
+    } catch (shareErr: any) {
+      if (shareErr && (shareErr.name === "AbortError" || shareErr.message?.includes("abort"))) {
+        return false;
+      }
+      console.warn("Native text share fallback:", shareErr);
+    }
+  }
+
+  // Tier 3: Universal Fallback — Copy public link directly to clipboard
+  const copied = await copyToClipboard(shareUrl);
+  if (copied) {
+    onShowToast("Challenge link copied to clipboard!");
+  } else {
+    onShowToast("Unable to share. Please copy the URL manually.");
+  }
+  return copied;
 }

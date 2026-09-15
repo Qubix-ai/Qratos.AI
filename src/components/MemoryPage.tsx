@@ -37,6 +37,7 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [customToneMode, setCustomToneMode] = useState(false);
 
   useEffect(() => {
@@ -65,14 +66,20 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
     if (!user?.id) return;
 
     setIsSaving(true);
+    setSaveError(null);
     try {
-      await saveUserMemory(user.id, memory);
-      setShowSavedToast(true);
-      setTimeout(() => {
-        setShowSavedToast(false);
-      }, 3000);
-    } catch (err) {
+      const res = await saveUserMemory(user.id, memory);
+      if (res.success) {
+        setShowSavedToast(true);
+        setTimeout(() => {
+          setShowSavedToast(false);
+        }, 3000);
+      } else {
+        setSaveError(res.error || "Failed to persist memory to database.");
+      }
+    } catch (err: any) {
       console.error("Error saving memory context:", err);
+      setSaveError(err?.message || "Failed to save memory.");
     } finally {
       setIsSaving(false);
     }
@@ -438,7 +445,7 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
           </form>
         )}
 
-        {/* Saved Success Toast */}
+        {/* Saved Success / Error Toast */}
         <AnimatePresence>
           {showSavedToast && (
             <motion.div
@@ -451,6 +458,21 @@ export function MemoryPage({ user, onGoToChat }: MemoryPageProps) {
               <div>
                 <p className="text-xs font-bold text-white">Memory Context Saved</p>
                 <p className="text-[10px] text-zinc-400">Murgii will automatically apply this across all future copy briefs.</p>
+              </div>
+            </motion.div>
+          )}
+
+          {saveError && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="fixed bottom-8 right-8 z-50 px-5 py-4 rounded-xl bg-rose-950/90 border border-rose-800 flex items-center gap-3.5 shadow-2xl text-white"
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-rose-200">Database Save Error</p>
+                <p className="text-[10px] text-rose-300/80">{saveError}</p>
               </div>
             </motion.div>
           )}

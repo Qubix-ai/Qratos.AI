@@ -9,7 +9,6 @@ import { AccountPage } from "./components/AccountPage";
 import { MemoryPage } from "./components/MemoryPage";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { LandingPage } from "./components/LandingPage";
-import { SplashScreen } from "./components/SplashScreen";
 import { AuthModal } from "./components/AuthModal";
 import { ChallengePage } from "./components/ChallengePage";
 import { TermsPage } from "./components/TermsPage";
@@ -30,147 +29,152 @@ import { AnimatePresence, motion } from "motion/react";
 import { FilmGrainOverlay } from "./components/FilmGrainOverlay";
 import { AmbientBackground } from "./components/AmbientBackground";
 import { SpotlightCursor } from "./components/SpotlightCursor";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { fetchUserPlan, fetchUserPlanAndCredits, UserPlanData } from "./lib/userAccount";
-import { loadUserSessions, createChatSession, notifySessionsChanged } from "./lib/chatHistory";
+import { loadUserSessions, createChatSession, notifySessionsChanged, getSessionById, SESSIONS_UPDATED_EVENT } from "./lib/chatHistory";
 
 const LAST_ACTIVE_SESSION_KEY = "murgii_last_active_session_id";
 
 export default function App() {
-  const getSlugFromPath = () => {
-    if (typeof window === "undefined") return null;
-    const path = window.location.pathname;
+  const getSlugFromPath = (pathname?: string) => {
+    if (typeof window === "undefined" && !pathname) return null;
+    const path = pathname || window.location.pathname;
     const match = path.match(/^\/challenge\/([^/?#]+)/i);
     return match ? match[1] : null;
   };
 
-  const checkIsTermsPath = () => {
-    if (typeof window === "undefined") return false;
-    return window.location.pathname.toLowerCase() === "/terms";
+  const getRouteFromPath = (pathname?: string): string => {
+    if (typeof window === "undefined" && !pathname) return "landing";
+    const p = (pathname || window.location.pathname).toLowerCase();
+
+    if (p.startsWith("/challenge")) return "challenge";
+    if (p === "/terms") return "terms";
+    if (p === "/privacy") return "privacy";
+    if (p === "/refund-policy" || p === "/refund") return "refund-policy";
+    if (p === "/platform-rules" || p === "/rules") return "platform-rules";
+    if (p === "/general-rules" || p === "/general") return "general-rules";
+    if (p === "/media" || p === "/press") return "media";
+    if (p === "/enterprise" || p === "/teams") return "enterprise";
+    if (p === "/security") return "security";
+    if (p === "/trust-centre" || p === "/trust-center" || p === "/trust") return "trust-centre";
+    if (p === "/learn" || p === "/getting-started") return "learn";
+    if (p === "/guides" || p === "/guide") return "guides";
+    if (p === "/affiliates" || p === "/affiliate" || p === "/partner" || p === "/partners") return "affiliates";
+    if (p === "/support" || p === "/help" || p === "/contact") return "support";
+    if (p === "/reviews" || p === "/testimonials") return "reviews";
+
+    return "landing";
   };
 
-  const checkIsPrivacyPath = () => {
-    if (typeof window === "undefined") return false;
-    return window.location.pathname.toLowerCase() === "/privacy";
-  };
+  const initialPath = typeof window !== "undefined" ? window.location.pathname : "/";
+  const initialRoute = getRouteFromPath(initialPath);
+  const [currentRoute, setCurrentRoute] = useState<string>(initialRoute);
+  const [challengeSlug, setChallengeSlug] = useState<string | null>(getSlugFromPath(initialPath));
 
-  const checkIsRefundPolicyPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/refund-policy" || p === "/refund";
-  };
-
-  const checkIsPlatformRulesPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/platform-rules" || p === "/rules";
-  };
-
-  const checkIsGeneralRulesPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/general-rules" || p === "/general";
-  };
-
-  const checkIsMediaPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/media" || p === "/press";
-  };
-
-  const checkIsEnterprisePath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/enterprise" || p === "/teams";
-  };
-
-  const checkIsSecurityPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/security";
-  };
-
-  const checkIsTrustCentrePath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/trust-centre" || p === "/trust-center" || p === "/trust";
-  };
-
-  const checkIsLearnPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/learn" || p === "/getting-started" || p === "/help";
-  };
-
-  const checkIsGuidesPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/guides" || p === "/guide";
-  };
-
-  const checkIsAffiliatesPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/affiliates" || p === "/affiliate" || p === "/partner" || p === "/partners";
-  };
-
-  const checkIsSupportPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/support" || p === "/help" || p === "/contact";
-  };
-
-  const checkIsReviewsPath = () => {
-    if (typeof window === "undefined") return false;
-    const p = window.location.pathname.toLowerCase();
-    return p === "/reviews" || p === "/testimonials";
-  };
-
-  const [challengeSlug, setChallengeSlug] = useState<string | null>(getSlugFromPath());
-  const [isTermsPage, setIsTermsPage] = useState<boolean>(checkIsTermsPath());
-  const [isPrivacyPage, setIsPrivacyPage] = useState<boolean>(checkIsPrivacyPath());
-  const [isRefundPolicyPage, setIsRefundPolicyPage] = useState<boolean>(checkIsRefundPolicyPath());
-  const [isPlatformRulesPage, setIsPlatformRulesPage] = useState<boolean>(checkIsPlatformRulesPath());
-  const [isGeneralRulesPage, setIsGeneralRulesPage] = useState<boolean>(checkIsGeneralRulesPath());
-  const [isMediaPage, setIsMediaPage] = useState<boolean>(checkIsMediaPath());
-  const [isEnterprisePage, setIsEnterprisePage] = useState<boolean>(checkIsEnterprisePath());
-  const [isSecurityPage, setIsSecurityPage] = useState<boolean>(checkIsSecurityPath());
-  const [isTrustCentrePage, setIsTrustCentrePage] = useState<boolean>(checkIsTrustCentrePath());
-  const [isLearnPage, setIsLearnPage] = useState<boolean>(checkIsLearnPath());
-  const [isGuidesPage, setIsGuidesPage] = useState<boolean>(checkIsGuidesPath());
-  const [isAffiliatesPage, setIsAffiliatesPage] = useState<boolean>(checkIsAffiliatesPath());
-  const [isSupportPage, setIsSupportPage] = useState<boolean>(checkIsSupportPath());
-  const [isReviewsPage, setIsReviewsPage] = useState<boolean>(checkIsReviewsPath());
   const [user, setUser] = useState<any>(null);
   const [userPlanData, setUserPlanData] = useState<UserPlanData>({ plan: "none", maxCredits: 3 });
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
   const [authResolved, setAuthResolved] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("landing");
+  const [activeTab, setActiveTab] = useState<string>(initialRoute !== "landing" ? initialRoute : "landing");
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
+  const [activeSessionTitle, setActiveSessionTitle] = useState<string>("New chat");
   const [pendingPrompt, setPendingPrompt] = useState<{ text: string; mode: MurgiiMode; autoSubmit?: boolean } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("signup");
 
+  const navigate = (target: string, pushState = true) => {
+    let route = target;
+    let path = "/";
+    let slug: string | null = null;
+
+    if (target.startsWith("/challenge/") || target === "challenge" || target === "/challenge") {
+      route = "challenge";
+      if (target.startsWith("/challenge/")) {
+        slug = target.split("/challenge/")[1]?.split("/")[0]?.split("?")[0] || null;
+        path = target;
+      } else {
+        path = "/challenge";
+      }
+    } else if (target === "terms" || target === "/terms") {
+      route = "terms";
+      path = "/terms";
+    } else if (target === "privacy" || target === "/privacy") {
+      route = "privacy";
+      path = "/privacy";
+    } else if (target === "refund-policy" || target === "refund" || target === "/refund-policy" || target === "/refund") {
+      route = "refund-policy";
+      path = "/refund-policy";
+    } else if (target === "platform-rules" || target === "rules" || target === "/platform-rules" || target === "/rules") {
+      route = "platform-rules";
+      path = "/platform-rules";
+    } else if (target === "general-rules" || target === "general" || target === "/general-rules" || target === "/general") {
+      route = "general-rules";
+      path = "/general-rules";
+    } else if (target === "media" || target === "press" || target === "/media" || target === "/press") {
+      route = "media";
+      path = "/media";
+    } else if (target === "enterprise" || target === "teams" || target === "/enterprise" || target === "/teams") {
+      route = "enterprise";
+      path = "/enterprise";
+    } else if (target === "security" || target === "/security") {
+      route = "security";
+      path = "/security";
+    } else if (target === "trust-centre" || target === "trust-center" || target === "trust" || target === "/trust-centre" || target === "/trust-center" || target === "/trust") {
+      route = "trust-centre";
+      path = "/trust-centre";
+    } else if (target === "learn" || target === "getting-started" || target === "/learn" || target === "/getting-started") {
+      route = "learn";
+      path = "/learn";
+    } else if (target === "guides" || target === "guide" || target === "/guides" || target === "/guide") {
+      route = "guides";
+      path = "/guides";
+    } else if (target === "affiliates" || target === "affiliate" || target === "partner" || target === "partners" || target === "/affiliates" || target === "/affiliate") {
+      route = "affiliates";
+      path = "/affiliates";
+    } else if (target === "support" || target === "contact" || target === "/support" || target === "/contact") {
+      route = "support";
+      path = "/support";
+    } else if (target === "reviews" || target === "testimonials" || target === "/reviews" || target === "/testimonials") {
+      route = "reviews";
+      path = "/reviews";
+    } else if (target === "chat" || target === "workspace" || target === "ai" || target === "/chat") {
+      route = "chat";
+      path = "/";
+    } else if (target === "pricing" || target === "/pricing") {
+      route = "pricing";
+      path = "/pricing";
+    } else if (target === "prompt-builder" || target === "/prompt-builder") {
+      route = "prompt-builder";
+      path = "/prompt-builder";
+    } else if (target === "account" || target === "/account") {
+      route = "account";
+      path = "/account";
+    } else if (target === "memory" || target === "/memory") {
+      route = "memory";
+      path = "/memory";
+    } else {
+      route = "landing";
+      path = "/";
+    }
+
+    if (pushState && typeof window !== "undefined") {
+      window.history.pushState({}, "", path);
+    }
+
+    setCurrentRoute(route);
+    setChallengeSlug(slug);
+    setActiveTab(route);
+  };
+
   useEffect(() => {
     const handlePopState = () => {
-      setChallengeSlug(getSlugFromPath());
-      setIsTermsPage(checkIsTermsPath());
-      setIsPrivacyPage(checkIsPrivacyPath());
-      setIsRefundPolicyPage(checkIsRefundPolicyPath());
-      setIsPlatformRulesPage(checkIsPlatformRulesPath());
-      setIsGeneralRulesPage(checkIsGeneralRulesPath());
-      setIsMediaPage(checkIsMediaPath());
-      setIsEnterprisePage(checkIsEnterprisePath());
-      setIsSecurityPage(checkIsSecurityPath());
-      setIsTrustCentrePage(checkIsTrustCentrePath());
-      setIsLearnPage(checkIsLearnPath());
-      setIsGuidesPage(checkIsGuidesPath());
-      setIsAffiliatesPage(checkIsAffiliatesPath());
-      setIsSupportPage(checkIsSupportPath());
-      setIsReviewsPage(checkIsReviewsPath());
+      const slug = getSlugFromPath();
+      const route = getRouteFromPath();
+      setChallengeSlug(slug);
+      setCurrentRoute(slug ? "challenge" : route);
+      setActiveTab(slug ? "challenge" : route);
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -229,7 +233,7 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    // Initial Supabase Session Check - Immediately resolves destination tab to eliminate intermediate render
+    // Initial Supabase Session Check
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
         console.error("Supabase getSession error:", error);
@@ -238,15 +242,10 @@ export default function App() {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          // Immediately set destination to chat workspace before splash finishes
-          setActiveTab("chat");
           loadUserData(currentUser);
           syncInitialSession(currentUser.id);
-        } else {
-          setActiveTab("landing");
         }
         setAuthResolved(true);
-        setLoading(false);
       }
     });
 
@@ -255,8 +254,11 @@ export default function App() {
       if (isMounted) {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        if (currentUser && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED")) {
+        if (currentUser && event === "SIGNED_IN") {
           setActiveTab("chat");
+          loadUserData(currentUser);
+          syncInitialSession(currentUser.id);
+        } else if (currentUser) {
           loadUserData(currentUser);
           syncInitialSession(currentUser.id);
         } else if (event === "SIGNED_OUT") {
@@ -299,6 +301,38 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    const syncTitle = async () => {
+      if (!activeSessionId) {
+        if (isMounted) setActiveSessionTitle("New chat");
+        return;
+      }
+      const uid = user?.id || user?.uid;
+      if (!uid) return;
+      try {
+        const sess = await getSessionById(uid, activeSessionId);
+        if (isMounted) {
+          if (sess && sess.title) {
+            setActiveSessionTitle(sess.title);
+          } else {
+            setActiveSessionTitle("New chat");
+          }
+        }
+      } catch {
+        if (isMounted) setActiveSessionTitle("New chat");
+      }
+    };
+
+    syncTitle();
+    const handleUpdate = () => syncTitle();
+    window.addEventListener(SESSIONS_UPDATED_EVENT, handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener(SESSIONS_UPDATED_EVENT, handleUpdate);
+    };
+  }, [activeSessionId, user]);
+
   const handleStartWriting = (mode: "login" | "signup" = "signup") => {
     if (user) {
       setActiveTab("chat");
@@ -339,73 +373,53 @@ export default function App() {
     setUser(null);
     setUserPlanData({ plan: "none", maxCredits: 3 });
     setRemainingCredits(null);
-    setActiveTab("landing");
+    navigate("landing");
     setSidebarOpen(false);
     setShowAdmin(false);
   };
 
-  if (challengeSlug) {
+  if (challengeSlug || currentRoute === "challenge") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
-        <ChallengePage 
-          slug={challengeSlug}
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setChallengeSlug(null);
-            setActiveTab(user ? "chat" : "landing");
-          }}
-          onGoToSignup={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setChallengeSlug(null);
-            if (user) {
-              setActiveTab("chat");
-            } else {
-              setActiveTab("landing");
-              handleStartWriting("signup");
-            }
-          }}
-        />
+        <ErrorBoundary fallbackTitle="Challenge Scorecard Error" onReset={() => navigate("landing")}>
+          <ChallengePage 
+            slug={challengeSlug || ""}
+            onGoToHome={() => navigate("landing")}
+            onGoToSignup={() => {
+              if (user) {
+                navigate("chat");
+              } else {
+                navigate("landing");
+                handleStartWriting("signup");
+              }
+            }}
+          />
+        </ErrorBoundary>
         <AuthModal 
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isTermsPage || activeTab === "terms") {
+  if (currentRoute === "terms") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <TermsPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsTermsPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsTermsPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -413,34 +427,22 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isPrivacyPage || activeTab === "privacy") {
+  if (currentRoute === "privacy") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <PrivacyPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsPrivacyPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsPrivacyPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -448,34 +450,22 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isRefundPolicyPage || activeTab === "refund-policy" || activeTab === "refund") {
+  if (currentRoute === "refund-policy") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <RefundPolicyPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsRefundPolicyPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsRefundPolicyPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -483,34 +473,22 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isPlatformRulesPage || activeTab === "platform-rules" || activeTab === "rules") {
+  if (currentRoute === "platform-rules") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <PlatformRulesPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsPlatformRulesPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsPlatformRulesPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -518,34 +496,22 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isGeneralRulesPage || activeTab === "general-rules" || activeTab === "general") {
+  if (currentRoute === "general-rules") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <GeneralRulesPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsGeneralRulesPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsGeneralRulesPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -553,34 +519,22 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isMediaPage || activeTab === "media" || activeTab === "press") {
+  if (currentRoute === "media") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <MediaPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsMediaPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsMediaPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -588,34 +542,22 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isEnterprisePage || activeTab === "enterprise" || activeTab === "teams") {
+  if (currentRoute === "enterprise") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <EnterprisePage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsEnterprisePage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsEnterprisePage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -623,34 +565,22 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isSecurityPage || activeTab === "security") {
+  if (currentRoute === "security") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <SecurityPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsSecurityPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsSecurityPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -658,62 +588,23 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isTrustCentrePage || activeTab === "trust-centre" || activeTab === "trust-center" || activeTab === "trust") {
+  if (currentRoute === "trust-centre") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <TrustCentrePage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsTrustCentrePage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsTrustCentrePage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
-          onNavigatePolicy={(key) => {
-            setIsTrustCentrePage(false);
-            if (key === "terms") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/terms");
-              setIsTermsPage(true);
-              setActiveTab("terms");
-            } else if (key === "privacy") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/privacy");
-              setIsPrivacyPage(true);
-              setActiveTab("privacy");
-            } else if (key === "security") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/security");
-              setIsSecurityPage(true);
-              setActiveTab("security");
-            } else if (key === "refund") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/refund-policy");
-              setIsRefundPolicyPage(true);
-              setActiveTab("refund-policy");
-            } else if (key === "platform-rules") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/platform-rules");
-              setIsPlatformRulesPage(true);
-              setActiveTab("platform-rules");
-            } else if (key === "general-rules") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/general-rules");
-              setIsGeneralRulesPage(true);
-              setActiveTab("general-rules");
-            }
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
+          onNavigatePolicy={(key) => navigate(key)}
         />
         <AuthModal 
           isOpen={authModalOpen}
@@ -721,60 +612,31 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isLearnPage || activeTab === "learn") {
+  if (currentRoute === "learn") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <LearnPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsLearnPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsLearnPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
           onNavigate={(tab) => {
-            setIsLearnPage(false);
-            if (tab === "guides") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/guides");
-              setIsGuidesPage(true);
-              setActiveTab("guides");
-            } else if (tab === "memory") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/memory");
-              if (user) setActiveTab("memory");
-              else handleStartWriting("login");
+            if (tab === "memory" && !user) {
+              handleStartWriting("login");
             } else if (tab === "challenge") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/challenge");
               handleStartChallenge();
-            } else if (tab === "prompt-builder") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/prompt-builder");
-              setActiveTab("prompt-builder");
-            } else if (tab === "pricing") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/pricing");
-              setActiveTab("pricing");
-            } else if (tab === "chat") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              if (user) setActiveTab("chat");
-              else handleStartWriting("login");
+            } else if (tab === "chat" && !user) {
+              handleStartWriting("login");
             } else {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              setActiveTab("landing");
+              navigate(tab);
             }
           }}
         />
@@ -784,47 +646,27 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isGuidesPage || activeTab === "guides") {
+  if (currentRoute === "guides") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <GuidesPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsGuidesPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsGuidesPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
           onNavigate={(tab) => {
-            setIsGuidesPage(false);
-            if (tab === "learn") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/learn");
-              setIsLearnPage(true);
-              setActiveTab("learn");
-            } else if (tab === "chat") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              if (user) setActiveTab("chat");
-              else handleStartWriting("login");
+            if (tab === "chat" && !user) {
+              handleStartWriting("login");
             } else {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              setActiveTab("landing");
+              navigate(tab);
             }
           }}
         />
@@ -834,43 +676,27 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isSupportPage || activeTab === "support") {
+  if (currentRoute === "support") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <SupportPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsSupportPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsSupportPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
           onNavigate={(tab) => {
-            setIsSupportPage(false);
-            if (tab === "chat") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              if (user) setActiveTab("chat");
-              else handleStartWriting("login");
+            if (tab === "chat" && !user) {
+              handleStartWriting("login");
             } else {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              setActiveTab("landing");
+              navigate(tab);
             }
           }}
         />
@@ -880,43 +706,27 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isReviewsPage || activeTab === "reviews") {
+  if (currentRoute === "reviews") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <ReviewsPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsReviewsPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsReviewsPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
           onNavigate={(tab) => {
-            setIsReviewsPage(false);
-            if (tab === "chat") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              if (user) setActiveTab("chat");
-              else handleStartWriting("login");
+            if (tab === "chat" && !user) {
+              handleStartWriting("login");
             } else {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              setActiveTab("landing");
+              navigate(tab);
             }
           }}
         />
@@ -926,43 +736,27 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
   }
 
-  if (isAffiliatesPage || activeTab === "affiliates") {
+  if (currentRoute === "affiliates") {
     return (
       <div className="min-h-screen bg-[#07060B] selection:bg-[#8B5CF6]/40 relative">
         <AmbientBackground />
         <FilmGrainOverlay />
         <SpotlightCursor />
         <AffiliatesPage 
-          onGoToHome={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsAffiliatesPage(false);
-            setActiveTab("landing");
-          }}
-          onGoToChat={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-            }
-            setIsAffiliatesPage(false);
-            setActiveTab(user ? "chat" : "landing");
-          }}
+          onGoToHome={() => navigate("landing")}
+          onGoToChat={() => navigate(user ? "chat" : "landing")}
           onNavigate={(tab) => {
-            setIsAffiliatesPage(false);
-            if (tab === "chat") {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              if (user) setActiveTab("chat");
-              else handleStartWriting("login");
+            if (tab === "chat" && !user) {
+              handleStartWriting("login");
             } else {
-              if (typeof window !== "undefined") window.history.pushState({}, "", "/");
-              setActiveTab("landing");
+              navigate(tab);
             }
           }}
         />
@@ -972,15 +766,11 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </div>
     );
-  }
-
-  if (loading || showSplash || !authResolved) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
   // Full-screen Landing Page
@@ -1003,93 +793,12 @@ export default function App() {
           onLogin={() => handleStartWriting("login")}
           onStartChallenge={handleStartChallenge}
           onNavigate={(tab) => {
-            if (tab === "terms") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/terms");
-              }
-              setIsTermsPage(true);
-              setActiveTab("terms");
-            } else if (tab === "privacy") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/privacy");
-              }
-              setIsPrivacyPage(true);
-              setActiveTab("privacy");
-            } else if (tab === "refund-policy" || tab === "refund") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/refund-policy");
-              }
-              setIsRefundPolicyPage(true);
-              setActiveTab("refund-policy");
-            } else if (tab === "platform-rules" || tab === "rules") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/platform-rules");
-              }
-              setIsPlatformRulesPage(true);
-              setActiveTab("platform-rules");
-            } else if (tab === "general-rules" || tab === "general") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/general-rules");
-              }
-              setIsGeneralRulesPage(true);
-              setActiveTab("general-rules");
-            } else if (tab === "media" || tab === "press") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/media");
-              }
-              setIsMediaPage(true);
-              setActiveTab("media");
-            } else if (tab === "enterprise" || tab === "teams") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/enterprise");
-              }
-              setIsEnterprisePage(true);
-              setActiveTab("enterprise");
-            } else if (tab === "security") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/security");
-              }
-              setIsSecurityPage(true);
-              setActiveTab("security");
-            } else if (tab === "trust-centre" || tab === "trust-center" || tab === "trust") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/trust-centre");
-              }
-              setIsTrustCentrePage(true);
-              setActiveTab("trust-centre");
-            } else if (tab === "learn" || tab === "getting-started") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/learn");
-              }
-              setIsLearnPage(true);
-              setActiveTab("learn");
-            } else if (tab === "guides" || tab === "guide") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/guides");
-              }
-              setIsGuidesPage(true);
-              setActiveTab("guides");
-            } else if (tab === "affiliates" || tab === "affiliate" || tab === "partner") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/affiliates");
-              }
-              setIsAffiliatesPage(true);
-              setActiveTab("affiliates");
-            } else if (tab === "pricing") {
-              setActiveTab("pricing");
-            } else if (tab === "prompt-builder") {
-              setActiveTab("prompt-builder");
-            } else if (tab === "challenge") {
+            if (tab === "challenge") {
               handleStartChallenge();
-            } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
-              if (user) setActiveTab("chat");
-              else handleStartWriting("login");
-            } else if (tab === "account") {
-              if (user) setActiveTab("account");
-              else handleStartWriting("login");
-            } else if (tab === "memory") {
-              if (user) setActiveTab("memory");
-              else handleStartWriting("login");
+            } else if ((tab === "chat" || tab === "workspace" || tab === "ai" || tab === "account" || tab === "memory") && !user) {
+              handleStartWriting("login");
+            } else {
+              navigate(tab);
             }
           }}
         />
@@ -1099,7 +808,7 @@ export default function App() {
           initialMode={authModalMode}
           onSuccess={() => {
             setAuthModalOpen(false);
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </motion.div>
@@ -1126,99 +835,21 @@ export default function App() {
           onLogin={() => handleStartWriting("login")}
           onStartChallenge={handleStartChallenge}
           onNavigate={(tab) => {
-            if (tab === "terms") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/terms");
-              }
-              setIsTermsPage(true);
-              setActiveTab("terms");
-            } else if (tab === "privacy") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/privacy");
-              }
-              setIsPrivacyPage(true);
-              setActiveTab("privacy");
-            } else if (tab === "refund-policy" || tab === "refund") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/refund-policy");
-              }
-              setIsRefundPolicyPage(true);
-              setActiveTab("refund-policy");
-            } else if (tab === "platform-rules" || tab === "rules") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/platform-rules");
-              }
-              setIsPlatformRulesPage(true);
-              setActiveTab("platform-rules");
-            } else if (tab === "general-rules" || tab === "general") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/general-rules");
-              }
-              setIsGeneralRulesPage(true);
-              setActiveTab("general-rules");
-            } else if (tab === "media" || tab === "press") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/media");
-              }
-              setIsMediaPage(true);
-              setActiveTab("media");
-            } else if (tab === "enterprise" || tab === "teams") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/enterprise");
-              }
-              setIsEnterprisePage(true);
-              setActiveTab("enterprise");
-            } else if (tab === "security") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/security");
-              }
-              setIsSecurityPage(true);
-              setActiveTab("security");
-            } else if (tab === "trust-centre" || tab === "trust-center" || tab === "trust") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/trust-centre");
-              }
-              setIsTrustCentrePage(true);
-              setActiveTab("trust-centre");
-            } else if (tab === "learn" || tab === "getting-started") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/learn");
-              }
-              setIsLearnPage(true);
-              setActiveTab("learn");
-            } else if (tab === "guides" || tab === "guide") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/guides");
-              }
-              setIsGuidesPage(true);
-              setActiveTab("guides");
-            } else if (tab === "affiliates" || tab === "affiliate" || tab === "partner") {
-              if (typeof window !== "undefined") {
-                window.history.pushState({}, "", "/affiliates");
-              }
-              setIsAffiliatesPage(true);
-              setActiveTab("affiliates");
-            } else if (tab === "pricing") {
-              setActiveTab("pricing");
-            } else if (tab === "prompt-builder") {
-              setActiveTab("prompt-builder");
-            } else if (tab === "challenge") {
+            if (tab === "challenge") {
               handleStartChallenge();
-            } else if (tab === "chat" || tab === "workspace" || tab === "ai") {
+            } else if ((tab === "chat" || tab === "workspace" || tab === "ai" || tab === "account" || tab === "memory") && !user) {
               handleStartWriting("login");
-            } else if (tab === "account") {
-              handleStartWriting("login");
-            } else if (tab === "memory") {
-              handleStartWriting("login");
+            } else {
+              navigate(tab);
             }
           }}
         />
         <AuthModal 
           isOpen={true}
-          onClose={() => setActiveTab("landing")}
+          onClose={() => navigate("landing")}
           initialMode="login"
           onSuccess={() => {
-            setActiveTab("chat");
+            navigate("chat");
           }}
         />
       </motion.div>
@@ -1231,7 +862,7 @@ export default function App() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="flex h-screen bg-[#07060B] text-gray-200 overflow-hidden font-sans relative selection:bg-[#8B5CF6]/40"
+      className="flex h-screen bg-[#09090B] text-gray-200 overflow-hidden font-sans relative selection:bg-[#F59E0B]/30"
     >
       <AmbientBackground />
       <FilmGrainOverlay />
@@ -1249,7 +880,7 @@ export default function App() {
         activeTab={activeTab} 
         activeSessionId={activeSessionId}
         onTabChange={(tab) => {
-          setActiveTab(tab);
+          navigate(tab);
           setSidebarOpen(false);
           setShowAdmin(false);
         }} 
@@ -1264,20 +895,11 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
       />
       
-      <main className="flex-1 relative flex flex-col min-w-0 h-full overflow-hidden z-20">
+      <main className="flex-1 relative flex flex-col min-w-0 h-full overflow-hidden z-20 bg-[#09090B]">
         {/* Persistent Top Navigation Bar for Logged-In State */}
         <TopNav
-          user={user}
-          activeTab={activeTab}
-          remainingCredits={remainingCredits}
-          maxCredits={userPlanData.maxCredits}
-          userPlan={userPlanData.plan}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            setShowAdmin(false);
-          }}
+          sessionTitle={activeSessionTitle}
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-          onLogout={handleLogout}
         />
 
         <div className="flex-1 relative min-h-0 overflow-hidden">
@@ -1383,15 +1005,12 @@ export default function App() {
                   onClearPendingPrompt={() => setPendingPrompt(null)}
                   onSessionChange={(id) => setActiveSessionId(id)}
                   onMenuToggle={() => setSidebarOpen(true)}
-                  onGoHome={() => setActiveTab("landing")}
-                  onGoToPricing={() => setActiveTab("pricing")}
-                  onGoToAccount={() => setActiveTab("account")}
+                  onGoHome={() => navigate("landing")}
+                  onGoToPricing={() => navigate("pricing")}
+                  onGoToAccount={() => navigate("account")}
                   onLogout={handleLogout}
                   onNavigateToPublicChallenge={(slug) => {
-                    if (typeof window !== "undefined") {
-                      window.history.pushState({}, "", `/challenge/${slug}`);
-                    }
-                    setChallengeSlug(slug);
+                    navigate(`/challenge/${slug}`);
                   }}
                 />
               </motion.div>

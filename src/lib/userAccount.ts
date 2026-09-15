@@ -82,7 +82,7 @@ export async function fetchUserPlan(userId: string, userMetadata?: any, userEmai
   const cleanEmail = (userEmail || userMetadata?.email || "").trim().toLowerCase();
 
   try {
-    // 1. Primary Query: Match on user_id = auth.uid()
+    // Primary Query: Match on user_id = auth.uid()
     const { data: primaryData, error: primaryErr } = await supabase
       .from("user_plan")
       .select("*")
@@ -92,48 +92,6 @@ export async function fetchUserPlan(userId: string, userMetadata?: any, userEmai
     if (!primaryErr && primaryData) {
       planString = primaryData.plan || primaryData.tier || primaryData.subscription_tier || primaryData.plan_name || primaryData.name || "";
       statusString = primaryData.status || primaryData.subscription_status;
-    }
-
-    // 2. Secondary Query: Match on id = auth.uid() if primary returned no plan
-    if (!planString) {
-      const { data: idData, error: idErr } = await supabase
-        .from("user_plan")
-        .select("*")
-        .eq("id", cleanUserId)
-        .maybeSingle();
-
-      if (!idErr && idData) {
-        planString = idData.plan || idData.tier || idData.subscription_tier || idData.plan_name || idData.name || "";
-        statusString = idData.status || idData.subscription_status;
-      }
-    }
-
-    // 3. Tertiary Query: Match on email if cleanEmail is available
-    if (!planString && cleanEmail) {
-      const { data: emailData, error: emailErr } = await supabase
-        .from("user_plan")
-        .select("*")
-        .eq("email", cleanEmail)
-        .maybeSingle();
-
-      if (!emailErr && emailData) {
-        planString = emailData.plan || emailData.tier || emailData.subscription_tier || emailData.plan_name || emailData.name || "";
-        statusString = emailData.status || emailData.subscription_status;
-      }
-    }
-
-    // 4. Quaternary Query: Match on user_email
-    if (!planString && cleanEmail) {
-      const { data: userEmailData, error: userEmailErr } = await supabase
-        .from("user_plan")
-        .select("*")
-        .eq("user_email", cleanEmail)
-        .maybeSingle();
-
-      if (!userEmailErr && userEmailData) {
-        planString = userEmailData.plan || userEmailData.tier || userEmailData.subscription_tier || userEmailData.plan_name || userEmailData.name || "";
-        statusString = userEmailData.status || userEmailData.subscription_status;
-      }
     }
   } catch (err) {
     console.warn("Could not query user_plan table from Supabase:", err);
@@ -301,33 +259,36 @@ export async function updateUserProfile(
   updates: Partial<UserProfile>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const payload = {
+    const fullName = (updates.full_name || updates.name || "").trim();
+    const payload: Record<string, any> = {
       id: userId,
-      name: updates.name,
-      full_name: updates.full_name || updates.name,
-      username: updates.username,
-      bio: updates.bio,
-      email: updates.email,
-      updated_at: new Date().toISOString(),
+      full_name: fullName,
     };
+    if (updates.email) {
+      payload.email = updates.email.trim();
+    }
 
-    const { error } = await supabase
+    const { error: profileError } = await supabase
       .from("profiles")
       .upsert(payload, { onConflict: "id" });
 
-    if (error) {
-      console.warn("Error upserting profile in profiles table:", error);
+    if (profileError) {
+      console.warn("Notice: profiles table upsert:", profileError);
     }
 
-    // Also update auth user_metadata if possible
-    await supabase.auth.updateUser({
+    // Update Supabase Auth user_metadata permanently
+    const { error: authError } = await supabase.auth.updateUser({
       data: {
-        name: updates.name,
-        full_name: updates.full_name || updates.name,
-        username: updates.username,
-        bio: updates.bio,
+        name: fullName,
+        full_name: fullName,
+        username: (updates.username || "").trim(),
+        bio: (updates.bio || "").trim(),
       },
     });
+
+    if (authError && profileError) {
+      return { success: false, error: authError.message || profileError.message };
+    }
 
     return { success: true };
   } catch (err: any) {
