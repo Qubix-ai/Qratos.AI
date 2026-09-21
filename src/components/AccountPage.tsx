@@ -12,7 +12,10 @@ import {
   ArrowRight,
   TrendingUp,
   Zap,
-  Crown
+  Crown,
+  Trash2,
+  AlertTriangle,
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -20,6 +23,7 @@ import {
   updateUserProfile, 
   fetchUserPlanAndCredits,
   fetchBoltProgress, 
+  deleteUserAccountAndData,
   UserProfile, 
   UserPlanData, 
   BoltProgressSummary 
@@ -57,6 +61,12 @@ export function AccountPage({
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [, setLoading] = useState(true);
+
+  // Account Deletion State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmationInput, setDeleteConfirmationInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadAccountData() {
@@ -114,6 +124,34 @@ export function AccountPage({
     } else {
       setSaveStatus("error");
       setErrorMessage(result.error || "Failed to update profile");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.id) return;
+    if (deleteConfirmationInput.trim().toUpperCase() !== "DELETE") {
+      setDeleteError('Please type "DELETE" exactly to confirm.');
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const result = await deleteUserAccountAndData(user.id, user.email);
+      if (!result.success) {
+        setDeleteError(result.error || "Failed to execute account deletion.");
+        setIsDeleting(false);
+        return;
+      }
+
+      setShowDeleteModal(false);
+      // Log out and reset root app state
+      onLogout();
+    } catch (err: any) {
+      console.error("Account deletion failed:", err);
+      setDeleteError(err?.message || "An unexpected error occurred during account deletion.");
+      setIsDeleting(false);
     }
   };
 
@@ -456,7 +494,171 @@ export function AccountPage({
           </form>
         </div>
 
+        {/* Section 3: Danger Zone - Account & Multi-Table Data Deletion */}
+        <div className="rounded-2xl bg-[#0E0D14] border border-red-900/40 p-6 sm:p-8 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-red-400">
+                <AlertTriangle size={14} />
+                <span>Danger Zone</span>
+              </div>
+              <h3 className="text-base font-bold text-white tracking-tight font-nohemi">
+                Delete Account &amp; Purge Stored Data
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">
+                Permanently purge your account identity and all associated database records across{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">profiles</code>,{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">progress</code>,{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">quick_notes</code>,{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">user_plan</code>,{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">chat_sessions</code>,{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">chat_messages</code>,{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">murgii_usage</code>,{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">murgii_memory</code>, and{" "}
+                <code className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1 py-0.5 rounded">challenge_results</code>.
+              </p>
+            </div>
+
+            <button
+              id="account-open-delete-modal-btn"
+              type="button"
+              onClick={() => {
+                setShowDeleteModal(true);
+                setDeleteConfirmationInput("");
+                setDeleteError(null);
+              }}
+              className="shrink-0 px-4 py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 text-red-300 hover:text-red-100 font-bold text-xs transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <Trash2 size={14} />
+              <span>Delete Account</span>
+            </button>
+          </div>
+        </div>
+
       </div>
+
+      {/* Account Deletion Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div 
+            id="account-delete-modal-backdrop" 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          >
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isDeleting && setShowDeleteModal(false)}
+              className="fixed inset-0 bg-black/85 backdrop-blur-md"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              id="account-delete-modal-card"
+              className="relative w-full max-w-[480px] rounded-3xl bg-[#0F0C10] border border-red-500/30 p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.9)] overflow-hidden z-10 space-y-6"
+            >
+              {/* Close Button */}
+              <button
+                id="account-delete-modal-close-btn"
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setShowDeleteModal(false)}
+                className="absolute right-4 top-4 rounded-full p-2 text-neutral-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-colors cursor-pointer disabled:opacity-30"
+              >
+                <X size={16} />
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-red-950/80 border border-red-500/40 flex items-center justify-center text-red-400 shrink-0">
+                  <AlertTriangle size={22} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white font-['Geist',sans-serif]">
+                    Permanently Delete Account
+                  </h3>
+                  <p className="text-xs text-red-300/80 font-mono mt-0.5">
+                    Irreversible Multi-Table Purge
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs text-neutral-300 leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/5">
+                <p>
+                  This action will permanently delete your user profile and execute a full purge across all tables storing your data:
+                </p>
+                <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-neutral-400">
+                  <li><strong className="text-neutral-200">profiles</strong> &amp; authentication credentials</li>
+                  <li><strong className="text-neutral-200">chat_sessions</strong> &amp; <strong className="text-neutral-200">chat_messages</strong></li>
+                  <li><strong className="text-neutral-200">murgii_memory</strong> &amp; brand context records</li>
+                  <li><strong className="text-neutral-200">murgii_usage</strong> &amp; credit generation history</li>
+                  <li><strong className="text-neutral-200">challenge_results</strong> score diagnostic cards</li>
+                  <li><strong className="text-neutral-200">progress</strong>, <strong className="text-neutral-200">quick_notes</strong> &amp; <strong className="text-neutral-200">user_plan</strong></li>
+                </ul>
+                <p className="text-red-400 font-semibold pt-1">
+                  Once deleted, your copy sequences and account history cannot be recovered.
+                </p>
+              </div>
+
+              {deleteError && (
+                <div className="rounded-xl border border-red-500/30 bg-red-950/50 p-3 text-xs text-red-200 flex items-start gap-2">
+                  <AlertCircle size={15} className="text-red-400 shrink-0 mt-0.5" />
+                  <span>{deleteError}</span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="block text-[11px] font-mono font-semibold text-neutral-300 uppercase tracking-wider">
+                  Type <span className="text-red-400 font-bold">DELETE</span> to confirm:
+                </label>
+                <input
+                  id="account-delete-confirmation-input"
+                  type="text"
+                  value={deleteConfirmationInput}
+                  onChange={(e) => setDeleteConfirmationInput(e.target.value)}
+                  placeholder="DELETE"
+                  disabled={isDeleting}
+                  className="w-full bg-black/60 py-2.5 px-3.5 rounded-xl border border-red-500/30 text-white placeholder:text-neutral-600 focus:outline-none focus:border-red-500 font-mono text-sm uppercase tracking-widest disabled:opacity-50"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-semibold text-neutral-300 hover:text-white transition-colors cursor-pointer disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+                <button
+                  id="account-confirm-delete-btn"
+                  type="button"
+                  disabled={isDeleting || deleteConfirmationInput.trim().toUpperCase() !== "DELETE"}
+                  onClick={handleDeleteAccount}
+                  className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Purging All Data...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} />
+                      <span>Permanently Delete Everything</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

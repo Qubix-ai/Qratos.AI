@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Eye, EyeOff, Lock, Mail, ArrowRight, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { recordUserActivity } from "../lib/sessionManager";
+import { recordUserConsent, CURRENT_TOS_VERSION } from "../lib/userAccount";
 import { QreatoLogo } from "./QreatoLogo";
 import { MoltenMetal } from "./MoltenMetal";
 
@@ -18,6 +19,7 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
       setError(null);
       setSuccessMessage(null);
       setShowPassword(false);
+      setAgreedToTerms(false);
     }
   }, [isOpen]);
 
@@ -82,7 +85,13 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           onClose();
         }
       } else {
-        // Frictionless Signup Flow (Email confirmation is disabled in Supabase)
+        // Frictionless Signup Flow with Mandatory Legal Consent
+        if (!agreedToTerms) {
+          setError("You must agree to the Terms of Service and Privacy Policy to create an account.");
+          setLoading(false);
+          return;
+        }
+
         if (!trimmedPassword) {
           setError("Please enter a secure password.");
           setLoading(false);
@@ -94,9 +103,18 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           return;
         }
 
+        const nowIso = new Date().toISOString();
+
         const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
           email: trimmedEmail,
           password: trimmedPassword,
+          options: {
+            data: {
+              tos_accepted_at: nowIso,
+              tos_version: CURRENT_TOS_VERSION,
+              privacy_accepted_at: nowIso,
+            },
+          },
         });
 
         // Handle case where account already exists
@@ -114,6 +132,14 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
             });
 
             if (directSignIn?.session) {
+              if (directSignIn.session.user?.id) {
+                await recordUserConsent(
+                  directSignIn.session.user.id,
+                  trimmedEmail,
+                  directSignIn.session.user.user_metadata,
+                  CURRENT_TOS_VERSION
+                );
+              }
               recordUserActivity();
               onSuccess?.();
               onClose();
@@ -128,6 +154,16 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           }
 
           throw signUpErr;
+        }
+
+        // Write explicit consent timestamp directly to profiles table
+        if (signUpData?.user?.id) {
+          await recordUserConsent(
+            signUpData.user.id,
+            trimmedEmail,
+            signUpData.user.user_metadata,
+            CURRENT_TOS_VERSION
+          );
         }
 
         // If session returned directly from signup, land straight in workspace
@@ -149,6 +185,14 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
           setIsLogin(true);
           setSuccessMessage("Account created! Please enter your password to enter the workspace.");
         } else if (signInData?.session) {
+          if (signInData.session.user?.id) {
+            await recordUserConsent(
+              signInData.session.user.id,
+              trimmedEmail,
+              signInData.session.user.user_metadata,
+              CURRENT_TOS_VERSION
+            );
+          }
           recordUserActivity();
           onSuccess?.();
           onClose();
@@ -174,6 +218,8 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
       setLoading(false);
     }
   };
+
+  const isSubmitDisabled = loading || (!isLogin && !showForgot && !agreedToTerms);
 
   return (
     <AnimatePresence>
@@ -367,12 +413,50 @@ export function AuthModal({ isOpen, onClose, initialMode = "login", onSuccess }:
                 </div>
               )}
 
-              {/* Clean, Flat, Confident CTA Button */}
+              {/* Explicit Legal Consent Checkbox (Mandatory for Signup) */}
+              {!isLogin && !showForgot && (
+                <div className="pt-1">
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none group">
+                    <input
+                      id="auth-tos-consent-checkbox"
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      required
+                      className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/[0.05] text-white accent-white focus:ring-1 focus:ring-white/40 cursor-pointer shrink-0"
+                    />
+                    <span className="text-xs text-neutral-400 leading-snug group-hover:text-neutral-300 transition-colors">
+                      I agree to the{" "}
+                      <a
+                        href="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white underline decoration-white/40 hover:decoration-white underline-offset-2 transition-colors font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Terms of Service
+                      </a>{" "}
+                      and{" "}
+                      <a
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white underline decoration-white/40 hover:decoration-white underline-offset-2 transition-colors font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Privacy Policy
+                      </a>
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {/* Submit CTA Button - Disabled until Consent Checkbox is Checked in Signup */}
               <button
                 id="auth-submit-cta-btn"
                 type="submit"
-                disabled={loading}
-                className="relative w-full py-3.5 rounded-xl bg-white hover:bg-neutral-100 text-black font-semibold text-xs sm:text-[13px] uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:scale-[1.01] active:scale-[0.99] cursor-pointer mt-5 disabled:opacity-50"
+                disabled={isSubmitDisabled}
+                className="relative w-full py-3.5 rounded-xl bg-white hover:bg-neutral-100 text-black font-semibold text-xs sm:text-[13px] uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:scale-[1.01] active:scale-[0.99] cursor-pointer mt-5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-white"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />

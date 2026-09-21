@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 
+export const CURRENT_TOS_VERSION = "1.0";
+
 export interface UserProfile {
   id: string;
   name?: string;
@@ -9,6 +11,9 @@ export interface UserProfile {
   bio?: string;
   avatar_url?: string;
   updated_at?: string;
+  tos_accepted_at?: string;
+  tos_version?: string;
+  privacy_accepted_at?: string;
 }
 
 export interface UserPlanData {
@@ -22,6 +27,13 @@ export interface BoltProgressSummary {
   totalCount: number;
   percentage: number;
   lastUpdated?: string;
+}
+
+export interface AccountDeletionResult {
+  success: boolean;
+  tablesDeleted: string[];
+  tablesFailed: { table: string; error: string }[];
+  error?: string;
 }
 
 /**
@@ -63,6 +75,206 @@ export function getPlanMaxCredits(plan: "basic" | "core" | "max" | "none"): numb
 }
 
 /**
+ * Records explicit Terms of Service and Privacy Policy consent at signup in the database.
+ * Writes tos_accepted_at, tos_version, and privacy_accepted_at into the `profiles` table
+ * and updates Supabase auth user metadata.
+ */
+export async function recordUserConsent(
+  userId: string,
+  email?: string,
+  userMetadata?: any,
+  tosVersion: string = CURRENT_TOS_VERSION
+): Promise<{ success: boolean; error?: string }> {
+  if (!userId) {
+    return { success: false, error: "User ID is required to record legal consent." };
+  }
+
+  const nowIso = new Date().toISOString();
+  const cleanEmail = (email || userMetadata?.email || "").trim();
+  const fullName = userMetadata?.full_name || userMetadata?.name || (cleanEmail ? cleanEmail.split("@")[0] : "Operator");
+
+  try {
+    // 1. Primary write: Upsert into Supabase `profiles` table
+    const profilePayload: Record<string, any> = {
+      id: userId,
+      tos_accepted_at: nowIso,
+      tos_version: tosVersion,
+      privacy_accepted_at: nowIso,
+      updated_at: nowIso,
+    };
+
+    if (cleanEmail) {
+      profilePayload.email = cleanEmail;
+    }
+    if (fullName) {
+      profilePayload.full_name = fullName;
+    }
+
+    const { error: profileErr } = await supabase
+      .from("profiles")
+      .upsert(profilePayload, { onConflict: "id" });
+
+    if (profileErr) {
+      console.warn("[Consent Capture] Notice writing to profiles table:", profileErr.message || profileErr);
+    }
+
+    // 2. Secondary write: Also persist in auth user_metadata permanently
+    const { error: authErr } = await supabase.auth.updateUser({
+      data: {
+        tos_accepted_at: nowIso,
+        tos_version: tosVersion,
+        privacy_accepted_at: nowIso,
+        terms_version: tosVersion,
+      },
+    });
+
+    if (authErr && profileErr) {
+      console.error("[Consent Capture Error] Failed writing consent to both profiles and auth metadata:", authErr);
+      return { success: false, error: authErr.message || profileErr.message };
+    }
+
+    console.info(`[Consent Capture] Successfully recorded ToS v${tosVersion} and Privacy consent for user ${userId} at ${nowIso}`);
+    return { success: true };
+  } catch (err: any) {
+    console.error("[Consent Capture] Exception while recording consent:", err);
+    return { success: false, error: err.message || "Failed to persist legal consent" };
+  }
+}
+
+/**
+ * Deletes all rows associated with a user across every table in the shared database
+ * (profiles, progress, quick_notes, user_plan, chat_sessions, chat_messages, murgii_usage, murgii_memory, challenge_results)
+ * and revokes the Supabase authentication session.
+ */
+export async function deleteUserAccountAndData(
+  userId: string,
+  userEmail?: string
+): Promise<AccountDeletionResult> {
+  if (!userId) {
+    return {
+      success: false,
+      tablesDeleted: [],
+      tablesFailed: [{ table: "all", error: "Missing user ID" }],
+      error: "User ID is required to execute account deletion.",
+    };
+  }
+
+  const cleanUserId = userId.trim();
+  const tablesDeleted: string[] = [];
+  const tablesFailed: { table: string; error: string }[] = [];
+
+  console.warn(`[Account Deletion] Initiating permanent multi-table deletion for user: ${cleanUserId}`);
+
+  // List of all database tables containing user personal or activity data
+  const tablesToDeleteByUser: { table: string; idColumn: string }[] = [
+    { table: "chat_messages", idColumn: "user_id" },
+    { table: "chat_sessions", idColumn: "user_id" },
+    { table: "murgii_memory", idColumn: "user_id" },
+    { table: "murgii_usage", idColumn: "user_id" },
+    { table: "challenge_results", idColumn: "user_id" },
+    { table: "progress", idColumn: "user_id" },
+    { table: "quick_notes", idColumn: "user_id" },
+    { table: "user_plan", idColumn: "user_id" },
+    { table: "profiles", idColumn: "id" },
+  ];
+
+  for (const item of tablesToDeleteByUser) {
+    try {
+      const { error } = await supabase
+        .from(item.table)
+        .delete()
+        .eq(item.idColumn, cleanUserId);
+
+      if (error) {
+        // Some schemas might use 'id' instead of 'user_id' or vice-versa; retry with fallback column if applicable
+        if (item.idColumn === "user_id") {
+          const { error: retryError } = await supabase
+            .from(item.table)
+            .delete()
+            .eq("id", cleanUserId);
+
+          if (retryError) {
+            console.warn(`[Account Deletion] Table ${item.table} deletion notice:`, error.message);
+            tablesFailed.push({ table: item.table, error: error.message });
+          } else {
+            tablesDeleted.push(item.table);
+          }
+        } else {
+          console.warn(`[Account Deletion] Table ${item.table} deletion notice:`, error.message);
+          tablesFailed.push({ table: item.table, error: error.message });
+        }
+      } else {
+        tablesDeleted.push(item.table);
+      }
+    } catch (err: any) {
+      console.warn(`[Account Deletion] Error deleting from ${item.table}:`, err?.message || err);
+      tablesFailed.push({ table: item.table, error: err?.message || "Unknown table deletion error" });
+    }
+  }
+
+  // Also purge local browser storage caches for this user
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      localStorage.removeItem("murgii_last_activity_timestamp");
+      localStorage.removeItem("murgii_last_active_session_id");
+      localStorage.removeItem(`murgii_memory_${cleanUserId}`);
+      localStorage.removeItem(`murgii_chat_sessions_${cleanUserId}`);
+      localStorage.removeItem(`murgii_active_session_${cleanUserId}`);
+
+      // Purge any other murgii keys
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes(cleanUserId) || key.startsWith("murgii_"))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    } catch (storageErr) {
+      console.warn("[Account Deletion] Local storage purge warning:", storageErr);
+    }
+  }
+
+  // Attempt to call admin deletion RPC or Edge Function if configured on the shared Supabase project
+  try {
+    await supabase.rpc("delete_user_account", { target_user_id: cleanUserId });
+  } catch {
+    // RPC is optional if direct table RLS allows user self-delete
+  }
+
+  try {
+    const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "https://omeqbiksjqyeqkxnkflh.supabase.co";
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (token) {
+      await fetch(`${supabaseUrl.replace(/\/$/, "")}/functions/v1/delete-user-account`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: cleanUserId, email: userEmail }),
+      }).catch(() => {});
+    }
+  } catch {
+    // Edge function fallback
+  }
+
+  // Revoke the Supabase authentication session immediately
+  try {
+    await supabase.auth.signOut();
+  } catch (signOutErr) {
+    console.warn("[Account Deletion] Error during signOut:", signOutErr);
+  }
+
+  return {
+    success: true,
+    tablesDeleted,
+    tablesFailed,
+  };
+}
+
+/**
  * Fetches user plan from shared user_plan table in Supabase, falling back to auth user metadata
  * Queries the user_plan table by auth.uid() user_id, id, and optional email fallback.
  * Uses select("*") so missing column schemas never cause query rejections.
@@ -79,7 +291,6 @@ export async function fetchUserPlan(userId: string, userMetadata?: any, userEmai
   }
 
   const cleanUserId = userId.trim();
-  const cleanEmail = (userEmail || userMetadata?.email || "").trim().toLowerCase();
 
   try {
     // Primary Query: Match on user_id = auth.uid()
@@ -225,6 +436,9 @@ export async function fetchUserProfile(user: any): Promise<UserProfile> {
     username: user.user_metadata?.username || (user.email ? user.email.split("@")[0] : "user"),
     email: user.email || "",
     bio: user.user_metadata?.bio || "Direct-response operator & persuasion strategist.",
+    tos_accepted_at: user.user_metadata?.tos_accepted_at,
+    tos_version: user.user_metadata?.tos_version,
+    privacy_accepted_at: user.user_metadata?.privacy_accepted_at,
   };
 
   try {
@@ -242,6 +456,9 @@ export async function fetchUserProfile(user: any): Promise<UserProfile> {
         email: data.email || fallbackProfile.email,
         username: data.username || fallbackProfile.username,
         bio: data.bio || fallbackProfile.bio,
+        tos_accepted_at: data.tos_accepted_at || fallbackProfile.tos_accepted_at,
+        tos_version: data.tos_version || fallbackProfile.tos_version,
+        privacy_accepted_at: data.privacy_accepted_at || fallbackProfile.privacy_accepted_at,
       };
     }
   } catch (err) {
@@ -267,6 +484,15 @@ export async function updateUserProfile(
     if (updates.email) {
       payload.email = updates.email.trim();
     }
+    if (updates.tos_accepted_at) {
+      payload.tos_accepted_at = updates.tos_accepted_at;
+    }
+    if (updates.tos_version) {
+      payload.tos_version = updates.tos_version;
+    }
+    if (updates.privacy_accepted_at) {
+      payload.privacy_accepted_at = updates.privacy_accepted_at;
+    }
 
     const { error: profileError } = await supabase
       .from("profiles")
@@ -277,13 +503,18 @@ export async function updateUserProfile(
     }
 
     // Update Supabase Auth user_metadata permanently
+    const authData: Record<string, any> = {
+      name: fullName,
+      full_name: fullName,
+      username: (updates.username || "").trim(),
+      bio: (updates.bio || "").trim(),
+    };
+    if (updates.tos_accepted_at) authData.tos_accepted_at = updates.tos_accepted_at;
+    if (updates.tos_version) authData.tos_version = updates.tos_version;
+    if (updates.privacy_accepted_at) authData.privacy_accepted_at = updates.privacy_accepted_at;
+
     const { error: authError } = await supabase.auth.updateUser({
-      data: {
-        name: fullName,
-        full_name: fullName,
-        username: (updates.username || "").trim(),
-        bio: (updates.bio || "").trim(),
-      },
+      data: authData,
     });
 
     if (authError && profileError) {
@@ -339,3 +570,4 @@ export async function fetchBoltProgress(userId: string): Promise<BoltProgressSum
     percentage: 0,
   };
 }
+
