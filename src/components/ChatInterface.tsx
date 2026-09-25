@@ -484,8 +484,16 @@ export function ChatInterface({
     await insertChatMessage(userId, targetSessionId, userMessage);
     updateSessionTitle(userId, targetSessionId, computedTitle).catch(() => {});
 
+    // Prepare complete conversation history including prior turns and the latest user message
+    const historyForGeneration = updatedWithUser
+      .filter((m) => !m.isDailyLimit && m.content && m.content.trim().length > 0)
+      .map((m) => ({
+        role: m.role,
+        content: stripScoreDataTags(m.content),
+      }));
+
     try {
-      const result = await callMurgiiGenerateEdgeFunction(targetMode, text);
+      const result = await callMurgiiGenerateEdgeFunction(targetMode, text, historyForGeneration);
 
       if (typeof result.remaining === 'number') {
         setRemainingCredits(result.remaining);

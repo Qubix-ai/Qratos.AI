@@ -508,18 +508,79 @@ Provide high-retention, high-engagement content (LinkedIn posts, X threads, or s
   return baseInstruction;
 }
 
-async function generateWithGeminiDirect(mode: string, brief: string): Promise<string> {
+function formatHistoryForGemini(brief: string, history?: Array<{ role: string; content: string }>) {
+  if (!history || !Array.isArray(history) || history.length === 0) {
+    return brief;
+  }
+
+  // Cap to the most recent 20 messages (approx. 10 complete user/assistant exchanges)
+  // This preserves rich context, previous iterations, and tone modifications while respecting context window and latency
+  const recentHistory = history.slice(-20);
+  const formatted: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+
+  for (const msg of recentHistory) {
+    const rawContent = (msg.content || "")
+      .replace(/<!--\s*SCORE_DATA[\s\S]*?(?:SCORE_DATA\s*-->|-->)\s*/gi, "")
+      .replace(/<!--\s*CHALLENGE_RESULT[\s\S]*?(?:-->)\s*/gi, "")
+      .replace(/SCORE_DATA-->/gi, "")
+      .trim();
+    if (!rawContent) continue;
+
+    const role: "user" | "model" = (msg.role === "assistant" || msg.role === "model") ? "model" : "user";
+
+    // Merge consecutive messages of the same role
+    if (formatted.length > 0 && formatted[formatted.length - 1].role === role) {
+      formatted[formatted.length - 1].parts[0].text += `\n\n${rawContent}`;
+    } else {
+      formatted.push({
+        role,
+        parts: [{ text: rawContent }]
+      });
+    }
+  }
+
+  // Gemini API requires the first turn to have role 'user'
+  while (formatted.length > 0 && formatted[0].role !== "user") {
+    formatted.shift();
+  }
+
+  if (formatted.length === 0) {
+    return brief;
+  }
+
+  // Ensure the latest user brief is at the end
+  if (formatted[formatted.length - 1].role !== "user") {
+    formatted.push({
+      role: "user",
+      parts: [{ text: brief }]
+    });
+  } else {
+    const lastPart = formatted[formatted.length - 1].parts[0].text;
+    if (!lastPart.includes(brief)) {
+      formatted[formatted.length - 1].parts[0].text = `${lastPart}\n\n${brief}`.trim();
+    }
+  }
+
+  return formatted;
+}
+
+async function generateWithGeminiDirect(
+  mode: string, 
+  brief: string, 
+  history?: Array<{ role: string; content: string }>
+): Promise<string> {
   const ai = getGenAI();
   const systemInstruction = getMurgiiSystemInstruction(mode);
+  const contents = formatHistoryForGemini(brief, history);
 
-  const modelsToTry = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-3.8-flash"];
+  const modelsToTry = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-flash-latest"];
   let lastError: any = null;
 
   for (const model of modelsToTry) {
     try {
       const response = await ai.models.generateContent({
         model,
-        contents: brief,
+        contents,
         config: {
           systemInstruction,
         },
@@ -721,7 +782,7 @@ app.get("/api/chat", (req: any, res: any) => {
 });
 
 app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
-  const { messages, conversationId, mode = "persuasion" } = req.body;
+  const { messages, history, conversationId, mode = "persuasion" } = req.body;
   const uid = req.user.uid;
   const authHeader = req.headers["authorization"] || "";
 
@@ -731,8 +792,11 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
       return res.status(403).json({ error: "No credits remaining. Reset in 24h." });
     }
 
-    const lastMessage = messages?.[messages.length - 1];
-    const brief = lastMessage?.content || "";
+    const conversationHistory = history || messages || [];
+    const lastMessage = conversationHistory.length > 0 
+      ? conversationHistory[conversationHistory.length - 1] 
+      : null;
+    const brief = lastMessage?.content || req.body.brief || "";
 
     let rawText = "";
     let edgeSuccess = false;
@@ -749,7 +813,12 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
           "apikey": supabaseAnonKey,
           ...(authHeader ? { "Authorization": authHeader } : {}),
         },
-        body: JSON.stringify({ mode, brief }),
+        body: JSON.stringify({ 
+          mode, 
+          brief,
+          history: conversationHistory,
+          messages: conversationHistory
+        }),
       });
 
       if (edgeResponse.status === 429) {
@@ -777,7 +846,7 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
 
     // Direct Gemini fallback if edge function was unavailable or returned non-JSON
     if (!edgeSuccess || !rawText) {
-      rawText = await generateWithGeminiDirect(mode, brief);
+      rawText = await generateWithGeminiDirect(mode, brief, conversationHistory);
     }
 
     const { cleanText, challengeResult } = parseScoreDataBlock(rawText);
@@ -796,13 +865,15 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
 
 // Dedicated Murgii AI Generation Endpoint with reliable Gemini engine fallback
 app.post("/api/murgii/generate", authenticateToken, async (req: any, res: any) => {
-  const { mode = "email", brief = "" } = req.body;
+  const { mode = "email", brief = "", history, messages } = req.body;
   const uid = req.user?.uid || "guest";
   const authHeader = req.headers["authorization"] || "";
 
   if (!brief || !brief.trim()) {
     return res.status(400).json({ error: "Brief is required for generation." });
   }
+
+  const conversationHistory = history || messages || [];
 
   try {
     const creditStatus = await checkAndDeductCredits(uid);
@@ -827,7 +898,12 @@ app.post("/api/murgii/generate", authenticateToken, async (req: any, res: any) =
       const edgeResponse = await fetch(functionUrl, {
         method: "POST",
         headers: edgeHeaders,
-        body: JSON.stringify({ mode, brief }),
+        body: JSON.stringify({ 
+          mode, 
+          brief,
+          history: conversationHistory,
+          messages: conversationHistory 
+        }),
       });
 
       if (edgeResponse.status === 429) {
@@ -860,8 +936,8 @@ app.post("/api/murgii/generate", authenticateToken, async (req: any, res: any) =
 
     // Direct Gemini fallback if edge function was unavailable, returned error, or returned non-JSON
     if (!edgeSuccess || !rawText) {
-      console.log(`[Murgii Server] Generating via direct Gemini engine for mode: ${mode}`);
-      rawText = await generateWithGeminiDirect(mode, brief);
+      console.log(`[Murgii Server] Generating via direct Gemini engine with multi-turn history for mode: ${mode}`);
+      rawText = await generateWithGeminiDirect(mode, brief, conversationHistory);
     }
 
     const { cleanText, challengeResult } = parseScoreDataBlock(rawText);

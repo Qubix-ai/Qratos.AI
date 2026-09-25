@@ -29,6 +29,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 export type MurgiiMode = "email" | "ads" | "landing" | "psych" | "content" | "challenge";
 
+export interface ChatMessageHistory {
+  role: "user" | "assistant" | "model";
+  content: string;
+}
+
 export interface ChallengeResult {
   shareSlug: string;
   overallScore: number;
@@ -75,7 +80,8 @@ export class DailyLimitError extends Error {
 async function callLocalGenerateApi(
   mode: MurgiiMode,
   brief: string,
-  token?: string
+  token?: string,
+  history?: ChatMessageHistory[]
 ): Promise<MurgiiGenerateResponse> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -87,7 +93,12 @@ async function callLocalGenerateApi(
   const res = await fetch("/api/murgii/generate", {
     method: "POST",
     headers,
-    body: JSON.stringify({ mode, brief }),
+    body: JSON.stringify({ 
+      mode, 
+      brief,
+      history,
+      messages: history
+    }),
   });
 
   const rawResText = await res.text();
@@ -123,11 +134,12 @@ async function callLocalGenerateApi(
  * Invokes the secure Murgii AI generation service.
  * All modes (Emails, Ads, Pages, Persuasion, Content, and Challenge) call the
  * exact same murgii-generate Edge Function with identical authentication,
- * request structure, and mode parameters.
+ * request structure, mode parameters, and complete multi-turn conversation history.
  */
 export async function callMurgiiGenerateEdgeFunction(
   mode: MurgiiMode,
-  brief: string
+  brief: string,
+  history?: ChatMessageHistory[]
 ): Promise<MurgiiGenerateResponse> {
   let token: string | undefined;
 
@@ -152,6 +164,8 @@ export async function callMurgiiGenerateEdgeFunction(
         body: JSON.stringify({
           mode,
           brief,
+          history,
+          messages: history,
         }),
       });
 
@@ -202,6 +216,6 @@ export async function callMurgiiGenerateEdgeFunction(
     }
   }
 
-  // Fallback to local server-side Gemini Persuasion Engine
-  return await callLocalGenerateApi(mode, brief, token);
+  // Fallback to local server-side Gemini Persuasion Engine with full history
+  return await callLocalGenerateApi(mode, brief, token, history);
 }
