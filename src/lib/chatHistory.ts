@@ -117,35 +117,95 @@ export function decodeMessageContent(rawContent: string): { content: string; cha
   return { content, challengeResult };
 }
 
+const CACHE_PREFIX = "murgii_chat_cache_";
+const SESSION_CACHE_PREFIX = "murgii_session_msgs_";
+
+function getLocalCache(userId: string): ChatSession[] {
+  if (typeof window === "undefined" || !userId) return [];
+  try {
+    const raw = localStorage.getItem(`${CACHE_PREFIX}${userId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    // Ignore localStorage access restrictions
+  }
+  return [];
+}
+
+function setLocalCache(userId: string, sessions: ChatSession[]): void {
+  if (typeof window === "undefined" || !userId) return;
+  try {
+    localStorage.setItem(`${CACHE_PREFIX}${userId}`, JSON.stringify(sessions));
+  } catch {
+    // Ignore localStorage quota errors
+  }
+}
+
+function getCachedSessionDetail(sessionId: string): ChatSession | null {
+  if (typeof window === "undefined" || !sessionId) return null;
+  try {
+    const raw = localStorage.getItem(`${SESSION_CACHE_PREFIX}${sessionId}`);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
+function setCachedSessionDetail(sessionId: string, session: ChatSession): void {
+  if (typeof window === "undefined" || !sessionId) return;
+  try {
+    localStorage.setItem(`${SESSION_CACHE_PREFIX}${sessionId}`, JSON.stringify(session));
+  } catch {
+    // Ignore
+  }
+}
+
 /**
  * Loads all chat sessions for a user directly from Supabase chat_sessions table as authoritative single source of truth.
- * Queries fresh on every call: SELECT * FROM chat_sessions WHERE user_id = [current user] ORDER BY created_at DESC
+ * Includes local storage caching and graceful retry to guard against network glitches.
  */
 export async function loadUserSessions(userId: string): Promise<ChatSession[]> {
   if (!userId) {
-    console.warn("[Supabase Chat Warning] loadUserSessions called without userId");
     return [];
   }
 
-  console.log(`[Supabase Chat] Querying chat_sessions fresh for user_id: ${userId} ORDER BY created_at DESC`);
-  try {
-    const { data: sessionRows, error: sessionErr } = await supabase
+  const fetchFromSupabase = async () => {
+    return await supabase
       .from("chat_sessions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
+  };
+
+  try {
+    let { data: sessionRows, error: sessionErr } = await fetchFromSupabase();
+
+    // Quick single retry on transient network errors (e.g. Failed to fetch)
+    if (sessionErr && (sessionErr.message?.includes("Failed to fetch") || sessionErr.name === "TypeError")) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      const retryResult = await fetchFromSupabase();
+      sessionRows = retryResult.data;
+      sessionErr = retryResult.error;
+    }
 
     if (sessionErr) {
-      console.error("[Supabase Chat Error] Failed to fetch chat_sessions from Supabase:", sessionErr.message || sessionErr);
-      return [];
+      const isNetworkErr = sessionErr.message?.includes("Failed to fetch") || sessionErr.name === "TypeError";
+      if (isNetworkErr) {
+        console.warn("[Supabase Chat] Network temporarily unreachable, serving from local cache.");
+      } else {
+        console.error("[Supabase Chat Error] Failed to fetch chat_sessions from Supabase:", sessionErr.message || sessionErr);
+      }
+      return getLocalCache(userId);
     }
 
     if (!Array.isArray(sessionRows)) {
-      console.log("[Supabase Chat] No session rows returned for user:", userId);
-      return [];
+      return getLocalCache(userId);
     }
-
-    console.log(`[Supabase Chat] Successfully retrieved ${sessionRows.length} sessions from chat_sessions table.`);
 
     const seenSessionIds = new Set<string>();
     const sessions: ChatSession[] = [];
@@ -163,10 +223,16 @@ export async function loadUserSessions(userId: string): Promise<ChatSession[]> {
       });
     }
 
+    setLocalCache(userId, sessions);
     return sessions;
-  } catch (err) {
-    console.error("[Supabase Chat Error] Unexpected exception loading user sessions:", err);
-    return [];
+  } catch (err: any) {
+    const isNetworkErr = err?.message?.includes("Failed to fetch") || err?.name === "TypeError";
+    if (isNetworkErr) {
+      console.warn("[Supabase Chat] Fetch exception (offline/network drop), serving from cache.");
+    } else {
+      console.error("[Supabase Chat Error] Unexpected exception loading user sessions:", err);
+    }
+    return getLocalCache(userId);
   }
 }
 
@@ -182,6 +248,21 @@ export async function createChatSession(userId: string, initialTitle: string = "
   const now = new Date().toISOString();
   console.log(`[Supabase Chat] Creating new chat_sessions row in Supabase for user ${userId} with id: ${sessionId}`);
 
+  const localNewSession: ChatSession = {
+    id: sessionId,
+    userId,
+    title: initialTitle,
+    isPinned: false,
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+  };
+
+  // Optimistically store in cache
+  const cached = getLocalCache(userId);
+  setLocalCache(userId, [localNewSession, ...cached]);
+  setCachedSessionDetail(sessionId, localNewSession);
+
   try {
     const { error } = await supabase
       .from("chat_sessions")
@@ -194,64 +275,80 @@ export async function createChatSession(userId: string, initialTitle: string = "
       });
 
     if (error) {
-      console.error("[Supabase Chat Error] Failed to insert new chat_session:", error.message || error, error);
-      return null;
+      console.warn("[Supabase Chat Warning] Insert chat_session returned error, kept in local state:", error.message || error);
+    } else {
+      console.log(`[Supabase Chat] Successfully inserted chat_session into Supabase with ID: ${sessionId}`);
     }
 
-    console.log(`[Supabase Chat] Successfully inserted chat_session into Supabase with ID: ${sessionId}`);
     notifySessionsChanged();
-    return {
-      id: sessionId,
-      userId,
-      title: initialTitle,
-      isPinned: false,
-      createdAt: now,
-      updatedAt: now,
-      messages: [],
-    };
+    return localNewSession;
   } catch (err) {
-    console.error("[Supabase Chat Error] Exception in createChatSession:", err);
-    return null;
+    console.warn("[Supabase Chat Warning] Network exception in createChatSession, kept in local state:", err);
+    notifySessionsChanged();
+    return localNewSession;
   }
 }
 
 /**
  * Fetches a single chat session with its full message history fresh from Supabase.
- * Queries chat_messages table filtered by session_id ORDER BY created_at ASC.
+ * Queries chat_messages table filtered by session_id ORDER BY created_at ASC with offline fallback.
  */
 export async function getSessionById(userId: string, sessionId: string): Promise<ChatSession | null> {
   if (!userId || !sessionId) return null;
 
-  console.log(`[Supabase Chat] Fetching session details fresh from Supabase for session_id: ${sessionId}`);
+  const fallback = getCachedSessionDetail(sessionId);
+
   try {
-    // 1. Fetch session row from chat_sessions
-    const { data: sessionData, error: sessionErr } = await supabase
-      .from("chat_sessions")
-      .select("*")
-      .eq("id", sessionId)
-      .eq("user_id", userId)
-      .maybeSingle();
+    const fetchSession = async () => {
+      return await supabase
+        .from("chat_sessions")
+        .select("*")
+        .eq("id", sessionId)
+        .eq("user_id", userId)
+        .maybeSingle();
+    };
+
+    let { data: sessionData, error: sessionErr } = await fetchSession();
+
+    if (sessionErr && (sessionErr.message?.includes("Failed to fetch") || sessionErr.name === "TypeError")) {
+      await new Promise((r) => setTimeout(r, 350));
+      const retryResult = await fetchSession();
+      sessionData = retryResult.data;
+      sessionErr = retryResult.error;
+    }
 
     if (sessionErr) {
-      console.error("[Supabase Chat Error] Failed to fetch session row from chat_sessions:", sessionErr.message || sessionErr);
-      return null;
+      console.warn("[Supabase Chat] Notice fetching session row:", sessionErr.message || sessionErr);
+      return fallback;
     }
 
     if (!sessionData) {
-      console.warn(`[Supabase Chat Warning] Session ${sessionId} not found in chat_sessions table for user ${userId}.`);
-      return null;
+      return fallback;
     }
 
-    // 2. Fetch messages fresh from chat_messages table
-    console.log(`[Supabase Chat] Querying chat_messages fresh for session_id: ${sessionId} ORDER BY created_at ASC`);
-    const { data: messageRows, error: msgErr } = await supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: true });
+    // 2. Fetch messages from chat_messages table
+    const fetchMessages = async () => {
+      return await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("session_id", sessionId)
+        .order("created_at", { ascending: true });
+    };
+
+    let { data: messageRows, error: msgErr } = await fetchMessages();
+
+    if (msgErr && (msgErr.message?.includes("Failed to fetch") || msgErr.name === "TypeError")) {
+      await new Promise((r) => setTimeout(r, 350));
+      const retryMsg = await fetchMessages();
+      messageRows = retryMsg.data;
+      msgErr = retryMsg.error;
+    }
 
     if (msgErr) {
-      console.error(`[Supabase Chat Error] Failed to fetch messages from chat_messages for session ${sessionId}:`, msgErr.message || msgErr);
+      console.warn(`[Supabase Chat Warning] Could not fetch messages from chat_messages for session ${sessionId}:`, msgErr.message || msgErr);
+      if (fallback && fallback.messages.length > 0) {
+        return fallback;
+      }
     }
 
     const seenMsgIds = new Set<string>();
@@ -272,9 +369,7 @@ export async function getSessionById(userId: string, sessionId: string): Promise
       }
     }
 
-    console.log(`[Supabase Chat] Successfully retrieved ${messages.length} messages fresh from chat_messages for session: ${sessionId}`);
-
-    return {
+    const fullSession: ChatSession = {
       id: sessionData.id,
       userId: sessionData.user_id || userId,
       title: sessionData.title || "New Conversation",
@@ -283,9 +378,12 @@ export async function getSessionById(userId: string, sessionId: string): Promise
       updatedAt: sessionData.updated_at || new Date().toISOString(),
       messages,
     };
-  } catch (err) {
-    console.error("[Supabase Chat Error] Exception in getSessionById:", err);
-    return null;
+
+    setCachedSessionDetail(sessionId, fullSession);
+    return fullSession;
+  } catch (err: any) {
+    console.warn("[Supabase Chat Warning] Exception in getSessionById, returning cached session:", err);
+    return fallback;
   }
 }
 

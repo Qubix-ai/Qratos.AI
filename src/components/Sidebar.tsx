@@ -79,9 +79,11 @@ export function Sidebar({
     if (!userId) return;
     try {
       const data = await loadUserSessions(userId);
-      setSessions(data);
+      if (Array.isArray(data)) {
+        setSessions(data);
+      }
     } catch (e) {
-      console.error("[Supabase Chat Error] Could not load sessions in Sidebar:", e);
+      console.warn("[Sidebar] Could not load sessions:", e);
     }
   };
 
@@ -93,7 +95,13 @@ export function Sidebar({
     };
 
     window.addEventListener(SESSIONS_UPDATED_EVENT, handleSessionsUpdate);
-    const interval = setInterval(loadSessions, 5000);
+    
+    // Poll only when tab is active and visible
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        loadSessions();
+      }
+    }, 12000);
     
     return () => {
       window.removeEventListener(SESSIONS_UPDATED_EVENT, handleSessionsUpdate);

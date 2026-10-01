@@ -129,6 +129,8 @@ export function stripScoreDataTags(rawText: string): string {
     .replace(/<!--\s*SCORE_DATA[\s\S]*?(?:SCORE_DATA\s*-->|-->)\s*/gi, "")
     .replace(/<!--\s*SCORE_DATA[\s\S]*$/gi, "")
     .replace(/SCORE_DATA-->/gi, "")
+    .replace(/<!--\s*NON_BILLABLE_RESPONSE\s*-->/gi, "")
+    .replace(/<!--\s*RESPONSE_TYPE[\s\S]*?-->/gi, "")
     .trim();
 }
 

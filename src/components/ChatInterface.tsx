@@ -114,16 +114,33 @@ export const markdownComponents = {
       {children}
     </em>
   ),
-  a: ({ href, children }: any) => (
-    <a 
-      href={href} 
-      target="_blank" 
-      rel="noopener noreferrer" 
-      className="text-[#F59E0B] hover:text-amber-300 underline underline-offset-2 transition-colors font-medium"
-    >
-      {children}
-    </a>
-  ),
+  a: ({ href, children }: any) => {
+    // XSS Hardening: Validate and sanitize URL protocols
+    let safeUrl = "#";
+    if (typeof href === "string") {
+      const trimmed = href.trim();
+      const lower = trimmed.toLowerCase();
+      // Allow only http, https, mailto, or anchor links
+      if (
+        lower.startsWith("https://") ||
+        lower.startsWith("http://") ||
+        lower.startsWith("mailto:") ||
+        lower.startsWith("#")
+      ) {
+        safeUrl = trimmed;
+      }
+    }
+    return (
+      <a 
+        href={safeUrl} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="text-[#F59E0B] hover:text-amber-300 underline underline-offset-2 transition-colors font-medium"
+      >
+        {children}
+      </a>
+    );
+  },
   code: ({ className, children, ...props }: any) => {
     const isInline = !className && typeof children === "string" && !children.includes("\n");
     if (isInline) {

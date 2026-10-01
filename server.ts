@@ -211,6 +211,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Security headers middleware
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: wss: https://*.supabase.co wss://*.supabase.co; frame-ancestors 'self' https://aistudio.google.com https://*.google.com https://*.run.app; object-src 'none'; base-uri 'self';"
+  );
+  next();
+});
+
 interface FallbackUser {
   email: string;
   displayName: string;
@@ -353,6 +364,33 @@ async function checkAndDeductCredits(uid: string) {
   }
 }
 
+// Refund / restore a credit when a response is non-billable (scope-redirect, capability-gap, or clarifying question)
+async function refundCredit(uid: string) {
+  if (!uid || uid.startsWith('guest_')) {
+    return;
+  }
+  try {
+    const mem = memoryUserStore.get(uid);
+    if (mem && !mem.isAdmin) {
+      mem.remainingCredits = Math.min(mem.totalCredits, (mem.remainingCredits || 0) + 1);
+    }
+    const database = getDb();
+    const userRef = database.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+    if (userDoc.exists) {
+      const userData = userDoc.data()!;
+      if (!userData.isAdmin) {
+        const total = userData.totalCredits || 30;
+        const currentRemaining = userData.remainingCredits !== undefined ? userData.remainingCredits : 29;
+        const newRemaining = Math.min(total, currentRemaining + 1);
+        await userRef.update({ remainingCredits: newRemaining });
+      }
+    }
+  } catch (err) {
+    // Non-fatal fallback (memoryUserStore already updated)
+  }
+}
+
 // Middleware to verify Auth (supporting Supabase ES256/HS256 tokens and Firebase RS256 tokens)
 const authenticateToken = async (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
@@ -415,98 +453,13 @@ const authenticateToken = async (req: any, res: any, next: any) => {
   return next();
 };
 
-function getMurgiiSystemInstruction(mode: string): string {
-  const baseInstruction = `You are Murgii AI, the $500M Direct-Response Persuasion & Copywriting Intelligence Engine.
-You write world-class, punchy, high-converting copy that sounds like a master copywriter (e.g., Gary Halbert, Eugene Schwartz, Dan Kennedy, Stefan Georgi).
-You avoid generic corporate fluff, cliches, and boring filler. Your output is sharp, psychologically grounded, rhythmically paced, and conversion-focused.`;
-
-  if (mode === "challenge") {
-    return `${baseInstruction}
-
-Your task is to ruthlessly and accurately evaluate the user's submitted copy as a master copy editor and conversion rate optimization (CRO) director.
-Analyze the copy across 5 key dimensions:
-1. Attention (0-20): Hook strength, curiosity gap, pattern interruption.
-2. Clarity (0-20): Value proposition, simplicity, reading ease.
-3. Desire (0-20): Emotional resonance, benefit stacking, transformation vividness.
-4. Persuasion (0-20): Proof elements, objection anticipation, risk reversal.
-5. Action (0-20): CTA friction, urgency, clarity of next step.
-
-Calculate the total score (0-100) by summing the 5 dimension scores.
-Identify the STRONGEST DIMENSION with the highest subscore (must be one of: "ATTENTION", "CLARITY", "DESIRE", "PERSUASION", "ACTION").
-Provide a short, positive praise line (1 sentence) celebrating that highest dimension that the user would be glad to show a friend.
-Identify the BIGGEST LEVERAGE dimension that needs fixing (must be one of: "ATTENTION", "CLARITY", "DESIRE", "PERSUASION", "ACTION").
-Provide a punchy, constructive diagnosis (1-2 sentences) explaining why and what single change would unlock the highest conversion lift. NOTE: This diagnosis and critical feedback belongs in your chat response text so the user learns how to improve.
-
-Your response MUST:
-1. Provide a direct, professional, and actionable critique breakdown of the copy in the chat response (including the biggest leverage diagnosis and weakest point here).
-2. Provide a rewritten, optimized version demonstrating how a master copywriter would transform it.
-3. CRITICAL: At the very end of your response, append the following exact machine-readable comment block (do not modify the format):
-<!-- SCORE_DATA
-{
-  "overall_score": <total 0-100>,
-  "attention_score": <0-20>,
-  "clarity_score": <0-20>,
-  "desire_score": <0-20>,
-  "persuasion_score": <0-20>,
-  "action_score": <0-20>,
-  "strongest_dimension": "<ATTENTION|CLARITY|DESIRE|PERSUASION|ACTION>",
-  "strongest_element": "<1 short positive line celebrating the highest dimension>",
-  "biggest_leverage": "<ATTENTION|CLARITY|DESIRE|PERSUASION|ACTION>",
-  "diagnosis": "<1-2 sentence diagnosis for chat response text>",
-  "extracted_copy": "<first 120 characters of evaluated copy>"
-}
-SCORE_DATA -->`;
-  }
-
-  if (mode === "email") {
-    return `${baseInstruction}
-Mode: EMAIL MARKETING.
-Provide:
-- 3 high-open-rate subject lines (Curiosity, Benefit, Pattern Interrupt).
-- Optional preview text.
-- Full email body using direct-response storytelling (PAS, AIDA, or Story-Offer framework).
-- Single, clear, frictionless call-to-action (CTA).
-- High-leverage P.S. line.`;
-  }
-
-  if (mode === "ads") {
-    return `${baseInstruction}
-Mode: PAID ADVERTISING (Meta, Google, TikTok, LinkedIn).
-Provide:
-- 3 distinct hook variations (Visual/Text hook, Problem-first, Contradiction).
-- Primary ad copy (short-form and long-form variants).
-- Compelling headline and description.
-- Recommended visual concept or creative direction.`;
-  }
-
-  if (mode === "landing") {
-    return `${baseInstruction}
-Mode: HIGH-CONVERTING SALES / LANDING PAGE.
-Provide:
-- Hero section: Above-the-fold headline, compelling sub-headline, and primary CTA.
-- The Core Problem: Agitation and empathetic pain-point breakdown.
-- The Mechanism: Unique solution breakdown.
-- Bulleted Benefit Stack with emotional payoffs.
-- Risk Reversal / Guarantee framing.
-- FAQ addressing the 3 biggest objections.`;
-  }
-
-  if (mode === "psych") {
-    return `${baseInstruction}
-Mode: PSYCHOLOGICAL TRIGGERS & COGNITIVE BIASES.
-Break down and implement:
-- The dominant psychological levers at play (Loss aversion, Status signaling, Scarcity, Reciprocity, Anchoring, Social proof).
-- Practical implementation examples of how to weave these triggers into the user's campaign or offer.`;
-  }
-
-  if (mode === "content") {
-    return `${baseInstruction}
-Mode: CONTENT & VIRAL SCRIPTS.
-Provide high-retention, high-engagement content (LinkedIn posts, X threads, or short-form video scripts) with powerful hooks, high-density value, and natural engagement prompts.`;
-  }
-
-  return baseInstruction;
-}
+import { 
+  getMurgiiSystemInstruction, 
+  isNonBillableResponse, 
+  cleanGeneratedCopy, 
+  findBannedPhraseViolations 
+} from "./src/lib/murgiiPersona.ts";
+export { getMurgiiSystemInstruction, isNonBillableResponse, cleanGeneratedCopy, findBannedPhraseViolations };
 
 function formatHistoryForGemini(brief: string, history?: Array<{ role: string; content: string }>) {
   if (!history || !Array.isArray(history) || history.length === 0) {
@@ -573,7 +526,13 @@ async function generateWithGeminiDirect(
   const systemInstruction = getMurgiiSystemInstruction(mode);
   const contents = formatHistoryForGemini(brief, history);
 
-  const modelsToTry = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-flash-latest"];
+  // Prioritize gemini-3.1-flash-lite for instant response, high throughput, and active quota
+  const modelsToTry = [
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
+    "gemini-2.5-flash",
+    "gemini-3.8-flash",
+  ];
   let lastError: any = null;
 
   for (const model of modelsToTry) {
@@ -586,11 +545,38 @@ async function generateWithGeminiDirect(
         },
       });
       if (response.text) {
-        return response.text;
+        let cleaned = cleanGeneratedCopy(response.text);
+        
+        // Optional cheap backstop: flag and do a quick single-retry if a banned pattern appeared
+        const violations = findBannedPhraseViolations(cleaned);
+        if (violations.length > 0) {
+          console.warn(`[Murgii Gemini] Output contained banned pattern (${violations.join(", ")}), attempting one clean correction pass...`);
+          try {
+            const retryResp = await ai.models.generateContent({
+              model,
+              contents: [
+                ...(Array.isArray(contents) ? contents : [{ role: "user", parts: [{ text: String(contents) }] }]),
+                { role: "model", parts: [{ text: cleaned }] },
+                { role: "user", parts: [{ text: `CRITICAL SELF-AUDIT: Your previous draft contained prohibited pattern(s): ${violations.join(", ")}. Rewrite it now completely eliminating that pattern. Adhere strictly to word limits, format rules, and return raw copy only.` }] }
+              ] as any,
+              config: {
+                systemInstruction,
+              },
+            });
+            if (retryResp.text) {
+              cleaned = cleanGeneratedCopy(retryResp.text);
+            }
+          } catch (retryErr) {
+            // keep cleaned
+          }
+        }
+        
+        return cleaned;
       }
     } catch (err: any) {
       lastError = err;
-      console.warn(`[Murgii Gemini] Model ${model} returned error, trying fallback...`, err?.message || err);
+      const status = err?.status || err?.code || "";
+      console.log(`[Murgii Gemini] Model ${model} unavailable (${status}), trying candidate fallback...`);
     }
   }
 
@@ -722,6 +708,8 @@ function parseScoreDataBlock(rawText: string) {
     .replace(/<!--\s*SCORE_DATA[\s\S]*?(?:SCORE_DATA\s*-->|-->)\s*/gi, "")
     .replace(/<!--\s*SCORE_DATA[\s\S]*$/gi, "")
     .replace(/SCORE_DATA-->/gi, "")
+    .replace(/<!--\s*NON_BILLABLE_RESPONSE\s*-->/gi, "")
+    .replace(/<!--\s*RESPONSE_TYPE[\s\S]*?-->/gi, "")
     .trim();
 
   let challengeResult: any = null;
@@ -799,62 +787,81 @@ app.post("/api/chat", authenticateToken, async (req: any, res: any) => {
     const brief = lastMessage?.content || req.body.brief || "";
 
     let rawText = "";
-    let edgeSuccess = false;
 
-    try {
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://omeqbiksjqyeqkxnkflh.supabase.co";
-      const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
-      const functionUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/murgii-generate`;
-
-      const edgeResponse = await fetch(functionUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": supabaseAnonKey,
-          ...(authHeader ? { "Authorization": authHeader } : {}),
-        },
-        body: JSON.stringify({ 
-          mode, 
-          brief,
-          history: conversationHistory,
-          messages: conversationHistory
-        }),
-      });
-
-      if (edgeResponse.status === 429) {
-        let limitMessage = "You have reached your daily generation limit. Please upgrade or try again tomorrow.";
-        try {
-          const errorJson = await edgeResponse.json();
-          if (errorJson?.message) limitMessage = errorJson.message;
-        } catch {}
-        return res.status(429).json({ error: limitMessage });
+    // 1. Primary: Direct Gemini engine with local consolidated system instructions
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        rawText = await generateWithGeminiDirect(mode, brief, conversationHistory);
+      } catch (geminiErr: any) {
+        console.log("[Murgii /api/chat] Direct Gemini generation returned error, trying fallback...", geminiErr?.message || geminiErr);
       }
-
-      const rawBody = await edgeResponse.text();
-      if (edgeResponse.ok) {
-        try {
-          const parsed = JSON.parse(rawBody);
-          if (parsed && parsed.text) {
-            rawText = parsed.text;
-            edgeSuccess = true;
-          }
-        } catch {}
-      }
-    } catch (edgeErr) {
-      console.warn("[Murgii /api/chat] Edge function call failed, falling back to direct Gemini:", edgeErr);
     }
 
-    // Direct Gemini fallback if edge function was unavailable or returned non-JSON
-    if (!edgeSuccess || !rawText) {
-      rawText = await generateWithGeminiDirect(mode, brief, conversationHistory);
+    // 2. Secondary fallback: Edge function if direct Gemini was unavailable
+    if (!rawText) {
+      try {
+        const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://omeqbiksjqyeqkxnkflh.supabase.co";
+        const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+        const functionUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/murgii-generate`;
+
+        const edgeResponse = await fetch(functionUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": supabaseAnonKey,
+            ...(authHeader ? { "Authorization": authHeader } : {}),
+          },
+          body: JSON.stringify({ 
+            mode, 
+            brief,
+            history: conversationHistory,
+            messages: conversationHistory
+          }),
+        });
+
+        if (edgeResponse.status === 429) {
+          let limitMessage = "You have reached your daily generation limit. Please upgrade or try again tomorrow.";
+          try {
+            const errorJson = await edgeResponse.json();
+            if (errorJson?.message) limitMessage = errorJson.message;
+          } catch {}
+          return res.status(429).json({ error: limitMessage });
+        }
+
+        const rawBody = await edgeResponse.text();
+        if (edgeResponse.ok) {
+          try {
+            const parsed = JSON.parse(rawBody);
+            if (parsed && parsed.text) {
+              rawText = parsed.text;
+            }
+          } catch {}
+        }
+      } catch (edgeErr) {
+        // Fallback network error
+      }
+    }
+
+    if (!rawText) {
+      throw new Error("Persuasion engine temporarily busy. Please retry in a few moments.");
     }
 
     const { cleanText, challengeResult } = parseScoreDataBlock(rawText);
 
+    // Credit handling: scope-redirect, capability-gap notice, or clarifying question do not deduct credit
+    const isNonBillable = isNonBillableResponse(rawText, cleanText);
+    if (isNonBillable) {
+      await refundCredit(uid);
+    }
+    const finalRemaining = isNonBillable 
+      ? Math.min(30, (creditStatus.remaining ?? 29) + 1)
+      : creditStatus.remaining;
+
     return res.status(200).json({
       text: cleanText,
-      remaining: creditStatus.remaining,
+      remaining: finalRemaining,
       challengeResult: challengeResult || null,
+      isNonBillable,
     });
   } catch (error: any) {
     console.error("Chat API Error:", error);
@@ -880,64 +887,68 @@ app.post("/api/murgii/generate", authenticateToken, async (req: any, res: any) =
 
     let rawText = "";
     let finalChallengeResult: any = null;
-    let edgeSuccess = false;
 
-    try {
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://omeqbiksjqyeqkxnkflh.supabase.co";
-      const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
-      const functionUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/murgii-generate`;
-
-      const edgeHeaders: Record<string, string> = {
-        "Content-Type": "application/json",
-        "apikey": supabaseAnonKey,
-      };
-      if (authHeader) {
-        edgeHeaders["Authorization"] = authHeader;
+    // 1. Primary: Direct Gemini engine with local consolidated system instructions
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        rawText = await generateWithGeminiDirect(mode, brief, conversationHistory);
+      } catch (geminiErr: any) {
+        console.log(`[Murgii Server] Direct Gemini failed, trying fallback...`, geminiErr?.message || geminiErr);
       }
-
-      const edgeResponse = await fetch(functionUrl, {
-        method: "POST",
-        headers: edgeHeaders,
-        body: JSON.stringify({ 
-          mode, 
-          brief,
-          history: conversationHistory,
-          messages: conversationHistory 
-        }),
-      });
-
-      if (edgeResponse.status === 429) {
-        let limitMessage = "You have reached your daily generation limit. Please upgrade or try again tomorrow.";
-        try {
-          const errorJson = await edgeResponse.json();
-          if (errorJson?.message) limitMessage = errorJson.message;
-        } catch {}
-        return res.status(429).json({ error: limitMessage });
-      }
-
-      const rawBody = await edgeResponse.text();
-      if (edgeResponse.ok) {
-        try {
-          const parsed = JSON.parse(rawBody);
-          if (parsed && parsed.text) {
-            rawText = parsed.text;
-            finalChallengeResult = parsed.challengeResult || null;
-            edgeSuccess = true;
-          }
-        } catch (jsonErr) {
-          console.warn("[Murgii Server] Edge function returned non-JSON response:", rawBody.slice(0, 100));
-        }
-      } else {
-        console.warn(`[Murgii Server] Edge function returned HTTP ${edgeResponse.status}:`, rawBody.slice(0, 120));
-      }
-    } catch (edgeErr) {
-      console.warn("[Murgii Server] Edge function network error, falling back to direct Gemini:", edgeErr);
     }
 
-    // Direct Gemini fallback if edge function was unavailable, returned error, or returned non-JSON
-    if (!edgeSuccess || !rawText) {
-      console.log(`[Murgii Server] Generating via direct Gemini engine with multi-turn history for mode: ${mode}`);
-      rawText = await generateWithGeminiDirect(mode, brief, conversationHistory);
+    // 2. Secondary fallback: Edge function if direct Gemini was unavailable
+    if (!rawText) {
+      try {
+        const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://omeqbiksjqyeqkxnkflh.supabase.co";
+        const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+        const functionUrl = `${supabaseUrl.replace(/\/$/, "")}/functions/v1/murgii-generate`;
+
+        const edgeHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+          "apikey": supabaseAnonKey,
+        };
+        if (authHeader) {
+          edgeHeaders["Authorization"] = authHeader;
+        }
+
+        const edgeResponse = await fetch(functionUrl, {
+          method: "POST",
+          headers: edgeHeaders,
+          body: JSON.stringify({ 
+            mode, 
+            brief,
+            history: conversationHistory,
+            messages: conversationHistory 
+          }),
+        });
+
+        if (edgeResponse.status === 429) {
+          let limitMessage = "You have reached your daily generation limit. Please upgrade or try again tomorrow.";
+          try {
+            const errorJson = await edgeResponse.json();
+            if (errorJson?.message) limitMessage = errorJson.message;
+          } catch {}
+          return res.status(429).json({ error: limitMessage });
+        }
+
+        const rawBody = await edgeResponse.text();
+        if (edgeResponse.ok) {
+          try {
+            const parsed = JSON.parse(rawBody);
+            if (parsed && parsed.text) {
+              rawText = parsed.text;
+              finalChallengeResult = parsed.challengeResult || null;
+            }
+          } catch (jsonErr) {}
+        }
+      } catch (edgeErr) {
+        // Fallback network error
+      }
+    }
+
+    if (!rawText) {
+      throw new Error("Persuasion engine temporarily busy. Please retry in a few moments.");
     }
 
     const { cleanText, challengeResult } = parseScoreDataBlock(rawText);
@@ -953,10 +964,20 @@ app.post("/api/murgii/generate", authenticateToken, async (req: any, res: any) =
       });
     }
 
+    // Credit handling: scope-redirect, capability-gap notice, or clarifying question do not deduct credit
+    const isNonBillable = isNonBillableResponse(rawText, cleanText);
+    if (isNonBillable) {
+      await refundCredit(uid);
+    }
+    const finalRemaining = isNonBillable 
+      ? Math.min(30, (creditStatus.remaining ?? 29) + 1)
+      : creditStatus.remaining;
+
     return res.status(200).json({
       text: cleanText,
-      remaining: creditStatus.remaining,
+      remaining: finalRemaining,
       challengeResult: mergedChallengeResult || null,
+      isNonBillable,
     });
   } catch (error: any) {
     console.error("Murgii Generate API Error:", error);
